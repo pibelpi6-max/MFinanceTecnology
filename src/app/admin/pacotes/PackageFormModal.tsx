@@ -13,15 +13,17 @@ interface PackageFormModalProps {
   editing: BudgetPackageRow | null;
   year: number;
   costCenterNodes: { id: string; name: string }[];
+  entityNodes: { id: string; name: string }[];
   onSaved: () => void;
 }
 
-export function PackageFormModal({ open, onClose, editing, year, costCenterNodes, onSaved }: PackageFormModalProps) {
+export function PackageFormModal({ open, onClose, editing, year, costCenterNodes, entityNodes, onSaved }: PackageFormModalProps) {
   const t = useTranslations("packages");
   const tc = useTranslations("common");
 
   const [name, setName] = useState("");
   const [costCenterNodeId, setCostCenterNodeId] = useState("");
+  const [entityNodeId, setEntityNodeId] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,6 +31,7 @@ export function PackageFormModal({ open, onClose, editing, year, costCenterNodes
     if (!open) return;
     setName(editing?.name ?? "");
     setCostCenterNodeId(editing?.costCenterNodeId ?? "");
+    setEntityNodeId(editing?.entityNodeId ?? "");
     setError(null);
   }, [open, editing]);
 
@@ -43,8 +46,14 @@ export function PackageFormModal({ open, onClose, editing, year, costCenterNodes
           currentStatus: editing.status,
           name: name.trim(),
           costCenterNodeId: costCenterNodeId || null,
+          entityNodeId: entityNodeId || null,
         })
-      : await createPackage({ year, name: name.trim(), costCenterNodeId: costCenterNodeId || null });
+      : await createPackage({
+          year,
+          name: name.trim(),
+          costCenterNodeId: costCenterNodeId || null,
+          entityNodeId: entityNodeId || null,
+        });
 
     setLoading(false);
     if (result.error) {
@@ -81,6 +90,21 @@ export function PackageFormModal({ open, onClose, editing, year, costCenterNodes
             required
             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
           />
+        </div>
+        <div>
+          <label className="mb-1 block text-xs font-medium text-gray-600">{t("entity")}</label>
+          <select
+            value={entityNodeId}
+            onChange={(e) => setEntityNodeId(e.target.value)}
+            className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+          >
+            <option value="">{t("noEntity")}</option>
+            {entityNodes.map((n) => (
+              <option key={n.id} value={n.id}>
+                {n.name}
+              </option>
+            ))}
+          </select>
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-gray-600">{t("costCenter")}</label>

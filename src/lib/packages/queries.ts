@@ -7,8 +7,11 @@ export async function getPackages(tenantId: string, year: number): Promise<Budge
   const { data, error } = await supabase
     .from("budget_packages")
     .select(
-      `id, year, name, cost_center_node_id, owner_user_id, status, created_at, updated_at,
-       dimension_nodes:cost_center_node_id (
+      `id, year, name, cost_center_node_id, entity_node_id, owner_user_id, status, created_at, updated_at,
+       cost_center:dimension_nodes!cost_center_node_id (
+         dimension_node_versions!dimension_node_id!inner ( name )
+       ),
+       entity:dimension_nodes!entity_node_id (
          dimension_node_versions!dimension_node_id!inner ( name )
        )`
     )
@@ -31,23 +34,31 @@ export async function getPackages(tenantId: string, year: number): Promise<Budge
     countByPackage.set(row.package_id, (countByPackage.get(row.package_id) ?? 0) + 1);
   }
 
+  function extractName(
+    nodeRel: { dimension_node_versions?: { name: string }[] | { name: string } } | null | undefined
+  ): string | null {
+    if (!nodeRel?.dimension_node_versions) return null;
+    const v = Array.isArray(nodeRel.dimension_node_versions)
+      ? nodeRel.dimension_node_versions[0]
+      : nodeRel.dimension_node_versions;
+    return v?.name ?? null;
+  }
+
   return (data ?? []).map((row) => {
-    const nodeRel = row.dimension_nodes as unknown as
+    const costCenterRel = row.cost_center as unknown as
       | { dimension_node_versions?: { name: string }[] | { name: string } }
       | null;
-    let costCenterName: string | null = null;
-    if (nodeRel?.dimension_node_versions) {
-      const v = Array.isArray(nodeRel.dimension_node_versions)
-        ? nodeRel.dimension_node_versions[0]
-        : nodeRel.dimension_node_versions;
-      costCenterName = v?.name ?? null;
-    }
+    const entityRel = row.entity as unknown as
+      | { dimension_node_versions?: { name: string }[] | { name: string } }
+      | null;
     return {
       id: row.id,
       year: row.year,
       name: row.name,
       costCenterNodeId: row.cost_center_node_id,
-      costCenterName,
+      costCenterName: extractName(costCenterRel),
+      entityNodeId: row.entity_node_id,
+      entityName: extractName(entityRel),
       status: row.status,
       ownerUserId: row.owner_user_id,
       createdAt: row.created_at,

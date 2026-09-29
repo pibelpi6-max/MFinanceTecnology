@@ -6,6 +6,8 @@ export interface BudgetPackageRow {
   name: string;
   costCenterNodeId: string | null;
   costCenterName: string | null;
+  entityNodeId: string | null;
+  entityName: string | null;
   status: PackageStatus;
   ownerUserId: string | null;
   createdAt: string;

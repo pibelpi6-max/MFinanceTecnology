@@ -137,6 +137,14 @@
       "out": "Oct",
       "nov": "Nov",
       "dez": "Dec"
+    },
+    "tree": {
+      "title": "Entities and {packages}",
+      "otherPackages": "Other {packages}",
+      "noPackages": "No packages in {year}.",
+      "hide": "Hide tree",
+      "show": "Show tree",
+      "goToPackages": "View in Packages"
     }
   },
   "packages": {
@@ -167,7 +175,9 @@
     "edit": "Edit package",
     "emptyMessage": "No packages registered for {year}.",
     "deleteConfirmTitle": "Delete package",
-    "deleteConfirmBody": "\"{name}\" will be permanently deleted. This action cannot be undone."
+    "deleteConfirmBody": "\"{name}\" will be permanently deleted. This action cannot be undone.",
+    "entity": "Entity",
+    "noEntity": "No entity"
   },
   "actuals": {
     "title": "Actual Expenses",
