@@ -1,0 +1,75 @@
+{
+  "common": {
+    "actions": "Actions",
+    "edit": "Edit",
+    "search": "Search",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving...",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "loading": "Loading...",
+    "tooltips": {
+      "columns": "Columns",
+      "dragColumn": "Drag column",
+      "noInfo": "No information",
+      "viewDetails": "View details",
+      "close": "Close"
+    },
+    "columns": {
+      "allVisible": "All columns are visible.",
+      "noMatch": "No available column matches the search.",
+      "subtitle": "Enable, disable or drag to reorder",
+      "title": "Columns",
+      "search": "Search column"
+    }
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "dimensoes": "Dimensions",
+    "pacotes": "Packages",
+    "configuracoes": "Settings",
+    "sistema": "System",
+    "logout": "Sign out",
+    "langPT": "Portuguese",
+    "langEN": "English",
+    "langES": "Spanish"
+  },
+  "labels": {
+    "budgetPackage": "Package",
+    "budgetPackagePlural": "Packages"
+  },
+  "auth": {
+    "title": "Sign in",
+    "subtitle": "Access Sistema Financeiro",
+    "email": "Email",
+    "password": "Password",
+    "rememberMe": "Remember me",
+    "signIn": "Sign in",
+    "signingIn": "Signing in...",
+    "forgotPassword": "Forgot my password",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "invalidCredentials": "Incorrect email or password.",
+    "emailNotConfirmed": "Please confirm your email before signing in.",
+    "tooManyRequests": "Too many attempts. Please try again shortly.",
+    "generic": "Couldn't sign in. Please try again."
+  },
+  "dimensions": {
+    "title": "Dimensions",
+    "year": "Year",
+    "new": "New item",
+    "edit": "Edit item",
+    "code": "Code",
+    "name": "Name",
+    "parent": "Parent item",
+    "noParent": "None (root)",
+    "validFrom": "Effective from",
+    "activeFrom": "Effective since {year}",
+    "deleteConfirmTitle": "End validity",
+    "deleteConfirmBody": "\"{name}\" stops applying starting {year}. History from earlier years is preserved.",
+    "emptyMessage": "No items registered for {year}.",
+    "searchPlaceholder": "Search by name or code",
+    "maxDepthReached": "Maximum depth of 10 levels reached."
+  }
+}
