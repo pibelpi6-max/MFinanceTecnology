@@ -9,7 +9,8 @@
 .login-wrapper {
   display: grid;
   grid-template-columns: minmax(0, 880fr) minmax(0, 560fr);
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
   background: #fff;
   color: #1B2140;
   font-family: var(--login-font, "Inter"), "Segoe UI", sans-serif;
@@ -21,10 +22,11 @@
 /* ── Left Panel — navy brand panel ──────────────────── */
 .login-left {
   position: relative;
+  height: 100%;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  padding: 56px 72px;
+  padding: clamp(28px, 6vh, 56px) 72px;
   background: linear-gradient(150deg, #10153A 0%, #1B2559 46%, #2E52A8 100%);
 }
 
@@ -56,29 +58,36 @@
   position: relative;
   z-index: 1;
   height: 100%;
+  min-height: 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .brand-label {
+  flex-shrink: 0;
   font-size: 12px; font-weight: 700; letter-spacing: .08em;
   text-transform: uppercase; color: #8FB4F0;
 }
 
-.headline-block { margin-top: 64px; max-width: 640px; display: flex; flex-direction: column; gap: 16px; }
-.headline { margin: 0; font-size: 34px; font-weight: 700; color: #fff; line-height: 1.25; letter-spacing: -.01em; }
+.headline-block { flex-shrink: 0; margin-top: clamp(20px, 6vh, 64px); max-width: 640px; display: flex; flex-direction: column; gap: 16px; }
+.headline { margin: 0; font-size: clamp(26px, 3vh, 34px); font-weight: 700; color: #fff; line-height: 1.25; letter-spacing: -.01em; }
 .headline-desc { margin: 0; font-size: 14.5px; color: rgba(255,255,255,.72); line-height: 1.6; }
 
 /* ── Image card — swaps with the carousel ───────────── */
-.visual-card { margin-top: 48px; position: relative; width: 600px; max-width: 100%; }
+.visual-card { flex-shrink: 1; min-height: 0; margin-top: clamp(18px, 5vh, 48px); position: relative; width: 600px; max-width: 100%; display: flex; }
 .visual-badge {
   position: absolute; top: -16px; right: 24px; z-index: 2;
   background: #8FB4F0; color: #1B2559; font-size: 12.5px; font-weight: 700;
   padding: 7px 14px; border-radius: 4px;
 }
 .visual-body {
-  background: #fff; border-radius: 16px; padding: 30px 32px;
-  box-shadow: 0 20px 50px rgba(0,0,0,.28); min-height: 260px; box-sizing: border-box;
+  width: 100%;
+  background: #fff; border-radius: 16px; padding: clamp(16px, 3vh, 30px) 32px;
+  box-shadow: 0 20px 50px rgba(0,0,0,.28);
+  min-height: 0; max-height: clamp(170px, 32vh, 260px);
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .visual-panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
@@ -113,12 +122,13 @@
 
 /* ── Carousel text — plain, no card ──────────────────── */
 .carousel-text {
-  margin-top: 32px; display: flex; flex-direction: column; gap: 16px;
+  flex-shrink: 0;
+  margin-top: clamp(14px, 3vh, 32px); display: flex; flex-direction: column; gap: 12px;
   transition: opacity .35s ease, transform .35s ease;
   opacity: 1; transform: translateY(0);
 }
 .carousel-text.fading { opacity: 0; transform: translateY(6px); }
-.carousel-copy { min-height: 66px; display: flex; flex-direction: column; gap: 6px; }
+.carousel-copy { min-height: 0; display: flex; flex-direction: column; gap: 6px; }
 .carousel-title { margin: 0; font-size: 16px; font-weight: 700; color: #fff; }
 .carousel-desc { margin: 0; font-size: 13px; color: rgba(255,255,255,.72); line-height: 1.55; max-width: 460px; }
 .carousel-dots { display: flex; gap: 7px; }
@@ -144,11 +154,13 @@
 /* ── Right Panel — form ──────────────────────────────── */
 .login-right {
   position: relative;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 56px 44px;
+  padding: clamp(24px, 6vh, 56px) 44px;
   background: #fff;
+  overflow-y: auto;
 }
 
 .prefs-row { position: absolute; top: 40px; right: 44px; display: flex; gap: 18px; }
