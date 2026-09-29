@@ -1,0 +1,75 @@
+{
+  "common": {
+    "actions": "Acciones",
+    "edit": "Editar",
+    "search": "Buscar",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "saving": "Guardando...",
+    "delete": "Eliminar",
+    "confirm": "Confirmar",
+    "loading": "Cargando...",
+    "tooltips": {
+      "columns": "Columnas",
+      "dragColumn": "Arrastrar columna",
+      "noInfo": "Sin información",
+      "viewDetails": "Ver detalles",
+      "close": "Cerrar"
+    },
+    "columns": {
+      "allVisible": "Todas las columnas están visibles.",
+      "noMatch": "Ninguna columna disponible coincide con la búsqueda.",
+      "subtitle": "Activa, desactiva o arrastra para reordenar",
+      "title": "Columnas",
+      "search": "Buscar columna"
+    }
+  },
+  "nav": {
+    "dashboard": "Panel",
+    "dimensoes": "Dimensiones",
+    "pacotes": "Paquetes",
+    "configuracoes": "Configuración",
+    "sistema": "Sistema",
+    "logout": "Salir",
+    "langPT": "Portugués",
+    "langEN": "Inglés",
+    "langES": "Español"
+  },
+  "labels": {
+    "budgetPackage": "Paquete",
+    "budgetPackagePlural": "Paquetes"
+  },
+  "auth": {
+    "title": "Iniciar sesión",
+    "subtitle": "Accede a Sistema Financeiro",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "rememberMe": "Recordarme",
+    "signIn": "Entrar",
+    "signingIn": "Entrando...",
+    "forgotPassword": "Olvidé mi contraseña",
+    "showPassword": "Mostrar contraseña",
+    "hidePassword": "Ocultar contraseña",
+    "invalidCredentials": "Correo o contraseña incorrectos.",
+    "emailNotConfirmed": "Confirma tu correo antes de entrar.",
+    "tooManyRequests": "Demasiados intentos. Intenta de nuevo en un momento.",
+    "generic": "No se pudo entrar. Intenta de nuevo."
+  },
+  "dimensions": {
+    "title": "Dimensiones",
+    "year": "Año",
+    "new": "Nuevo ítem",
+    "edit": "Editar ítem",
+    "code": "Código",
+    "name": "Nombre",
+    "parent": "Ítem superior",
+    "noParent": "Ninguno (raíz)",
+    "validFrom": "Vigente desde",
+    "activeFrom": "Vigente desde {year}",
+    "deleteConfirmTitle": "Finalizar vigencia",
+    "deleteConfirmBody": "\"{name}\" deja de aplicar a partir de {year}. El historial de años anteriores se conserva.",
+    "emptyMessage": "Ningún ítem registrado para {year}.",
+    "searchPlaceholder": "Buscar por nombre o código",
+    "maxDepthReached": "Profundidad máxima de 10 niveles alcanzada."
+  }
+}

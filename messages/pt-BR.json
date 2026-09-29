@@ -3,6 +3,12 @@
     "actions": "Ações",
     "edit": "Editar",
     "search": "Buscar",
+    "cancel": "Cancelar",
+    "save": "Salvar",
+    "saving": "Salvando...",
+    "delete": "Excluir",
+    "confirm": "Confirmar",
+    "loading": "Carregando...",
     "tooltips": {
       "columns": "Colunas",
       "dragColumn": "Arrastar coluna",
@@ -14,7 +20,56 @@
       "allVisible": "Todas as colunas estão visíveis.",
       "noMatch": "Nenhuma coluna disponível corresponde à busca.",
       "subtitle": "Ative, desative ou arraste para reordenar",
-      "title": "Colunas"
+      "title": "Colunas",
+      "search": "Buscar coluna"
     }
+  },
+  "nav": {
+    "dashboard": "Painel",
+    "dimensoes": "Dimensões",
+    "pacotes": "Pacotes",
+    "configuracoes": "Configurações",
+    "sistema": "Sistema",
+    "logout": "Sair",
+    "langPT": "Português",
+    "langEN": "Inglês",
+    "langES": "Espanhol"
+  },
+  "labels": {
+    "budgetPackage": "Pacote",
+    "budgetPackagePlural": "Pacotes"
+  },
+  "auth": {
+    "title": "Entrar",
+    "subtitle": "Acesse o Sistema Financeiro",
+    "email": "E-mail",
+    "password": "Senha",
+    "rememberMe": "Lembrar-me",
+    "signIn": "Entrar",
+    "signingIn": "Entrando...",
+    "forgotPassword": "Esqueci minha senha",
+    "showPassword": "Mostrar senha",
+    "hidePassword": "Ocultar senha",
+    "invalidCredentials": "E-mail ou senha incorretos.",
+    "emailNotConfirmed": "Confirme seu e-mail antes de entrar.",
+    "tooManyRequests": "Muitas tentativas. Tente novamente em instantes.",
+    "generic": "Não foi possível entrar. Tente novamente."
+  },
+  "dimensions": {
+    "title": "Dimensões",
+    "year": "Ano",
+    "new": "Novo item",
+    "edit": "Editar item",
+    "code": "Código",
+    "name": "Nome",
+    "parent": "Item superior",
+    "noParent": "Nenhum (raiz)",
+    "validFrom": "Vigente a partir de",
+    "activeFrom": "Vigente desde {year}",
+    "deleteConfirmTitle": "Encerrar vigência",
+    "deleteConfirmBody": "\"{name}\" deixa de valer a partir de {year}. O histórico de anos anteriores é preservado.",
+    "emptyMessage": "Nenhum item cadastrado para {year}.",
+    "searchPlaceholder": "Buscar por nome ou código",
+    "maxDepthReached": "Profundidade máxima de 10 níveis atingida."
   }
 }
