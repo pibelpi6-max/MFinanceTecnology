@@ -225,16 +225,78 @@ create policy tenant_isolation_select on expense_entries
 create policy tenant_isolation_write on expense_entries
     for insert with check (tenant_id in (select auth_tenant_ids()));
 
--- TODO: replicar as 3 policies acima (select/insert/update) para:
--- dimension_types, dimension_nodes, budget_packages, tolerances,
--- deviation_explanations. dimension_node_versions herda o tenant via
--- join com dimension_nodes (policy via subquery).
+-- Demais tabelas com tenant_id direto: mesmo padrão select/insert/update.
+create policy tenant_isolation_select on dimension_types
+    for select using (tenant_id in (select auth_tenant_ids()));
+create policy tenant_isolation_write on dimension_types
+    for insert with check (tenant_id in (select auth_tenant_ids()));
+create policy tenant_isolation_update on dimension_types
+    for update using (tenant_id in (select auth_tenant_ids()));
+
+create policy tenant_isolation_select on dimension_nodes
+    for select using (tenant_id in (select auth_tenant_ids()));
+create policy tenant_isolation_write on dimension_nodes
+    for insert with check (tenant_id in (select auth_tenant_ids()));
+create policy tenant_isolation_update on dimension_nodes
+    for update using (tenant_id in (select auth_tenant_ids()));
+
+create policy tenant_isolation_select on budget_packages
+    for select using (tenant_id in (select auth_tenant_ids()));
+create policy tenant_isolation_write on budget_packages
+    for insert with check (tenant_id in (select auth_tenant_ids()));
+create policy tenant_isolation_update on budget_packages
+    for update using (tenant_id in (select auth_tenant_ids()));
+
+create policy tenant_isolation_select on tolerances
+    for select using (tenant_id in (select auth_tenant_ids()));
+create policy tenant_isolation_write on tolerances
+    for insert with check (tenant_id in (select auth_tenant_ids()));
+create policy tenant_isolation_update on tolerances
+    for update using (tenant_id in (select auth_tenant_ids()));
+
+create policy tenant_isolation_select on deviation_explanations
+    for select using (tenant_id in (select auth_tenant_ids()));
+create policy tenant_isolation_write on deviation_explanations
+    for insert with check (tenant_id in (select auth_tenant_ids()));
+
+-- dimension_node_versions não tem tenant_id direto: herda via join com
+-- dimension_nodes.
+create policy tenant_isolation_select on dimension_node_versions
+    for select using (
+        dimension_node_id in (
+            select id from dimension_nodes where tenant_id in (select auth_tenant_ids())
+        )
+    );
+create policy tenant_isolation_write on dimension_node_versions
+    for insert with check (
+        dimension_node_id in (
+            select id from dimension_nodes where tenant_id in (select auth_tenant_ids())
+        )
+    );
+create policy tenant_isolation_update on dimension_node_versions
+    for update using (
+        dimension_node_id in (
+            select id from dimension_nodes where tenant_id in (select auth_tenant_ids())
+        )
+    );
+
+-- profiles e user_tenant_roles: cada usuário só vê/edita o próprio registro
+-- (o vínculo com tenants é gerenciado à parte, fora do fluxo de app comum).
+alter table profiles enable row level security;
+alter table user_tenant_roles enable row level security;
+
+create policy own_profile_select on profiles
+    for select using (id = auth.uid());
+create policy own_profile_update on profiles
+    for update using (id = auth.uid());
+
+create policy own_roles_select on user_tenant_roles
+    for select using (user_id = auth.uid());
 
 -- =====================================================================
 -- Próximos passos sugeridos:
 -- 1. Rodar este arquivo no Supabase (SQL Editor ou CLI).
 -- 2. Popular dimension_types com os 3 tipos base (Centro de Custo,
 --    Conta, Entidade) por tenant.
--- 3. Completar as RLS policies faltantes (ver TODO acima).
--- 4. Definir a tela/fluxo de elaboração de pacote (status transitions).
+-- 3. Definir a tela/fluxo de elaboração de pacote (status transitions).
 -- =====================================================================
