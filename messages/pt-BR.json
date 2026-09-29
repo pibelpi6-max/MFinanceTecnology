@@ -1,0 +1,20 @@
+{
+  "common": {
+    "actions": "Ações",
+    "edit": "Editar",
+    "search": "Buscar",
+    "tooltips": {
+      "columns": "Colunas",
+      "dragColumn": "Arrastar coluna",
+      "noInfo": "Sem informações",
+      "viewDetails": "Ver detalhes",
+      "close": "Fechar"
+    },
+    "columns": {
+      "allVisible": "Todas as colunas estão visíveis.",
+      "noMatch": "Nenhuma coluna disponível corresponde à busca.",
+      "subtitle": "Ative, desative ou arraste para reordenar",
+      "title": "Colunas"
+    }
+  }
+}
