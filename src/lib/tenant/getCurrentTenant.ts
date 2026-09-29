@@ -15,14 +15,28 @@ export async function getCurrentTenant(): Promise<CurrentTenant | null> {
   } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("user_tenant_roles")
     .select("role, tenant_id, tenants(name)")
     .eq("user_id", user.id)
     .limit(1)
     .maybeSingle();
 
-  if (!data) return null;
+  if (error) {
+    console.error("[getCurrentTenant] erro ao buscar vínculo:", {
+      userId: user.id,
+      userEmail: user.email,
+      error,
+    });
+  }
+
+  if (!data) {
+    console.warn("[getCurrentTenant] nenhum vínculo encontrado para:", {
+      userId: user.id,
+      userEmail: user.email,
+    });
+    return null;
+  }
 
   const tenantName = Array.isArray(data.tenants)
     ? (data.tenants[0] as { name: string } | undefined)?.name

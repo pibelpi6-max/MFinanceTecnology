@@ -41,7 +41,7 @@ export async function getDimensionTree(
     .from("dimension_nodes")
     .select(
       `id, code,
-       dimension_node_versions!inner (
+       dimension_node_versions!dimension_node_id!inner (
          id, name, parent_node_id, level, valid_from_year, valid_until_year
        )`
     )
