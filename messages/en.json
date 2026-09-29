@@ -41,25 +41,51 @@
     "budgetPackagePlural": "Packages"
   },
   "auth": {
-    "pretitle": "Secure Access",
-    "title": "Sign in",
-    "subtitle": "Access Sistema Financeiro",
-    "tagLine1": "Budgeting and financial management,",
-    "tagLine2Pre": "with ",
-    "tagWords": ["clarity", "control", "foresight", "intelligence", "confidence"],
-    "tagDesc": "Bring your company's budget, expenses and KPIs together in one place, with the same FP&A structure large enterprises use.",
-    "tagFooter": "Built for small and mid-sized businesses",
+    "brandLabel": "Sistema Financeiro",
+    "headline": "Full visibility into your budget.",
+    "headlineDesc": "From the budget matrix to month-end close, every cost center in a single corporate dashboard.",
+    "welcomeTitle": "Welcome back",
+    "welcomeSubtitle": "Sign in with your corporate credentials.",
+    "slides": [
+      {
+        "title": "Real-time budget matrix",
+        "desc": "Enter, review and approve values by cost center, with totals recalculated instantly.",
+        "badge": "▲ 12.4% vs budget"
+      },
+      {
+        "title": "Multi-company consolidation",
+        "desc": "Track subsidiaries and business units in a single dashboard, no more loose spreadsheets.",
+        "badge": "3 units consolidated"
+      },
+      {
+        "title": "From budget to actuals",
+        "desc": "Compare targets with the month's results and explain variances without leaving the system.",
+        "badge": "▲ 23.5% in results"
+      }
+    ],
+    "visual": {
+      "matrixTitle": "Budget matrix — March",
+      "consolidated": "Consolidated",
+      "colSP": "SP Branch",
+      "colRJ": "RJ Branch",
+      "colHQ": "HQ",
+      "rowRevenue": "Revenue",
+      "rowCosts": "Costs",
+      "rowResult": "Result",
+      "consolidationTitle": "Consolidation — units",
+      "budgetActualTitle": "Budget vs. actual — March"
+    },
     "localeLabel": "Language",
-    "email": "Email",
-    "emailPlaceholder": "you@email.com",
+    "email": "Corporate email",
+    "emailPlaceholder": "you@yourcompany.com",
     "password": "Password",
     "passwordPlaceholder": "••••••••",
     "rememberMe": "Remember me",
     "signIn": "Sign in",
     "signingIn": "Signing in...",
-    "forgotPassword": "Forgot my password",
-    "showPassword": "Show password",
-    "hidePassword": "Hide password",
+    "forgotPassword": "Forgot password",
+    "showPassword": "Show",
+    "hidePassword": "Hide",
     "invalidCredentials": "Incorrect email or password.",
     "invalidEmail": "Enter a valid email address.",
     "emailNotConfirmed": "Please confirm your email before signing in.",
