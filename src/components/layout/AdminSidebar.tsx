@@ -54,6 +54,9 @@ export function AdminSidebar({
   useEffect(() => {
     router.prefetch("/admin");
     router.prefetch("/admin/orcamento/matriz");
+    router.prefetch("/admin/orcamento/realizado");
+    router.prefetch("/admin/orcamento/comparativo");
+    router.prefetch("/admin/pacotes");
     for (const d of dimensionTypes) router.prefetch(`/admin/dimensoes/${d.code}`);
   }, [router, dimensionTypes]);
 
@@ -129,6 +132,26 @@ export function AdminSidebar({
             <span className="sb-label">{t("matriz")}</span>
           </button>
 
+          <button
+            onClick={(e) => { e.stopPropagation(); router.push("/admin/orcamento/realizado"); }}
+            className={cl("sb-item", isActive("/admin/orcamento/realizado"))}
+          >
+            <svg className="sb-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 14.25 12 18l3-3.75M3 6.75h18M5.25 6.75v11.5c0 .69.56 1.25 1.25 1.25h11c.69 0 1.25-.56 1.25-1.25V6.75" />
+            </svg>
+            <span className="sb-label">{t("realizado")}</span>
+          </button>
+
+          <button
+            onClick={(e) => { e.stopPropagation(); router.push("/admin/orcamento/comparativo"); }}
+            className={cl("sb-item", isActive("/admin/orcamento/comparativo"))}
+          >
+            <svg className="sb-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 17.25V9.75M12 17.25V6.75M15 17.25v-4.5M3.75 20.25h16.5" />
+            </svg>
+            <span className="sb-label">{t("comparativo")}</span>
+          </button>
+
           <div className="sb-sep" />
 
           <button
@@ -165,7 +188,10 @@ export function AdminSidebar({
             </div>
           )}
 
-          <button className="sb-item sb-item-blocked" onClick={(e) => e.stopPropagation()}>
+          <button
+            onClick={(e) => { e.stopPropagation(); router.push("/admin/pacotes"); }}
+            className={cl("sb-item", isActive("/admin/pacotes"))}
+          >
             <svg className="sb-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" />
             </svg>
