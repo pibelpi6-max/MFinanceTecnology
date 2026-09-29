@@ -125,8 +125,18 @@
     "unsavedChanges": "{count} célula(s) não salva(s)",
     "missingSetup": "Cadastre pelo menos uma Entidade, um Centro de Custo e uma Conta em Dimensões antes de lançar o orçamento.",
     "months": {
-      "jan": "Jan", "fev": "Fev", "mar": "Mar", "abr": "Abr", "mai": "Mai", "jun": "Jun",
-      "jul": "Jul", "ago": "Ago", "set": "Set", "out": "Out", "nov": "Nov", "dez": "Dez"
+      "jan": "Jan",
+      "fev": "Fev",
+      "mar": "Mar",
+      "abr": "Abr",
+      "mai": "Mai",
+      "jun": "Jun",
+      "jul": "Jul",
+      "ago": "Ago",
+      "set": "Set",
+      "out": "Out",
+      "nov": "Nov",
+      "dez": "Dez"
     }
   },
   "packages": {
@@ -191,5 +201,31 @@
     "explanationPlaceholder": "Descreva o motivo do desvio...",
     "suggestWithAI": "Sugerir com IA",
     "suggesting": "Gerando sugestão..."
+  },
+  "settings": {
+    "period": {
+      "title": "Período orçamentário",
+      "intro": "Mês em que o exercício orçamentário da empresa começa. Hoje a Matriz, o Realizado e o Comparativo continuam considerando o ano civil (janeiro a dezembro); ajustar esses filtros para seguir o mês de início é um próximo passo.",
+      "startMonth": "Mês de início do exercício",
+      "save": "Salvar",
+      "saving": "Salvando...",
+      "saved": "Salvo.",
+      "adminOnly": "Apenas administradores podem alterar."
+    },
+    "dimensions": {
+      "title": "Dimensões",
+      "intro": "Gerencie o nome e a descrição de cada dimensão da empresa, e crie dimensões personalizadas além de Centro de Custo, Conta e Entidade.",
+      "name": "Nome",
+      "code": "Código",
+      "fieldDescription": "Descrição",
+      "system": "Padrão do sistema",
+      "custom": "Personalizada",
+      "noDescription": "Sem descrição.",
+      "new": "Nova dimensão",
+      "edit": "Editar",
+      "codeHint": "Usado internamente; só letras minúsculas, números e _.",
+      "limitReached": "Limite de 10 dimensões personalizadas atingido.",
+      "adminOnly": "Apenas administradores podem editar."
+    }
   }
 }

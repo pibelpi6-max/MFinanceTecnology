@@ -3,6 +3,7 @@ export interface DimensionType {
   tenant_id: string;
   code: string;
   name: string;
+  description: string | null;
   is_system: boolean;
   sort_order: number;
 }

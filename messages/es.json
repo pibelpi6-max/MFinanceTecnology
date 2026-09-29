@@ -125,8 +125,18 @@
     "unsavedChanges": "{count} celda(s) sin guardar",
     "missingSetup": "Configura al menos una Entidad, un Centro de Costo y una Cuenta en Dimensiones antes de ingresar el presupuesto.",
     "months": {
-      "jan": "Ene", "fev": "Feb", "mar": "Mar", "abr": "Abr", "mai": "May", "jun": "Jun",
-      "jul": "Jul", "ago": "Ago", "set": "Sep", "out": "Oct", "nov": "Nov", "dez": "Dic"
+      "jan": "Ene",
+      "fev": "Feb",
+      "mar": "Mar",
+      "abr": "Abr",
+      "mai": "May",
+      "jun": "Jun",
+      "jul": "Jul",
+      "ago": "Ago",
+      "set": "Sep",
+      "out": "Oct",
+      "nov": "Nov",
+      "dez": "Dic"
     }
   },
   "packages": {
@@ -191,5 +201,31 @@
     "explanationPlaceholder": "Describe el motivo del desvío...",
     "suggestWithAI": "Sugerir con IA",
     "suggesting": "Generando sugerencia..."
+  },
+  "settings": {
+    "period": {
+      "title": "Período presupuestario",
+      "intro": "Mes en que comienza el ejercicio presupuestario de la empresa. La Matriz, lo Realizado y el Comparativo aún consideran el año calendario (enero-diciembre); ajustar esos filtros al mes de inicio queda como próximo paso.",
+      "startMonth": "Mes de inicio del ejercicio",
+      "save": "Guardar",
+      "saving": "Guardando...",
+      "saved": "Guardado.",
+      "adminOnly": "Solo los administradores pueden cambiarlo."
+    },
+    "dimensions": {
+      "title": "Dimensiones",
+      "intro": "Gestione el nombre y la descripción de cada dimensión, y cree dimensiones personalizadas además de Centro de Costo, Cuenta y Entidad.",
+      "name": "Nombre",
+      "code": "Código",
+      "fieldDescription": "Descripción",
+      "system": "Predeterminada del sistema",
+      "custom": "Personalizada",
+      "noDescription": "Sin descripción.",
+      "new": "Nueva dimensión",
+      "edit": "Editar",
+      "codeHint": "Uso interno; solo minúsculas, números y _.",
+      "limitReached": "Límite de 10 dimensiones personalizadas alcanzado.",
+      "adminOnly": "Solo los administradores pueden editarlo."
+    }
   }
 }

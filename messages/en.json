@@ -125,8 +125,18 @@
     "unsavedChanges": "{count} unsaved cell(s)",
     "missingSetup": "Set up at least one Entity, Cost Center and Account in Dimensions before entering the budget.",
     "months": {
-      "jan": "Jan", "fev": "Feb", "mar": "Mar", "abr": "Apr", "mai": "May", "jun": "Jun",
-      "jul": "Jul", "ago": "Aug", "set": "Sep", "out": "Oct", "nov": "Nov", "dez": "Dec"
+      "jan": "Jan",
+      "fev": "Feb",
+      "mar": "Mar",
+      "abr": "Apr",
+      "mai": "May",
+      "jun": "Jun",
+      "jul": "Jul",
+      "ago": "Aug",
+      "set": "Sep",
+      "out": "Oct",
+      "nov": "Nov",
+      "dez": "Dec"
     }
   },
   "packages": {
@@ -191,5 +201,31 @@
     "explanationPlaceholder": "Describe the reason for the deviation...",
     "suggestWithAI": "Suggest with AI",
     "suggesting": "Generating suggestion..."
+  },
+  "settings": {
+    "period": {
+      "title": "Budget period",
+      "intro": "The month the company's fiscal year begins. The Matrix, Actuals and Comparison screens still use the calendar year (Jan–Dec) for now; wiring those filters to the start month is a follow-up.",
+      "startMonth": "Fiscal year start month",
+      "save": "Save",
+      "saving": "Saving...",
+      "saved": "Saved.",
+      "adminOnly": "Only admins can change this."
+    },
+    "dimensions": {
+      "title": "Dimensions",
+      "intro": "Manage the name and description of each dimension, and create custom dimensions beyond Cost Center, Account and Entity.",
+      "name": "Name",
+      "code": "Code",
+      "fieldDescription": "Description",
+      "system": "System default",
+      "custom": "Custom",
+      "noDescription": "No description.",
+      "new": "New dimension",
+      "edit": "Edit",
+      "codeHint": "Used internally; lowercase letters, numbers and _ only.",
+      "limitReached": "Limit of 10 custom dimensions reached.",
+      "adminOnly": "Only admins can edit this."
+    }
   }
 }

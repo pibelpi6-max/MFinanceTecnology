@@ -7,7 +7,7 @@ export async function getDimensionTypes(
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("dimension_types")
-    .select("id, tenant_id, code, name, is_system, sort_order")
+    .select("id, tenant_id, code, name, description, is_system, sort_order")
     .eq("tenant_id", tenantId)
     .order("sort_order", { ascending: true });
 
@@ -22,7 +22,7 @@ export async function getDimensionTypeByCode(
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("dimension_types")
-    .select("id, tenant_id, code, name, is_system, sort_order")
+    .select("id, tenant_id, code, name, description, is_system, sort_order")
     .eq("tenant_id", tenantId)
     .eq("code", code)
     .maybeSingle();

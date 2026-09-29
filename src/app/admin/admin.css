@@ -107,7 +107,7 @@
 .admin-main > main, .admin-page-content { flex: 1; overflow-y: auto; min-height: 0; display: flex; flex-direction: column; }
 
 .admin-topbar { background: #fff; border-bottom: 1px solid rgba(0,0,0,.06); padding: 0 24px; height: 56px; display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-shrink: 0; }
-.admin-topbar-logo { font-family: "Syne", sans-serif; font-size: 17px; font-weight: 800; letter-spacing: .05em; color: #ccc; }
+.admin-topbar-logo { font-size: 15px; font-weight: 700; letter-spacing: -.01em; color: #ccc; }
 .admin-topbar-logo span { color: #3E6FE0; }
 .admin-flags { display: flex; gap: 4px; align-items: center; }
 .flag-btn { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: all .15s; flex-shrink: 0; display: flex; align-items: center; justify-content: center; opacity: .5; background: transparent; padding: 2px; }
@@ -117,7 +117,7 @@
 
 .admin-subheader { background: #fff; border-bottom: 1px solid rgba(0,0,0,.06); padding: 0 24px; height: 56px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
 .admin-page-crumb { font-size: 10px; color: var(--text-muted); letter-spacing: .06em; text-transform: uppercase; font-weight: 500; }
-.admin-page-title { font-family: "Syne", sans-serif; font-size: 18px; font-weight: 700; color: var(--text-strong); line-height: 1.1; }
+.admin-page-title { font-size: 18px; font-weight: 600; letter-spacing: -.01em; color: var(--text-strong); line-height: 1.1; }
 .admin-page-actions { display: flex; align-items: center; gap: 8px; }
 
 .admin-content { padding: 16px 24px 24px; flex: 1; overflow: hidden; }
@@ -194,3 +194,30 @@
 
 /* ── Comparativo (orçado x realizado) ─────────────────── */
 .comparativo-row-over td { background: rgba(220,38,38,.04); }
+
+/* ── Parâmetros (Configurações) ───────────────────────── */
+.admin-content--scroll { overflow-y: auto; overflow-x: hidden; }
+.settings-stack { display: flex; flex-direction: column; gap: 16px; max-width: 760px; }
+.settings-card { background: #fff; border-radius: 12px; border: 1px solid rgba(0,0,0,.06); }
+.settings-card-header { padding: 16px 20px 0; }
+.settings-card-header--row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.settings-card-title { font-size: 14px; font-weight: 700; color: var(--text-strong); margin: 0 0 4px; }
+.settings-card-intro { font-size: 12.5px; color: var(--text-muted); line-height: 1.5; margin: 0; max-width: 560px; }
+.settings-card-body { padding: 14px 20px 20px; }
+.settings-field-label { display: block; font-size: 12px; font-weight: 600; color: #666; margin-bottom: 6px; }
+.settings-saved-hint { color: #15803d; font-size: 12px; font-weight: 600; }
+.settings-admin-hint { font-size: 11.5px; color: var(--text-muted); margin-top: 6px; }
+
+.settings-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.settings-table th {
+  text-align: left; font-size: 10.5px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--text-muted); padding: 8px 10px; border-bottom: 1px solid rgba(0,0,0,.06);
+}
+.settings-table td { padding: 10px; border-bottom: 1px solid rgba(0,0,0,.04); vertical-align: top; }
+.settings-table tr:last-child td { border-bottom: none; }
+.settings-code { font-size: 11.5px; color: #888; background: #f4f5f8; border-radius: 5px; padding: 1px 6px; }
+.settings-edit-link { font-size: 12px; font-weight: 600; color: #3E6FE0; background: none; border: none; cursor: pointer; padding: 4px 6px; }
+.settings-edit-link:hover { text-decoration: underline; }
+
+.type-badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 600; white-space: nowrap; background: rgba(62,111,224,.1); color: #3E6FE0; }
+.type-badge--system { background: #f1f2f6; color: #5b5f76; }
