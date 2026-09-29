@@ -27,6 +27,7 @@
   "nav": {
     "dashboard": "Painel",
     "dimensoes": "Dimensões",
+    "matriz": "Matriz Orçamentária",
     "pacotes": "Pacotes",
     "configuracoes": "Configurações",
     "sistema": "Sistema",
@@ -40,10 +41,19 @@
     "budgetPackagePlural": "Pacotes"
   },
   "auth": {
+    "pretitle": "Acesso Seguro",
     "title": "Entrar",
     "subtitle": "Acesse o Sistema Financeiro",
+    "tagLine1": "Orçamento e gestão financeira,",
+    "tagLine2Pre": "com ",
+    "tagWords": ["clareza", "controle", "previsibilidade", "inteligência", "confiança"],
+    "tagDesc": "Centralize orçamento, despesas e indicadores da sua empresa em um só lugar, com a mesma estrutura de FP&A que as grandes empresas usam.",
+    "tagFooter": "Feito para pequenas e médias empresas",
+    "localeLabel": "Idioma",
     "email": "E-mail",
+    "emailPlaceholder": "seu@email.com",
     "password": "Senha",
+    "passwordPlaceholder": "••••••••",
     "rememberMe": "Lembrar-me",
     "signIn": "Entrar",
     "signingIn": "Entrando...",
@@ -51,8 +61,10 @@
     "showPassword": "Mostrar senha",
     "hidePassword": "Ocultar senha",
     "invalidCredentials": "E-mail ou senha incorretos.",
+    "invalidEmail": "Informe um e-mail válido.",
     "emailNotConfirmed": "Confirme seu e-mail antes de entrar.",
     "tooManyRequests": "Muitas tentativas. Tente novamente em instantes.",
+    "connectionTimeout": "Tempo de conexão esgotado. Tente novamente.",
     "generic": "Não foi possível entrar. Tente novamente."
   },
   "dimensions": {
@@ -71,5 +83,22 @@
     "emptyMessage": "Nenhum item cadastrado para {year}.",
     "searchPlaceholder": "Buscar por nome ou código",
     "maxDepthReached": "Profundidade máxima de 10 níveis atingida."
+  },
+  "budget": {
+    "title": "Matriz Orçamentária",
+    "entity": "Entidade",
+    "account": "Conta",
+    "rowTotal": "Total",
+    "columnTotal": "Total",
+    "save": "Salvar",
+    "saving": "Salvando...",
+    "discard": "Descartar",
+    "savedSuccess": "Alterações salvas.",
+    "unsavedChanges": "{count} célula(s) não salva(s)",
+    "missingSetup": "Cadastre pelo menos uma Entidade, um Centro de Custo e uma Conta em Dimensões antes de lançar o orçamento.",
+    "months": {
+      "jan": "Jan", "fev": "Fev", "mar": "Mar", "abr": "Abr", "mai": "Mai", "jun": "Jun",
+      "jul": "Jul", "ago": "Ago", "set": "Set", "out": "Out", "nov": "Nov", "dez": "Dez"
+    }
   }
 }

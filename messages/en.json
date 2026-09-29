@@ -27,6 +27,7 @@
   "nav": {
     "dashboard": "Dashboard",
     "dimensoes": "Dimensions",
+    "matriz": "Budget Matrix",
     "pacotes": "Packages",
     "configuracoes": "Settings",
     "sistema": "System",
@@ -40,10 +41,19 @@
     "budgetPackagePlural": "Packages"
   },
   "auth": {
+    "pretitle": "Secure Access",
     "title": "Sign in",
     "subtitle": "Access Sistema Financeiro",
+    "tagLine1": "Budgeting and financial management,",
+    "tagLine2Pre": "with ",
+    "tagWords": ["clarity", "control", "foresight", "intelligence", "confidence"],
+    "tagDesc": "Bring your company's budget, expenses and KPIs together in one place, with the same FP&A structure large enterprises use.",
+    "tagFooter": "Built for small and mid-sized businesses",
+    "localeLabel": "Language",
     "email": "Email",
+    "emailPlaceholder": "you@email.com",
     "password": "Password",
+    "passwordPlaceholder": "••••••••",
     "rememberMe": "Remember me",
     "signIn": "Sign in",
     "signingIn": "Signing in...",
@@ -51,8 +61,10 @@
     "showPassword": "Show password",
     "hidePassword": "Hide password",
     "invalidCredentials": "Incorrect email or password.",
+    "invalidEmail": "Enter a valid email address.",
     "emailNotConfirmed": "Please confirm your email before signing in.",
     "tooManyRequests": "Too many attempts. Please try again shortly.",
+    "connectionTimeout": "Connection timed out. Please try again.",
     "generic": "Couldn't sign in. Please try again."
   },
   "dimensions": {
@@ -71,5 +83,22 @@
     "emptyMessage": "No items registered for {year}.",
     "searchPlaceholder": "Search by name or code",
     "maxDepthReached": "Maximum depth of 10 levels reached."
+  },
+  "budget": {
+    "title": "Budget Matrix",
+    "entity": "Entity",
+    "account": "Account",
+    "rowTotal": "Total",
+    "columnTotal": "Total",
+    "save": "Save",
+    "saving": "Saving...",
+    "discard": "Discard",
+    "savedSuccess": "Changes saved.",
+    "unsavedChanges": "{count} unsaved cell(s)",
+    "missingSetup": "Set up at least one Entity, Cost Center and Account in Dimensions before entering the budget.",
+    "months": {
+      "jan": "Jan", "fev": "Feb", "mar": "Mar", "abr": "Apr", "mai": "May", "jun": "Jun",
+      "jul": "Jul", "ago": "Aug", "set": "Sep", "out": "Oct", "nov": "Nov", "dez": "Dec"
+    }
   }
 }
