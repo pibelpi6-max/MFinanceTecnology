@@ -27,6 +27,7 @@
   "nav": {
     "dashboard": "Panel",
     "dimensoes": "Dimensiones",
+    "matriz": "Matriz Presupuestaria",
     "pacotes": "Paquetes",
     "configuracoes": "Configuración",
     "sistema": "Sistema",
@@ -40,10 +41,19 @@
     "budgetPackagePlural": "Paquetes"
   },
   "auth": {
+    "pretitle": "Acceso Seguro",
     "title": "Iniciar sesión",
     "subtitle": "Accede a Sistema Financeiro",
+    "tagLine1": "Presupuesto y gestión financiera,",
+    "tagLine2Pre": "con ",
+    "tagWords": ["claridad", "control", "previsibilidad", "inteligencia", "confianza"],
+    "tagDesc": "Centraliza el presupuesto, los gastos y los indicadores de tu empresa en un solo lugar, con la misma estructura de FP&A que usan las grandes empresas.",
+    "tagFooter": "Hecho para pequeñas y medianas empresas",
+    "localeLabel": "Idioma",
     "email": "Correo electrónico",
+    "emailPlaceholder": "tu@email.com",
     "password": "Contraseña",
+    "passwordPlaceholder": "••••••••",
     "rememberMe": "Recordarme",
     "signIn": "Entrar",
     "signingIn": "Entrando...",
@@ -51,8 +61,10 @@
     "showPassword": "Mostrar contraseña",
     "hidePassword": "Ocultar contraseña",
     "invalidCredentials": "Correo o contraseña incorrectos.",
+    "invalidEmail": "Ingresa un correo válido.",
     "emailNotConfirmed": "Confirma tu correo antes de entrar.",
     "tooManyRequests": "Demasiados intentos. Intenta de nuevo en un momento.",
+    "connectionTimeout": "Tiempo de conexión agotado. Inténtalo de nuevo.",
     "generic": "No se pudo entrar. Intenta de nuevo."
   },
   "dimensions": {
@@ -71,5 +83,22 @@
     "emptyMessage": "Ningún ítem registrado para {year}.",
     "searchPlaceholder": "Buscar por nombre o código",
     "maxDepthReached": "Profundidad máxima de 10 niveles alcanzada."
+  },
+  "budget": {
+    "title": "Matriz Presupuestaria",
+    "entity": "Entidad",
+    "account": "Cuenta",
+    "rowTotal": "Total",
+    "columnTotal": "Total",
+    "save": "Guardar",
+    "saving": "Guardando...",
+    "discard": "Descartar",
+    "savedSuccess": "Cambios guardados.",
+    "unsavedChanges": "{count} celda(s) sin guardar",
+    "missingSetup": "Configura al menos una Entidad, un Centro de Costo y una Cuenta en Dimensiones antes de ingresar el presupuesto.",
+    "months": {
+      "jan": "Ene", "fev": "Feb", "mar": "Mar", "abr": "Abr", "mai": "May", "jun": "Jun",
+      "jul": "Jul", "ago": "Ago", "set": "Sep", "out": "Oct", "nov": "Nov", "dez": "Dic"
+    }
   }
 }

@@ -129,3 +129,54 @@
   cursor: pointer;
 }
 .year-select:focus { outline: none; border-color: #3E6FE0; box-shadow: 0 0 0 3px rgba(62,111,224,.15); }
+
+/* ── Matriz orçamentária ──────────────────────────── */
+.matrix-filters { display: flex; align-items: center; gap: 8px; }
+
+.matrix-wrap { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.matrix-toolbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px; border-bottom: 1px solid rgba(0,0,0,.06); flex-shrink: 0; gap: 12px;
+}
+.matrix-toolbar-info { display: flex; align-items: center; gap: 10px; font-size: 12px; min-height: 20px; }
+.matrix-dirty-hint { color: #b45309; font-weight: 600; }
+.matrix-saved-hint { color: #15803d; font-weight: 600; }
+.matrix-error-hint { color: #dc2626; font-weight: 600; }
+.matrix-toolbar-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+.matrix-scroll { flex: 1; overflow: auto; min-height: 0; }
+.matrix-table { border-collapse: separate; border-spacing: 0; width: max-content; min-width: 100%; font-size: 13px; }
+
+.matrix-table thead th {
+  position: sticky; top: 0; z-index: 2; background: #f9fafb;
+  border-bottom: 1px solid rgba(0,0,0,.08); font-weight: 600; color: var(--text-primary);
+  padding: 8px 10px; text-align: right; white-space: nowrap;
+}
+.matrix-th-account { position: sticky; left: 0; z-index: 3; text-align: left !important; min-width: 220px; background: #f9fafb; }
+.matrix-th-cc { min-width: 108px; }
+.matrix-th-total { min-width: 120px; }
+
+.matrix-table td { border-bottom: 1px solid rgba(0,0,0,.04); padding: 4px 6px; white-space: nowrap; }
+.matrix-td-account {
+  position: sticky; left: 0; z-index: 1; background: #fff;
+  font-weight: 500; color: var(--text-strong); min-width: 220px; padding: 6px 12px;
+  display: flex; align-items: center; gap: 6px; border-right: 1px solid rgba(0,0,0,.05);
+}
+.matrix-tree-mark { color: #ccc; }
+.matrix-td-cell { min-width: 108px; text-align: right; }
+.matrix-td-cell.dirty { background: rgba(245,158,11,.08); }
+.matrix-input {
+  width: 100%; border: 1px solid transparent; border-radius: 6px; padding: 5px 8px;
+  text-align: right; font-size: 13px; font-variant-numeric: tabular-nums; background: transparent;
+}
+.matrix-input:hover { background: #f9fafb; }
+.matrix-input:focus { outline: none; border-color: #3E6FE0; background: #fff; box-shadow: 0 0 0 3px rgba(62,111,224,.15); }
+
+.matrix-td-rowtotal { text-align: right; font-weight: 600; color: var(--text-strong); min-width: 120px; padding-right: 14px; }
+
+.matrix-table tfoot td { border-top: 2px solid rgba(0,0,0,.08); font-weight: 700; background: #f9fafb; position: sticky; bottom: 0; }
+.matrix-td-footlabel { position: sticky; left: 0; z-index: 1; background: #f9fafb; }
+.matrix-td-total { text-align: right; color: var(--text-primary); }
+.matrix-td-grandtotal { text-align: right; color: #3E6FE0; }
+
+.matrix-empty-state { display: flex; align-items: center; justify-content: center; height: 100%; padding: 40px; text-align: center; color: var(--text-content); font-size: 14px; }
