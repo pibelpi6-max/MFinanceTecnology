@@ -41,25 +41,51 @@
     "budgetPackagePlural": "Pacotes"
   },
   "auth": {
-    "pretitle": "Acesso Seguro",
-    "title": "Entrar",
-    "subtitle": "Acesse o Sistema Financeiro",
-    "tagLine1": "Orçamento e gestão financeira,",
-    "tagLine2Pre": "com ",
-    "tagWords": ["clareza", "controle", "previsibilidade", "inteligência", "confiança"],
-    "tagDesc": "Centralize orçamento, despesas e indicadores da sua empresa em um só lugar, com a mesma estrutura de FP&A que as grandes empresas usam.",
-    "tagFooter": "Feito para pequenas e médias empresas",
+    "brandLabel": "Sistema Financeiro",
+    "headline": "Visibilidade total do seu orçamento.",
+    "headlineDesc": "Da matriz orçamentária ao fechamento mensal, cada centro de custo em um único painel corporativo.",
+    "welcomeTitle": "Bem-vinda de volta",
+    "welcomeSubtitle": "Entre com suas credenciais corporativas.",
+    "slides": [
+      {
+        "title": "Matriz orçamentária em tempo real",
+        "desc": "Lance, revise e aprove valores por centro de custo, com totais recalculados na hora.",
+        "badge": "▲ 12,4% vs orçado"
+      },
+      {
+        "title": "Consolidação multiempresa",
+        "desc": "Acompanhe filiais e unidades de negócio em um único painel, sem planilhas soltas.",
+        "badge": "3 unidades consolidadas"
+      },
+      {
+        "title": "Do orçado ao realizado",
+        "desc": "Compare metas com o resultado do mês e explique desvios sem sair do sistema.",
+        "badge": "▲ 23,5% no resultado"
+      }
+    ],
+    "visual": {
+      "matrixTitle": "Matriz orçamentária — Março",
+      "consolidated": "Consolidado",
+      "colSP": "Filial SP",
+      "colRJ": "Filial RJ",
+      "colHQ": "Matriz",
+      "rowRevenue": "Receita",
+      "rowCosts": "Custos",
+      "rowResult": "Resultado",
+      "consolidationTitle": "Consolidação — unidades",
+      "budgetActualTitle": "Orçado vs. realizado — Março"
+    },
     "localeLabel": "Idioma",
-    "email": "E-mail",
-    "emailPlaceholder": "seu@email.com",
+    "email": "E-mail corporativo",
+    "emailPlaceholder": "voce@suaempresa.com.br",
     "password": "Senha",
     "passwordPlaceholder": "••••••••",
     "rememberMe": "Lembrar-me",
     "signIn": "Entrar",
     "signingIn": "Entrando...",
-    "forgotPassword": "Esqueci minha senha",
-    "showPassword": "Mostrar senha",
-    "hidePassword": "Ocultar senha",
+    "forgotPassword": "Esqueci a senha",
+    "showPassword": "Mostrar",
+    "hidePassword": "Ocultar",
     "invalidCredentials": "E-mail ou senha incorretos.",
     "invalidEmail": "Informe um e-mail válido.",
     "emailNotConfirmed": "Confirme seu e-mail antes de entrar.",

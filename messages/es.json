@@ -41,25 +41,51 @@
     "budgetPackagePlural": "Paquetes"
   },
   "auth": {
-    "pretitle": "Acceso Seguro",
-    "title": "Iniciar sesión",
-    "subtitle": "Accede a Sistema Financeiro",
-    "tagLine1": "Presupuesto y gestión financiera,",
-    "tagLine2Pre": "con ",
-    "tagWords": ["claridad", "control", "previsibilidad", "inteligencia", "confianza"],
-    "tagDesc": "Centraliza el presupuesto, los gastos y los indicadores de tu empresa en un solo lugar, con la misma estructura de FP&A que usan las grandes empresas.",
-    "tagFooter": "Hecho para pequeñas y medianas empresas",
+    "brandLabel": "Sistema Financeiro",
+    "headline": "Visibilidad total de tu presupuesto.",
+    "headlineDesc": "De la matriz presupuestaria al cierre mensual, cada centro de costo en un único panel corporativo.",
+    "welcomeTitle": "Bienvenida de nuevo",
+    "welcomeSubtitle": "Inicia sesión con tus credenciales corporativas.",
+    "slides": [
+      {
+        "title": "Matriz presupuestaria en tiempo real",
+        "desc": "Ingresa, revisa y aprueba valores por centro de costo, con totales recalculados al instante.",
+        "badge": "▲ 12,4% vs presupuesto"
+      },
+      {
+        "title": "Consolidación multiempresa",
+        "desc": "Sigue filiales y unidades de negocio en un único panel, sin hojas de cálculo sueltas.",
+        "badge": "3 unidades consolidadas"
+      },
+      {
+        "title": "Del presupuesto al resultado",
+        "desc": "Compara metas con el resultado del mes y explica desvíos sin salir del sistema.",
+        "badge": "▲ 23,5% en el resultado"
+      }
+    ],
+    "visual": {
+      "matrixTitle": "Matriz presupuestaria — Marzo",
+      "consolidated": "Consolidado",
+      "colSP": "Sucursal SP",
+      "colRJ": "Sucursal RJ",
+      "colHQ": "Matriz",
+      "rowRevenue": "Ingresos",
+      "rowCosts": "Costos",
+      "rowResult": "Resultado",
+      "consolidationTitle": "Consolidación — unidades",
+      "budgetActualTitle": "Presupuestado vs. real — Marzo"
+    },
     "localeLabel": "Idioma",
-    "email": "Correo electrónico",
-    "emailPlaceholder": "tu@email.com",
+    "email": "Correo corporativo",
+    "emailPlaceholder": "tu@tuempresa.com",
     "password": "Contraseña",
     "passwordPlaceholder": "••••••••",
     "rememberMe": "Recordarme",
     "signIn": "Entrar",
     "signingIn": "Entrando...",
     "forgotPassword": "Olvidé mi contraseña",
-    "showPassword": "Mostrar contraseña",
-    "hidePassword": "Ocultar contraseña",
+    "showPassword": "Mostrar",
+    "hidePassword": "Ocultar",
     "invalidCredentials": "Correo o contraseña incorrectos.",
     "invalidEmail": "Ingresa un correo válido.",
     "emailNotConfirmed": "Confirma tu correo antes de entrar.",
