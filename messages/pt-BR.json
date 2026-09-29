@@ -137,6 +137,14 @@
       "out": "Out",
       "nov": "Nov",
       "dez": "Dez"
+    },
+    "tree": {
+      "title": "Entidades e {packages}",
+      "otherPackages": "Outros {packages}",
+      "noPackages": "Nenhum pacote em {year}.",
+      "hide": "Ocultar árvore",
+      "show": "Mostrar árvore",
+      "goToPackages": "Ver em Pacotes"
     }
   },
   "packages": {
@@ -167,7 +175,9 @@
     "edit": "Editar pacote",
     "emptyMessage": "Nenhum pacote cadastrado para {year}.",
     "deleteConfirmTitle": "Excluir pacote",
-    "deleteConfirmBody": "\"{name}\" será excluído permanentemente. Essa ação não pode ser desfeita."
+    "deleteConfirmBody": "\"{name}\" será excluído permanentemente. Essa ação não pode ser desfeita.",
+    "entity": "Entidade",
+    "noEntity": "Sem entidade"
   },
   "actuals": {
     "title": "Despesas Realizadas",

@@ -133,6 +133,37 @@
 /* ── Matriz orçamentária ──────────────────────────── */
 .matrix-filters { display: flex; align-items: center; gap: 8px; }
 
+.matrix-layout { display: flex; gap: 14px; height: 100%; min-height: 0; }
+.matrix-layout .admin-table-card { flex: 1; min-width: 0; }
+
+.matrix-tree-panel {
+  width: 250px; flex-shrink: 0; display: flex; flex-direction: column;
+  background: #fff; border-radius: 12px; border: 1px solid rgba(0,0,0,.06); overflow: hidden;
+}
+.matrix-tree-panel.matrix-tree-collapsed { width: 40px; align-items: center; padding-top: 10px; }
+.matrix-tree-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 11px 12px; border-bottom: 1px solid rgba(0,0,0,.06); flex-shrink: 0; gap: 8px;
+}
+.matrix-tree-title { font-size: 11px; font-weight: 700; color: var(--text-strong); text-transform: uppercase; letter-spacing: .04em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.matrix-tree-toggle-btn { border: none; background: transparent; cursor: pointer; color: #999; padding: 4px; border-radius: 6px; display: flex; flex-shrink: 0; }
+.matrix-tree-toggle-btn:hover { background: rgba(0,0,0,.06); color: #555; }
+.matrix-tree-body { flex: 1; overflow-y: auto; padding: 8px 6px; }
+.matrix-tree-entity {
+  display: flex; align-items: center; gap: 6px; width: 100%; text-align: left; padding: 6px 8px;
+  border-radius: 8px; border: none; background: transparent; cursor: pointer; font-size: 12.5px; color: var(--text-primary);
+}
+.matrix-tree-entity:hover { background: rgba(0,0,0,.045); }
+.matrix-tree-entity.active { background: rgba(62,111,224,.1); color: #3E6FE0; font-weight: 600; }
+.matrix-tree-packages { display: flex; flex-direction: column; gap: 1px; margin-bottom: 4px; }
+.matrix-tree-package {
+  display: flex; align-items: center; gap: 6px; width: 100%; text-align: left; padding: 5px 8px;
+  border-radius: 7px; border: none; background: transparent; cursor: pointer; font-size: 12px; color: #777;
+}
+.matrix-tree-package:hover { background: rgba(0,0,0,.045); color: #333; }
+.matrix-tree-section-label { font-size: 10px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--text-muted); padding: 10px 8px 4px; }
+.matrix-tree-empty { font-size: 11.5px; color: var(--text-muted); padding: 2px 8px 8px; }
+
 .matrix-wrap { display: flex; flex-direction: column; height: 100%; min-height: 0; }
 .matrix-toolbar {
   display: flex; align-items: center; justify-content: space-between;

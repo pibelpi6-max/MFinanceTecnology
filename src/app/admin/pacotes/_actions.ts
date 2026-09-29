@@ -36,6 +36,7 @@ export async function createPackage(input: {
   year: number;
   name: string;
   costCenterNodeId: string | null;
+  entityNodeId: string | null;
 }): Promise<ActionResult> {
   try {
     const tenant = await requireWriteAccess();
@@ -48,6 +49,7 @@ export async function createPackage(input: {
         year: input.year,
         name: input.name,
         cost_center_node_id: input.costCenterNodeId,
+        entity_node_id: input.entityNodeId,
         owner_user_id: tenant.userId,
         status: "rascunho",
       })
@@ -74,6 +76,7 @@ export async function updatePackage(input: {
   currentStatus: PackageStatus;
   name: string;
   costCenterNodeId: string | null;
+  entityNodeId: string | null;
 }): Promise<ActionResult> {
   try {
     await requireWriteAccess();
@@ -83,7 +86,12 @@ export async function updatePackage(input: {
     const supabase = await createClient();
     const { error } = await supabase
       .from("budget_packages")
-      .update({ name: input.name, cost_center_node_id: input.costCenterNodeId, updated_at: new Date().toISOString() })
+      .update({
+        name: input.name,
+        cost_center_node_id: input.costCenterNodeId,
+        entity_node_id: input.entityNodeId,
+        updated_at: new Date().toISOString(),
+      })
       .eq("id", input.id);
     if (error) return { error: error.message };
 

@@ -16,6 +16,7 @@ interface PackagesClientProps {
   year: number;
   packages: BudgetPackageRow[];
   costCenterNodes: { id: string; name: string }[];
+  entityNodes: { id: string; name: string }[];
   packageLabel: string;
   role: "admin" | "elaborador" | "aprovador" | "leitor";
   currentUserId: string;
@@ -36,6 +37,7 @@ export function PackagesClient({
   year,
   packages,
   costCenterNodes,
+  entityNodes,
   packageLabel,
   role,
   currentUserId,
@@ -97,6 +99,12 @@ export function PackagesClient({
         label: t("name"),
         getText: (p) => p.name,
         render: (p) => <span className="font-medium text-gray-800">{p.name}</span>,
+      },
+      {
+        key: "entity",
+        label: t("entity"),
+        getText: (p) => p.entityName ?? "",
+        render: (p) => <span className="text-sm text-gray-600">{p.entityName ?? "—"}</span>,
       },
       {
         key: "costCenter",
@@ -188,6 +196,7 @@ export function PackagesClient({
         editing={editing === "new" ? null : editing}
         year={year}
         costCenterNodes={costCenterNodes}
+        entityNodes={entityNodes}
         onSaved={() => {
           setEditing(null);
           router.refresh();

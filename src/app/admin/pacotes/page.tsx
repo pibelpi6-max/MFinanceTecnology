@@ -19,10 +19,14 @@ export default async function PacotesPage({ searchParams }: PageProps) {
 
   const year = Number(searchParams.ano) || new Date().getFullYear();
 
-  const centroCustoType = await getDimensionTypeByCode(tenant.tenantId, "centro_custo");
-  const costCenterNodes = centroCustoType
-    ? await getDimensionTree(tenant.tenantId, centroCustoType.id, year)
-    : [];
+  const [centroCustoType, entidadeType] = await Promise.all([
+    getDimensionTypeByCode(tenant.tenantId, "centro_custo"),
+    getDimensionTypeByCode(tenant.tenantId, "entidade"),
+  ]);
+  const [costCenterNodes, entityNodes] = await Promise.all([
+    centroCustoType ? getDimensionTree(tenant.tenantId, centroCustoType.id, year) : Promise.resolve([]),
+    entidadeType ? getDimensionTree(tenant.tenantId, entidadeType.id, year) : Promise.resolve([]),
+  ]);
 
   const packages = await getPackages(tenant.tenantId, year);
 
@@ -40,6 +44,7 @@ export default async function PacotesPage({ searchParams }: PageProps) {
             year={year}
             packages={packages}
             costCenterNodes={costCenterNodes.map((n) => ({ id: n.id, name: n.name }))}
+            entityNodes={entityNodes.map((n) => ({ id: n.id, name: n.name }))}
             packageLabel={labels.budgetPackage}
             role={tenant.role}
             currentUserId={tenant.userId}

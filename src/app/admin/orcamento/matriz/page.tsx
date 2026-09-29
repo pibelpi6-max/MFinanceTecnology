@@ -1,11 +1,14 @@
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { getCurrentTenant } from "@/lib/tenant/getCurrentTenant";
 import { getDimensionTypeByCode, getDimensionTree } from "@/lib/dimensions/queries";
 import { buildDimensionHierarchy } from "@/lib/dimensions/hierarchy";
 import { getMatrixEntries } from "@/lib/budget/queries";
+import { getPackages } from "@/lib/packages/queries";
+import { getTenantLabels } from "@/lib/labels/getTenantLabels";
 import { MatrixFilters } from "./MatrixFilters";
 import { MatrixGridClient } from "./MatrixGridClient";
+import { MatrixEntityPackageTree } from "./MatrixEntityPackageTree";
 
 interface PageProps {
   searchParams: { ano?: string; mes?: string; entidade?: string };
@@ -16,6 +19,8 @@ export default async function MatrizPage({ searchParams }: PageProps) {
   if (!tenant) notFound();
 
   const t = await getTranslations("budget");
+  const locale = await getLocale();
+  const labels = await getTenantLabels(tenant.tenantId, locale);
 
   const [contaType, centroCustoType, entidadeType] = await Promise.all([
     getDimensionTypeByCode(tenant.tenantId, "conta"),
@@ -44,10 +49,10 @@ export default async function MatrizPage({ searchParams }: PageProps) {
 
   const missingSetup = accountRows.length === 0 || costCenterRows.length === 0 || entityRows.length === 0;
 
-  const entries =
-    !missingSetup && entityNodeId
-      ? await getMatrixEntries(tenant.tenantId, year, month, entityNodeId)
-      : [];
+  const [entries, packages] = await Promise.all([
+    !missingSetup && entityNodeId ? getMatrixEntries(tenant.tenantId, year, month, entityNodeId) : Promise.resolve([]),
+    getPackages(tenant.tenantId, year),
+  ]);
 
   return (
     <>
@@ -68,21 +73,33 @@ export default async function MatrizPage({ searchParams }: PageProps) {
         </div>
       </div>
       <div className="admin-content">
-        <div className="admin-table-card">
-          {missingSetup ? (
-            <div className="matrix-empty-state">
-              <p>{t("missingSetup")}</p>
-            </div>
-          ) : (
-            <MatrixGridClient
+        <div className="matrix-layout">
+          {!missingSetup && (
+            <MatrixEntityPackageTree
               year={year}
               month={month}
-              entityNodeId={entityNodeId!}
-              accounts={accountRows}
-              costCenters={costCenterRows.map((r) => r.item)}
-              initialEntries={entries}
+              entityRows={entityRows}
+              selectedEntityId={entityNodeId ?? ""}
+              packages={packages}
+              packageLabelPlural={labels.budgetPackagePlural}
             />
           )}
+          <div className="admin-table-card">
+            {missingSetup ? (
+              <div className="matrix-empty-state">
+                <p>{t("missingSetup")}</p>
+              </div>
+            ) : (
+              <MatrixGridClient
+                year={year}
+                month={month}
+                entityNodeId={entityNodeId!}
+                accounts={accountRows}
+                costCenters={costCenterRows.map((r) => r.item)}
+                initialEntries={entries}
+              />
+            )}
+          </div>
         </div>
       </div>
     </>
