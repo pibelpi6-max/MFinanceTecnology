@@ -110,7 +110,14 @@
     "deleteConfirmBody": "\"{name}\" stops applying starting {year}. History from earlier years is preserved.",
     "emptyMessage": "No items registered for {year}.",
     "searchPlaceholder": "Search by name or code",
-    "maxDepthReached": "Maximum depth of 10 levels reached."
+    "maxDepthReached": "Maximum depth of 10 levels reached.",
+    "importFields": {
+      "code": "Code",
+      "name": "Name",
+      "parent": "Parent item",
+      "parentHelp": "Must already exist in the system; leave blank for a top-level item."
+    },
+    "importButton": "Import"
   },
   "budget": {
     "title": "Budget Matrix",
@@ -145,7 +152,8 @@
       "hide": "Hide tree",
       "show": "Show tree",
       "goToPackages": "View in Packages"
-    }
+    },
+    "importButton": "Import"
   },
   "packages": {
     "name": "Name",
@@ -177,7 +185,8 @@
     "deleteConfirmTitle": "Delete package",
     "deleteConfirmBody": "\"{name}\" will be permanently deleted. This action cannot be undone.",
     "entity": "Entity",
-    "noEntity": "No entity"
+    "noEntity": "No entity",
+    "importButton": "Import"
   },
   "actuals": {
     "title": "Actual Expenses",
@@ -210,7 +219,8 @@
     "explanationLabel": "Explanation",
     "explanationPlaceholder": "Describe the reason for the deviation...",
     "suggestWithAI": "Suggest with AI",
-    "suggesting": "Generating suggestion..."
+    "suggesting": "Generating suggestion...",
+    "importButton": "Import"
   },
   "settings": {
     "period": {
@@ -236,6 +246,80 @@
       "codeHint": "Used internally; lowercase letters, numbers and _ only.",
       "limitReached": "Limit of 10 custom dimensions reached.",
       "adminOnly": "Only admins can edit this."
+    }
+  },
+  "import": {
+    "steps": {
+      "mapping": "Columns",
+      "review": "Review",
+      "done": "Done"
+    },
+    "cancel": "Cancel",
+    "back": "Back",
+    "continue": "Continue",
+    "upload": {
+      "dropzoneTitle": "Drag a file here or click to choose one",
+      "dropzoneHint": "Accepts .csv, .xlsx or .xls",
+      "mappingInProgress": "AI is identifying your spreadsheet columns…",
+      "genericError": "Could not read this file. Check the format and try again."
+    },
+    "mapping": {
+      "hint": "Check which field each spreadsheet column will fill. Fields marked * are required.",
+      "column": "Spreadsheet column",
+      "preview": "Example",
+      "field": "Target field",
+      "ignoreColumn": "Ignore this column",
+      "missingRequired": "Still need to map: {fields}."
+    },
+    "review": {
+      "status": "Status",
+      "includeRow": "Include this row in the import",
+      "ready": "Ready",
+      "hasErrors": "Has errors",
+      "skipped": "Skipped",
+      "total": "{count} row(s) in the spreadsheet",
+      "readyCount": "{count} ready",
+      "errorCount": "{count} with errors",
+      "skippedCount": "{count} skipped",
+      "importButton": "Import {count} row(s)"
+    },
+    "done": {
+      "title": "{count} record(s) imported successfully",
+      "someFailed": "{count} row(s) could not be imported",
+      "rowLabel": "Row {row}",
+      "backToScreen": "Back to screen"
+    },
+    "titlePrefix": "Import",
+    "matrizFields": {
+      "title": "Budget Matrix entries",
+      "description": "Each row becomes a budgeted value for the entity + cost center + account + year + month combination. An existing value for the same combination is replaced.",
+      "entidade": "Entity",
+      "centroCusto": "Cost Center",
+      "conta": "Account",
+      "ano": "Year",
+      "mes": "Month",
+      "valor": "Amount",
+      "anoInvalid": "Invalid year.",
+      "mesInvalid": "Month must be between 1 and 12."
+    },
+    "realizadoFields": {
+      "title": "Actual Expenses",
+      "description": "Each row becomes a new expense entry (existing entries are not replaced).",
+      "entidade": "Entity",
+      "centroCusto": "Cost Center",
+      "conta": "Account",
+      "ano": "Year",
+      "mes": "Month",
+      "valor": "Amount",
+      "descricao": "Description",
+      "anoInvalid": "Invalid year.",
+      "mesInvalid": "Month must be between 1 and 12."
+    },
+    "pacotesFields": {
+      "description": "Each row becomes a new package, always created as draft (the initial status cannot be set by the import).",
+      "nome": "Name",
+      "centroCusto": "Cost Center",
+      "entidade": "Entity"
     }
   }
 }

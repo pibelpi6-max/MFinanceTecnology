@@ -171,3 +171,53 @@ export async function fetchPackageHistory(packageId: string): Promise<{ data?: P
     return { error: e instanceof Error ? e.message : "Erro inesperado" };
   }
 }
+
+export async function importPackages(input: {
+  year: number;
+  rows: { values: Record<string, string> }[];
+}): Promise<{ successCount: number; errorCount: number; errors: { rowIndex: number; message: string }[] }> {
+  const tenant = await requireWriteAccess();
+  const supabase = await createClient();
+
+  const errors: { rowIndex: number; message: string }[] = [];
+  let successCount = 0;
+
+  for (let rowIndex = 0; rowIndex < input.rows.length; rowIndex++) {
+    const v = input.rows[rowIndex].values;
+    const name = (v.nome ?? "").trim();
+    if (!name) {
+      errors.push({ rowIndex, message: "Nome é obrigatório." });
+      continue;
+    }
+
+    const { data: pkg, error } = await supabase
+      .from("budget_packages")
+      .insert({
+        tenant_id: tenant.tenantId,
+        year: input.year,
+        name,
+        cost_center_node_id: v.centro_custo || null,
+        entity_node_id: v.entidade || null,
+        owner_user_id: tenant.userId,
+        status: "rascunho",
+      })
+      .select("id")
+      .single();
+    if (error) {
+      errors.push({ rowIndex, message: error.message });
+      continue;
+    }
+
+    await supabase.from("budget_package_status_history").insert({
+      package_id: pkg.id,
+      from_status: null,
+      to_status: "rascunho",
+      changed_by: tenant.userId,
+    });
+
+    successCount++;
+  }
+
+  if (successCount > 0) revalidatePath("/admin/pacotes");
+  return { successCount, errorCount: errors.length, errors };
+}
