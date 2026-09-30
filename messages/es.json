@@ -225,7 +225,7 @@
   "settings": {
     "period": {
       "title": "Período presupuestario",
-      "intro": "Mes en que comienza el ejercicio presupuestario de la empresa. La Matriz, lo Realizado y el Comparativo aún consideran el año calendario (enero-diciembre); ajustar esos filtros al mes de inicio queda como próximo paso.",
+      "intro": "Mes de inicio del ejercicio.",
       "startMonth": "Mes de inicio del ejercicio",
       "save": "Guardar",
       "saving": "Guardando...",
@@ -234,18 +234,22 @@
     },
     "dimensions": {
       "title": "Dimensiones",
-      "intro": "Gestione el nombre y la descripción de cada dimensión, y cree dimensiones personalizadas además de Centro de Costo, Cuenta y Entidad.",
+      "intro": "Nombre, descripción y dimensiones personalizadas de la empresa.",
       "name": "Nombre",
       "code": "Código",
       "fieldDescription": "Descripción",
       "system": "Predeterminada del sistema",
       "custom": "Personalizada",
+      "customUsage": "Dimensiones personalizadas",
       "noDescription": "Sin descripción.",
-      "new": "Nueva dimensión",
+      "new": "+ Nueva dimensión",
       "edit": "Editar",
       "codeHint": "Uso interno; solo minúsculas, números y _.",
+      "codeLockedHint": "Código de una dimensión estándar del sistema; no se puede modificar.",
       "limitReached": "Límite de 10 dimensiones personalizadas alcanzado.",
-      "adminOnly": "Solo los administradores pueden editarlo."
+      "adminOnly": "Solo los administradores pueden editarlo.",
+      "deleteConfirmTitle": "Eliminar dimensión",
+      "deleteConfirmBody": "¿Eliminar <b>{name}</b> permanentemente?"
     }
   },
   "import": {

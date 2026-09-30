@@ -225,7 +225,7 @@
   "settings": {
     "period": {
       "title": "Budget period",
-      "intro": "The month the company's fiscal year begins. The Matrix, Actuals and Comparison screens still use the calendar year (Jan–Dec) for now; wiring those filters to the start month is a follow-up.",
+      "intro": "Fiscal year start month.",
       "startMonth": "Fiscal year start month",
       "save": "Save",
       "saving": "Saving...",
@@ -234,18 +234,22 @@
     },
     "dimensions": {
       "title": "Dimensions",
-      "intro": "Manage the name and description of each dimension, and create custom dimensions beyond Cost Center, Account and Entity.",
+      "intro": "Name, description and custom dimensions for your company.",
       "name": "Name",
       "code": "Code",
       "fieldDescription": "Description",
       "system": "System default",
       "custom": "Custom",
+      "customUsage": "Custom dimensions",
       "noDescription": "No description.",
-      "new": "New dimension",
+      "new": "+ New dimension",
       "edit": "Edit",
       "codeHint": "Used internally; lowercase letters, numbers and _ only.",
+      "codeLockedHint": "Code of a system-default dimension; cannot be changed.",
       "limitReached": "Limit of 10 custom dimensions reached.",
-      "adminOnly": "Only admins can edit this."
+      "adminOnly": "Only admins can edit this.",
+      "deleteConfirmTitle": "Delete dimension",
+      "deleteConfirmBody": "Delete <b>{name}</b> permanently?"
     }
   },
   "import": {

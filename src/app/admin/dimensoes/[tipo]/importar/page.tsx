@@ -24,7 +24,6 @@ export default async function ImportarDimensaoPage({ params, searchParams }: Pag
     <>
       <div className="admin-subheader">
         <div>
-          <p className="admin-page-crumb">{tenant.tenantName}</p>
           <h1 className="admin-page-title">
             {t("titlePrefix")} {dimensionType.name}
           </h1>

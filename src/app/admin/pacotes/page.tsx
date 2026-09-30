@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { getCurrentTenant } from "@/lib/tenant/getCurrentTenant";
 import { getDimensionTypeByCode, getDimensionTree } from "@/lib/dimensions/queries";
+import { DIMENSION_CODES } from "@/lib/dimensions/constants";
 import { getPackages } from "@/lib/packages/queries";
 import { getTenantLabels } from "@/lib/labels/getTenantLabels";
 import { ImportLinkButton } from "@/components/import/ImportLinkButton";
@@ -21,8 +22,8 @@ export default async function PacotesPage({ searchParams }: PageProps) {
   const year = Number(searchParams.ano) || new Date().getFullYear();
 
   const [centroCustoType, entidadeType] = await Promise.all([
-    getDimensionTypeByCode(tenant.tenantId, "centro_custo"),
-    getDimensionTypeByCode(tenant.tenantId, "entidade"),
+    getDimensionTypeByCode(tenant.tenantId, DIMENSION_CODES.CENTRO_CUSTO),
+    getDimensionTypeByCode(tenant.tenantId, DIMENSION_CODES.ENTIDADE),
   ]);
   const [costCenterNodes, entityNodes] = await Promise.all([
     centroCustoType ? getDimensionTree(tenant.tenantId, centroCustoType.id, year) : Promise.resolve([]),
@@ -36,7 +37,6 @@ export default async function PacotesPage({ searchParams }: PageProps) {
     <>
       <div className="admin-subheader">
         <div>
-          <p className="admin-page-crumb">{tenant.tenantName}</p>
           <h1 className="admin-page-title">{labels.budgetPackagePlural}</h1>
         </div>
         <div className="admin-page-actions">

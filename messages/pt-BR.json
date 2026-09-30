@@ -25,7 +25,7 @@
     }
   },
   "nav": {
-    "dashboard": "Painel",
+    "dashboard": "Dashboard",
     "dimensoes": "Dimensões",
     "matriz": "Matriz Orçamentária",
     "realizado": "Despesas Realizadas",
@@ -225,7 +225,7 @@
   "settings": {
     "period": {
       "title": "Período orçamentário",
-      "intro": "Mês em que o exercício orçamentário da empresa começa. Hoje a Matriz, o Realizado e o Comparativo continuam considerando o ano civil (janeiro a dezembro); ajustar esses filtros para seguir o mês de início é um próximo passo.",
+      "intro": "Mês de início do exercício:",
       "startMonth": "Mês de início do exercício",
       "save": "Salvar",
       "saving": "Salvando...",
@@ -234,18 +234,22 @@
     },
     "dimensions": {
       "title": "Dimensões",
-      "intro": "Gerencie o nome e a descrição de cada dimensão da empresa, e crie dimensões personalizadas além de Centro de Custo, Conta e Entidade.",
+      "intro": "Nome, descrição e dimensões personalizadas da empresa.",
       "name": "Nome",
       "code": "Código",
       "fieldDescription": "Descrição",
       "system": "Padrão do sistema",
       "custom": "Personalizada",
+      "customUsage": "Dimensões personalizadas",
       "noDescription": "Sem descrição.",
-      "new": "Nova dimensão",
+      "new": "+ Nova dimensão",
       "edit": "Editar",
       "codeHint": "Usado internamente; só letras minúsculas, números e _.",
+      "codeLockedHint": "Código de uma dimensão padrão do sistema; não pode ser alterado.",
       "limitReached": "Limite de 10 dimensões personalizadas atingido.",
-      "adminOnly": "Apenas administradores podem editar."
+      "adminOnly": "Apenas administradores podem editar.",
+      "deleteConfirmTitle": "Excluir dimensão",
+      "deleteConfirmBody": "Deseja excluir <b>{name}</b> permanentemente?"
     }
   },
   "import": {

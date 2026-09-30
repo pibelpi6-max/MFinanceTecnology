@@ -26,7 +26,6 @@ export default async function DimensionTypePage({ params, searchParams }: PagePr
     <>
       <div className="admin-subheader">
         <div>
-          <p className="admin-page-crumb">{tenant.tenantName}</p>
           <h1 className="admin-page-title">{dimensionType.name}</h1>
         </div>
         <div className="admin-page-actions">
