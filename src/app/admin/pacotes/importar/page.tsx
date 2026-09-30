@@ -2,23 +2,20 @@ import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { getCurrentTenant } from "@/lib/tenant/getCurrentTenant";
 import { getDimensionTypeByCode, getDimensionTree } from "@/lib/dimensions/queries";
-import { getPackages } from "@/lib/packages/queries";
 import { getTenantLabels } from "@/lib/labels/getTenantLabels";
-import { ImportLinkButton } from "@/components/import/ImportLinkButton";
-import { PackagesClient } from "./PackagesClient";
+import { ImportPacotesClient } from "./ImportPacotesClient";
 
 interface PageProps {
   searchParams: { ano?: string };
 }
 
-export default async function PacotesPage({ searchParams }: PageProps) {
+export default async function ImportarPacotesPage({ searchParams }: PageProps) {
   const tenant = await getCurrentTenant();
   if (!tenant) notFound();
 
+  const year = Number(searchParams.ano) || new Date().getFullYear();
   const locale = await getLocale();
   const labels = await getTenantLabels(tenant.tenantId, locale);
-
-  const year = Number(searchParams.ano) || new Date().getFullYear();
 
   const [centroCustoType, entidadeType] = await Promise.all([
     getDimensionTypeByCode(tenant.tenantId, "centro_custo"),
@@ -29,30 +26,25 @@ export default async function PacotesPage({ searchParams }: PageProps) {
     entidadeType ? getDimensionTree(tenant.tenantId, entidadeType.id, year) : Promise.resolve([]),
   ]);
 
-  const packages = await getPackages(tenant.tenantId, year);
-  const t = await getTranslations("packages");
+  const t = await getTranslations("import");
 
   return (
     <>
       <div className="admin-subheader">
         <div>
           <p className="admin-page-crumb">{tenant.tenantName}</p>
-          <h1 className="admin-page-title">{labels.budgetPackagePlural}</h1>
-        </div>
-        <div className="admin-page-actions">
-          <ImportLinkButton href={`/admin/pacotes/importar?ano=${year}`} label={t("importButton")} />
+          <h1 className="admin-page-title">
+            {t("titlePrefix")} {labels.budgetPackagePlural}
+          </h1>
         </div>
       </div>
-      <div className="admin-content">
+      <div className="admin-content admin-content--scroll">
         <div className="admin-table-card">
-          <PackagesClient
+          <ImportPacotesClient
             year={year}
-            packages={packages}
-            costCenterNodes={costCenterNodes.map((n) => ({ id: n.id, name: n.name }))}
-            entityNodes={entityNodes.map((n) => ({ id: n.id, name: n.name }))}
-            packageLabel={labels.budgetPackage}
-            role={tenant.role}
-            currentUserId={tenant.userId}
+            packageLabelPlural={labels.budgetPackagePlural}
+            costCenterNodes={costCenterNodes.map((n) => ({ id: n.id, code: n.code, name: n.name }))}
+            entityNodes={entityNodes.map((n) => ({ id: n.id, code: n.code, name: n.name }))}
           />
         </div>
       </div>

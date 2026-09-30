@@ -45,3 +45,48 @@ export async function saveMatrixEntries(input: {
     return { error: e instanceof Error ? e.message : "Erro inesperado" };
   }
 }
+
+export async function importMatrixEntries(input: {
+  rows: { values: Record<string, string> }[];
+}): Promise<{ successCount: number; errorCount: number; errors: { rowIndex: number; message: string }[] }> {
+  const tenant = await getCurrentTenant();
+  if (!tenant) throw new Error("Não autenticado");
+  const supabase = await createClient();
+
+  const errors: { rowIndex: number; message: string }[] = [];
+  let successCount = 0;
+
+  for (let rowIndex = 0; rowIndex < input.rows.length; rowIndex++) {
+    const v = input.rows[rowIndex].values;
+    const year = Number(v.ano);
+    const month = Number(v.mes);
+    const amount = Number(v.valor);
+
+    if (!v.entidade || !v.centro_custo || !v.conta || !Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(amount)) {
+      errors.push({ rowIndex, message: "Linha incompleta ou com valores inválidos." });
+      continue;
+    }
+
+    const { error } = await supabase.from("matrix_budget_entries").upsert(
+      {
+        tenant_id: tenant.tenantId,
+        year,
+        month,
+        entity_node_id: v.entidade,
+        cost_center_node_id: v.centro_custo,
+        account_node_id: v.conta,
+        amount,
+        created_by: tenant.userId,
+      },
+      { onConflict: "tenant_id,year,month,cost_center_node_id,account_node_id,entity_node_id" }
+    );
+    if (error) {
+      errors.push({ rowIndex, message: error.message });
+      continue;
+    }
+    successCount++;
+  }
+
+  if (successCount > 0) revalidatePath("/admin/orcamento/matriz");
+  return { successCount, errorCount: errors.length, errors };
+}

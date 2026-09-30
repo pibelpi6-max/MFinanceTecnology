@@ -110,7 +110,14 @@
     "deleteConfirmBody": "\"{name}\" deja de aplicar a partir de {year}. El historial de años anteriores se conserva.",
     "emptyMessage": "Ningún ítem registrado para {year}.",
     "searchPlaceholder": "Buscar por nombre o código",
-    "maxDepthReached": "Profundidad máxima de 10 niveles alcanzada."
+    "maxDepthReached": "Profundidad máxima de 10 niveles alcanzada.",
+    "importFields": {
+      "code": "Código",
+      "name": "Nombre",
+      "parent": "Elemento superior",
+      "parentHelp": "Debe existir ya en el sistema; déjalo en blanco para un elemento de nivel 1."
+    },
+    "importButton": "Importar"
   },
   "budget": {
     "title": "Matriz Presupuestaria",
@@ -145,7 +152,8 @@
       "hide": "Ocultar árbol",
       "show": "Mostrar árbol",
       "goToPackages": "Ver en Paquetes"
-    }
+    },
+    "importButton": "Importar"
   },
   "packages": {
     "name": "Nombre",
@@ -177,7 +185,8 @@
     "deleteConfirmTitle": "Eliminar paquete",
     "deleteConfirmBody": "\"{name}\" será eliminado permanentemente. Esta acción no se puede deshacer.",
     "entity": "Entidad",
-    "noEntity": "Sin entidad"
+    "noEntity": "Sin entidad",
+    "importButton": "Importar"
   },
   "actuals": {
     "title": "Gastos Reales",
@@ -210,7 +219,8 @@
     "explanationLabel": "Explicación",
     "explanationPlaceholder": "Describe el motivo del desvío...",
     "suggestWithAI": "Sugerir con IA",
-    "suggesting": "Generando sugerencia..."
+    "suggesting": "Generando sugerencia...",
+    "importButton": "Importar"
   },
   "settings": {
     "period": {
@@ -236,6 +246,80 @@
       "codeHint": "Uso interno; solo minúsculas, números y _.",
       "limitReached": "Límite de 10 dimensiones personalizadas alcanzado.",
       "adminOnly": "Solo los administradores pueden editarlo."
+    }
+  },
+  "import": {
+    "steps": {
+      "mapping": "Columnas",
+      "review": "Revisión",
+      "done": "Listo"
+    },
+    "cancel": "Cancelar",
+    "back": "Volver",
+    "continue": "Continuar",
+    "upload": {
+      "dropzoneTitle": "Arrastra un archivo aquí o haz clic para elegirlo",
+      "dropzoneHint": "Acepta .csv, .xlsx o .xls",
+      "mappingInProgress": "La IA está identificando las columnas de tu hoja…",
+      "genericError": "No pude leer este archivo. Revisa el formato e inténtalo de nuevo."
+    },
+    "mapping": {
+      "hint": "Revisa qué campo va a completar cada columna de la hoja. Los campos con * son obligatorios.",
+      "column": "Columna de la hoja",
+      "preview": "Ejemplo",
+      "field": "Campo de destino",
+      "ignoreColumn": "Ignorar esta columna",
+      "missingRequired": "Falta mapear: {fields}."
+    },
+    "review": {
+      "status": "Estado",
+      "includeRow": "Incluir esta fila en la importación",
+      "ready": "Lista",
+      "hasErrors": "Con error",
+      "skipped": "Ignorada",
+      "total": "{count} fila(s) en la hoja",
+      "readyCount": "{count} lista(s)",
+      "errorCount": "{count} con error",
+      "skippedCount": "{count} ignorada(s)",
+      "importButton": "Importar {count} fila(s)"
+    },
+    "done": {
+      "title": "{count} registro(s) importado(s) con éxito",
+      "someFailed": "{count} fila(s) no se pudieron importar",
+      "rowLabel": "Fila {row}",
+      "backToScreen": "Volver a la pantalla"
+    },
+    "titlePrefix": "Importar",
+    "matrizFields": {
+      "title": "Lanzamientos de la Matriz Presupuestaria",
+      "description": "Cada fila se convierte en un valor presupuestado para la combinación de entidad, centro de costo, cuenta, año y mes. Si ya existe un valor para la misma combinación, se reemplaza.",
+      "entidade": "Entidad",
+      "centroCusto": "Centro de Costo",
+      "conta": "Cuenta",
+      "ano": "Año",
+      "mes": "Mes",
+      "valor": "Valor",
+      "anoInvalid": "Año inválido.",
+      "mesInvalid": "El mes debe estar entre 1 y 12."
+    },
+    "realizadoFields": {
+      "title": "Gastos Realizados",
+      "description": "Cada fila se convierte en un nuevo gasto realizado (no reemplaza lanzamientos existentes).",
+      "entidade": "Entidad",
+      "centroCusto": "Centro de Costo",
+      "conta": "Cuenta",
+      "ano": "Año",
+      "mes": "Mes",
+      "valor": "Valor",
+      "descricao": "Descripción",
+      "anoInvalid": "Año inválido.",
+      "mesInvalid": "El mes debe estar entre 1 y 12."
+    },
+    "pacotesFields": {
+      "description": "Cada fila se convierte en un paquete nuevo, siempre creado como borrador (el estado inicial no se puede definir en la importación).",
+      "nome": "Nombre",
+      "centroCusto": "Centro de Costo",
+      "entidade": "Entidad"
     }
   }
 }

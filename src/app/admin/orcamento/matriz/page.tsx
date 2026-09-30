@@ -6,6 +6,7 @@ import { buildDimensionHierarchy } from "@/lib/dimensions/hierarchy";
 import { getMatrixEntries } from "@/lib/budget/queries";
 import { getPackages } from "@/lib/packages/queries";
 import { getTenantLabels } from "@/lib/labels/getTenantLabels";
+import { ImportLinkButton } from "@/components/import/ImportLinkButton";
 import { MatrixFilters } from "./MatrixFilters";
 import { MatrixGridClient } from "./MatrixGridClient";
 import { MatrixEntityPackageTree } from "./MatrixEntityPackageTree";
@@ -70,6 +71,7 @@ export default async function MatrizPage({ searchParams }: PageProps) {
               entities={entityRows.map((r) => ({ id: r.item.id, name: r.item.name }))}
             />
           )}
+          <ImportLinkButton href={`/admin/orcamento/matriz/importar?ano=${year}`} label={t("importButton")} />
         </div>
       </div>
       <div className="admin-content">

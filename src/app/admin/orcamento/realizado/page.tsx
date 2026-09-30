@@ -4,6 +4,7 @@ import { getCurrentTenant } from "@/lib/tenant/getCurrentTenant";
 import { getDimensionTypeByCode, getDimensionTree } from "@/lib/dimensions/queries";
 import { buildDimensionHierarchy } from "@/lib/dimensions/hierarchy";
 import { getExpenseEntries } from "@/lib/actuals/queries";
+import { ImportLinkButton } from "@/components/import/ImportLinkButton";
 import { RealizadoFilters } from "./RealizadoFilters";
 import { RealizadoClient } from "./RealizadoClient";
 
@@ -59,6 +60,7 @@ export default async function RealizadoPage({ searchParams }: PageProps) {
               entities={entityRows.map((r) => ({ id: r.item.id, name: r.item.name }))}
             />
           )}
+          <ImportLinkButton href={`/admin/orcamento/realizado/importar?ano=${year}`} label={t("importButton")} />
         </div>
       </div>
       <div className="admin-content">
