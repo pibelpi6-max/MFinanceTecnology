@@ -5,7 +5,7 @@
   height: 100vh;
   height: 100dvh;
   overflow: hidden;
-  background: #f4f5f7;
+  background: #E9F1FC;
 }
 
 :root {
@@ -120,7 +120,7 @@
 .admin-page-title { font-size: 18px; font-weight: 600; letter-spacing: -.01em; color: var(--text-strong); line-height: 1.1; }
 .admin-page-actions { display: flex; align-items: center; gap: 8px; }
 
-.admin-content { padding: 16px 24px 24px; flex: 1; overflow: hidden; }
+.admin-content { padding: 8px 10px 10px; flex: 1; overflow: hidden; }
 .admin-table-card { background: #fff; border-radius: 12px; border: 1px solid rgba(0,0,0,.06); overflow: hidden; display: flex; flex-direction: column; height: 100%; }
 
 .year-select {
@@ -228,16 +228,24 @@
 
 /* ── Parâmetros (Configurações) ───────────────────────── */
 .admin-content--scroll { overflow-y: auto; overflow-x: hidden; }
-.settings-stack { display: flex; flex-direction: column; gap: 16px; max-width: 760px; }
-.settings-card { background: #fff; border-radius: 12px; border: 1px solid rgba(0,0,0,.06); }
-.settings-card-header { padding: 16px 20px 0; }
-.settings-card-header--row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
-.settings-card-title { font-size: 14px; font-weight: 700; color: var(--text-strong); margin: 0 0 4px; }
-.settings-card-intro { font-size: 12.5px; color: var(--text-muted); line-height: 1.5; margin: 0; max-width: 560px; }
-.settings-card-body { padding: 14px 20px 20px; }
-.settings-field-label { display: block; font-size: 12px; font-weight: 600; color: #666; margin-bottom: 6px; }
+
+.settings-panel { background: #fff; border-radius: 14px; border: 1px solid rgba(0,0,0,.06); width: 100%; overflow: hidden; }
+.settings-block { padding: 18px 32px; }
+.settings-divider { height: 1px; background: rgba(0,0,0,.06); }
+.settings-block-title { font-size: 14.5px; font-weight: 700; color: var(--text-strong); margin: 0; }
+.settings-block-intro { font-size: 12.5px; color: var(--text-muted); line-height: 1.5; margin: 0; }
+.settings-block-subtitle-row { display: flex; justify-content: space-between; align-items: center; gap: 24px; margin-top: -6px; }
+.settings-block-actions { margin-top: 14px; margin-bottom: 12px; }
+.settings-inline-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
 .settings-saved-hint { color: #15803d; font-size: 12px; font-weight: 600; }
 .settings-admin-hint { font-size: 11.5px; color: var(--text-muted); margin-top: 6px; }
+
+.settings-progress-block { width: 230px; flex-shrink: 0; }
+.settings-progress-block-label { display: flex; justify-content: space-between; align-items: baseline; font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+.settings-progress-block-value { font-weight: 700; color: var(--text-strong); font-variant-numeric: tabular-nums; }
+.settings-progress-block-bar { height: 6px; border-radius: 4px; background: rgba(62,111,224,.12); overflow: hidden; }
+.settings-progress-block-fill { height: 100%; background: #3E6FE0; border-radius: 4px; transition: width .2s ease; }
+.settings-progress-block-fill--full { background: #c62828; }
 
 .settings-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .settings-table th {
@@ -249,6 +257,10 @@
 .settings-code { font-size: 11.5px; color: #888; background: #f4f5f8; border-radius: 5px; padding: 1px 6px; }
 .settings-edit-link { font-size: 12px; font-weight: 600; color: #3E6FE0; background: none; border: none; cursor: pointer; padding: 4px 6px; }
 .settings-edit-link:hover { text-decoration: underline; }
+.settings-edit-link--danger { color: #dc2626; }
+.settings-row-actions { opacity: 0; transition: opacity .12s ease; }
+.settings-table tr:hover .settings-row-actions,
+.settings-row-actions:focus-within { opacity: 1; }
 
 .type-badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 600; white-space: nowrap; background: rgba(62,111,224,.1); color: #3E6FE0; }
 .type-badge--system { background: #f1f2f6; color: #5b5f76; }

@@ -17,7 +17,6 @@ export default async function ConfiguracoesPage() {
     <>
       <div className="admin-subheader">
         <div>
-          <p className="admin-page-crumb">{tenant.tenantName}</p>
           <h1 className="admin-page-title">Parâmetros</h1>
         </div>
       </div>

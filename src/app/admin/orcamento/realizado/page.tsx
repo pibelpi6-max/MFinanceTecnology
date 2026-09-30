@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getCurrentTenant } from "@/lib/tenant/getCurrentTenant";
 import { getDimensionTypeByCode, getDimensionTree } from "@/lib/dimensions/queries";
+import { DIMENSION_CODES } from "@/lib/dimensions/constants";
 import { buildDimensionHierarchy } from "@/lib/dimensions/hierarchy";
 import { getExpenseEntries } from "@/lib/actuals/queries";
 import { ImportLinkButton } from "@/components/import/ImportLinkButton";
@@ -19,9 +20,9 @@ export default async function RealizadoPage({ searchParams }: PageProps) {
   const t = await getTranslations("actuals");
 
   const [contaType, centroCustoType, entidadeType] = await Promise.all([
-    getDimensionTypeByCode(tenant.tenantId, "conta"),
-    getDimensionTypeByCode(tenant.tenantId, "centro_custo"),
-    getDimensionTypeByCode(tenant.tenantId, "entidade"),
+    getDimensionTypeByCode(tenant.tenantId, DIMENSION_CODES.CONTA),
+    getDimensionTypeByCode(tenant.tenantId, DIMENSION_CODES.CENTRO_CUSTO),
+    getDimensionTypeByCode(tenant.tenantId, DIMENSION_CODES.ENTIDADE),
   ]);
 
   const year = Number(searchParams.ano) || new Date().getFullYear();
@@ -48,7 +49,6 @@ export default async function RealizadoPage({ searchParams }: PageProps) {
     <>
       <div className="admin-subheader">
         <div>
-          <p className="admin-page-crumb">{tenant.tenantName}</p>
           <h1 className="admin-page-title">{t("title")}</h1>
         </div>
         <div className="admin-page-actions">

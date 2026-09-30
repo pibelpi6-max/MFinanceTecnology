@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentTenant } from "@/lib/tenant/getCurrentTenant";
+import { isProtectedDimensionCode } from "@/lib/dimensions/constants";
 
 interface ActionResult {
   success?: true;
@@ -104,6 +105,7 @@ export async function createDimensionType(input: {
 
 export async function updateDimensionType(input: {
   id: string;
+  code: string;
   name: string;
   description: string | null;
 }): Promise<ActionResult> {
@@ -113,9 +115,76 @@ export async function updateDimensionType(input: {
     if (!name) return { error: "Informe um nome." };
 
     const supabase = await createClient();
+
+    const { data: current, error: currentError } = await supabase
+      .from("dimension_types")
+      .select("code")
+      .eq("id", input.id)
+      .eq("tenant_id", tenant.tenantId)
+      .maybeSingle();
+    if (currentError) return { error: currentError.message };
+    if (!current) return { error: "Dimensão não encontrada." };
+
+    const updatePayload: { name: string; description: string | null; code?: string } = {
+      name,
+      description: input.description?.trim() || null,
+    };
+
+    // Os 3 códigos estruturais (conta, centro_custo, entidade) são usados como
+    // literais em dezenas de lugares do sistema — nunca podem ser renomeados,
+    // mesmo que o front-end tente enviar um código diferente.
+    if (!isProtectedDimensionCode(current.code)) {
+      const code = input.code.trim().toLowerCase();
+      if (!CODE_PATTERN.test(code)) {
+        return { error: "Código deve começar com letra e conter só letras minúsculas, números e _." };
+      }
+      updatePayload.code = code;
+    }
+
     const { error } = await supabase
       .from("dimension_types")
-      .update({ name, description: input.description?.trim() || null })
+      .update(updatePayload)
+      .eq("id", input.id)
+      .eq("tenant_id", tenant.tenantId);
+    if (error) {
+      if (error.code === "23505") return { error: "Já existe uma dimensão com esse código." };
+      return { error: error.message };
+    }
+
+    afterMutation();
+    return { success: true };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Erro inesperado" };
+  }
+}
+
+export async function deleteDimensionType(input: { id: string }): Promise<ActionResult> {
+  try {
+    const tenant = await requireAdmin();
+    const supabase = await createClient();
+
+    const { data: type, error: typeError } = await supabase
+      .from("dimension_types")
+      .select("id, is_system")
+      .eq("id", input.id)
+      .eq("tenant_id", tenant.tenantId)
+      .maybeSingle();
+    if (typeError) return { error: typeError.message };
+    if (!type) return { error: "Dimensão não encontrada." };
+    if (type.is_system) return { error: "Dimensões padrão do sistema não podem ser excluídas." };
+
+    const { count, error: countError } = await supabase
+      .from("dimension_nodes")
+      .select("id", { count: "exact", head: true })
+      .eq("dimension_type_id", input.id);
+    if (countError) return { error: countError.message };
+    if ((count ?? 0) > 0) {
+      return { error: "Esta dimensão tem itens cadastrados. Exclua os itens antes de remover o tipo." };
+    }
+
+    const { error } = await supabase
+      .from("dimension_types")
+      .delete()
       .eq("id", input.id)
       .eq("tenant_id", tenant.tenantId);
     if (error) return { error: error.message };

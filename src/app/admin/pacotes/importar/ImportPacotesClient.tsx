@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { ImportWizard } from "@/components/import/ImportWizard";
 import { importPackages } from "../_actions";
 import type { ImportLayoutConfig } from "@/lib/import/types";
+import { DIMENSION_CODES } from "@/lib/dimensions/constants";
 
 interface NodeOption {
   id: string;
@@ -30,7 +31,7 @@ export function ImportPacotesClient({ year, packageLabelPlural, costCenterNodes,
       fields: [
         { key: "nome", label: t("nome"), type: "text", required: true, aliases: ["nome", "name", "pacote"] },
         {
-          key: "centro_custo",
+          key: DIMENSION_CODES.CENTRO_CUSTO,
           label: t("centroCusto"),
           type: "node-ref",
           required: false,
@@ -38,11 +39,11 @@ export function ImportPacotesClient({ year, packageLabelPlural, costCenterNodes,
           options: costCenterNodes.map((n) => ({ value: n.id, label: n.name, code: n.code })),
         },
         {
-          key: "entidade",
-          label: t("entidade"),
+          key: DIMENSION_CODES.ENTIDADE,
+          label: t(DIMENSION_CODES.ENTIDADE),
           type: "node-ref",
           required: false,
-          aliases: ["entidade", "unidade"],
+          aliases: [DIMENSION_CODES.ENTIDADE, "unidade"],
           options: entityNodes.map((n) => ({ value: n.id, label: n.name, code: n.code })),
         },
       ],

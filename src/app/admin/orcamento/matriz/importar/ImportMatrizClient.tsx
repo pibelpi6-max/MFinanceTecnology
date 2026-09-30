@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { ImportWizard } from "@/components/import/ImportWizard";
 import { importMatrixEntries } from "../_actions";
 import type { ImportLayoutConfig } from "@/lib/import/types";
+import { DIMENSION_CODES } from "@/lib/dimensions/constants";
 
 interface NodeOption {
   id: string;
@@ -29,15 +30,15 @@ export function ImportMatrizClient({ referenceYear, accountNodes, costCenterNode
       description: t("description", { year: referenceYear }),
       fields: [
         {
-          key: "entidade",
-          label: t("entidade"),
+          key: DIMENSION_CODES.ENTIDADE,
+          label: t(DIMENSION_CODES.ENTIDADE),
           type: "node-ref",
           required: true,
-          aliases: ["entidade", "unidade"],
+          aliases: [DIMENSION_CODES.ENTIDADE, "unidade"],
           options: entityNodes.map((n) => ({ value: n.id, label: n.name, code: n.code })),
         },
         {
-          key: "centro_custo",
+          key: DIMENSION_CODES.CENTRO_CUSTO,
           label: t("centroCusto"),
           type: "node-ref",
           required: true,
@@ -45,11 +46,11 @@ export function ImportMatrizClient({ referenceYear, accountNodes, costCenterNode
           options: costCenterNodes.map((n) => ({ value: n.id, label: n.name, code: n.code })),
         },
         {
-          key: "conta",
-          label: t("conta"),
+          key: DIMENSION_CODES.CONTA,
+          label: t(DIMENSION_CODES.CONTA),
           type: "node-ref",
           required: true,
-          aliases: ["conta", "account"],
+          aliases: [DIMENSION_CODES.CONTA, "account"],
           options: accountNodes.map((n) => ({ value: n.id, label: n.name, code: n.code })),
         },
         {

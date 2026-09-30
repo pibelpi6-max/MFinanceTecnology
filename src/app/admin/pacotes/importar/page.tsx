@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { getCurrentTenant } from "@/lib/tenant/getCurrentTenant";
 import { getDimensionTypeByCode, getDimensionTree } from "@/lib/dimensions/queries";
+import { DIMENSION_CODES } from "@/lib/dimensions/constants";
 import { getTenantLabels } from "@/lib/labels/getTenantLabels";
 import { ImportPacotesClient } from "./ImportPacotesClient";
 
@@ -18,8 +19,8 @@ export default async function ImportarPacotesPage({ searchParams }: PageProps) {
   const labels = await getTenantLabels(tenant.tenantId, locale);
 
   const [centroCustoType, entidadeType] = await Promise.all([
-    getDimensionTypeByCode(tenant.tenantId, "centro_custo"),
-    getDimensionTypeByCode(tenant.tenantId, "entidade"),
+    getDimensionTypeByCode(tenant.tenantId, DIMENSION_CODES.CENTRO_CUSTO),
+    getDimensionTypeByCode(tenant.tenantId, DIMENSION_CODES.ENTIDADE),
   ]);
   const [costCenterNodes, entityNodes] = await Promise.all([
     centroCustoType ? getDimensionTree(tenant.tenantId, centroCustoType.id, year) : Promise.resolve([]),
@@ -32,7 +33,6 @@ export default async function ImportarPacotesPage({ searchParams }: PageProps) {
     <>
       <div className="admin-subheader">
         <div>
-          <p className="admin-page-crumb">{tenant.tenantName}</p>
           <h1 className="admin-page-title">
             {t("titlePrefix")} {labels.budgetPackagePlural}
           </h1>
