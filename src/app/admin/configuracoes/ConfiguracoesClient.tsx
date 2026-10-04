@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { Tooltip } from "@/components/ui/Tooltip";
 import type { DimensionType } from "@/lib/dimensions/types";
+import { isProtectedDimensionCode } from "@/lib/dimensions/constants";
 import { DimensionTypeFormModal } from "./DimensionTypeFormModal";
 import { deleteDimensionType, updateFiscalYearStartMonth } from "./_actions";
 
@@ -170,7 +171,7 @@ export function ConfiguracoesClient({ dimensionTypes, fiscalYearStartMonth, isAd
                       <button type="button" className="settings-edit-link" onClick={() => setEditing(d)}>
                         {t("dimensions.edit")}
                       </button>
-                      {!d.is_system && (
+                      {!d.is_system && !isProtectedDimensionCode(d.code) && (
                         <button
                           type="button"
                           className="settings-edit-link settings-edit-link--danger"
