@@ -249,7 +249,24 @@
       "limitReached": "Limit of 10 custom dimensions reached.",
       "adminOnly": "Only admins can edit this.",
       "deleteConfirmTitle": "Delete dimension",
-      "deleteConfirmBody": "Delete <b>{name}</b> permanently?"
+      "deleteConfirmBody": "Delete <b>{name}</b> permanently?",
+      "modulesColumn": "Modules",
+      "modulesNone": "None",
+      "modulesLabel": "Modules",
+      "modulesHint": "Which modules this dimension can be used in.",
+      "modulesEmptyHint": "No modules created yet. Create one in the section above to associate it here."
+    },
+    "modules": {
+      "title": "Modules",
+      "intro": "Group dimensions by module (e.g. Budget Matrix, Capex, Supplier, Project) to organize where each one applies.",
+      "name": "Name",
+      "namePlaceholder": "e.g. Capex",
+      "new": "+ New module",
+      "edit": "Edit",
+      "empty": "No modules created yet.",
+      "adminOnly": "Only admins can edit this.",
+      "deleteConfirmTitle": "Delete module",
+      "deleteConfirmBody": "Delete <b>{name}</b> permanently? Associated dimensions will no longer belong to this module."
     }
   },
   "import": {
