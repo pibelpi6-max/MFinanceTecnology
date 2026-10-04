@@ -6,6 +6,8 @@ export interface DimensionType {
   description: string | null;
   is_system: boolean;
   sort_order: number;
+  /** Se esta dimensão aparece como eixo extra (filtro) na Matriz Orçamentária. */
+  use_in_matriz: boolean;
 }
 
 export interface DimensionNodeRow {

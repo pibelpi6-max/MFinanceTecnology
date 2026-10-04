@@ -250,28 +250,11 @@
       "adminOnly": "Apenas administradores podem editar.",
       "deleteConfirmTitle": "Excluir dimensão",
       "deleteConfirmBody": "Deseja excluir <b>{name}</b> permanentemente?",
-      "modulesColumn": "Módulos",
-      "modulesNone": "Nenhum",
-      "modulesLabel": "Módulos",
-      "modulesHint": "Em quais módulos esta dimensão pode ser usada.",
-      "modulesEmptyHint": "Nenhum módulo criado ainda. Crie um módulo na seção acima para poder associá-lo aqui."
-    },
-    "modules": {
-      "title": "Módulos",
-      "intro": "Agrupe dimensões por módulo (ex: Orçamento Matricial, Capex, Fornecedor, Projeto) para organizar onde cada uma se aplica.",
-      "name": "Nome",
-      "namePlaceholder": "ex: Capex",
-      "new": "+ Novo módulo",
-      "edit": "Editar",
-      "empty": "Nenhum módulo criado ainda.",
-      "adminOnly": "Apenas administradores podem editar.",
-      "deleteConfirmTitle": "Excluir módulo",
-      "deleteConfirmBody": "Deseja excluir <b>{name}</b> permanentemente? As dimensões associadas deixam de pertencer a este módulo."
-    },
-    "matrizEixos": {
-      "title": "Eixos extras da Matriz Orçamentária",
-      "intro": "Módulo que define quais dimensões extras aparecem como filtro na Matriz Orçamentária (além de Conta, Centro de Custo e Entidade):",
-      "none": "Nenhum (padrão: só Conta, Centro de Custo e Entidade)"
+      "useInMatriz": "Usar na Matriz Orçamentária",
+      "useInMatrizHint": "Se marcado, esta dimensão aparece como um filtro extra na Matriz Orçamentária.",
+      "useInMatrizColumn": "Matriz Orçamentária",
+      "useInMatrizYes": "Sim",
+      "useInMatrizNo": "Não"
     }
   },
   "import": {

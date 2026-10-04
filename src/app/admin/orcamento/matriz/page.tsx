@@ -1,23 +1,21 @@
 import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { getCurrentTenant } from "@/lib/tenant/getCurrentTenant";
-import { getDimensionTypeByCode, getDimensionTree } from "@/lib/dimensions/queries";
+import { getDimensionTypeByCode, getDimensionTree, getMatrizExtraDimensionTypes } from "@/lib/dimensions/queries";
 import { DIMENSION_CODES } from "@/lib/dimensions/constants";
 import { buildDimensionHierarchy } from "@/lib/dimensions/hierarchy";
 import { getMatrixEntries } from "@/lib/budget/queries";
 import { getPackages } from "@/lib/packages/queries";
 import { getTenantLabels } from "@/lib/labels/getTenantLabels";
-import { getTenantSettings } from "@/lib/settings/queries";
-import { getModuleDimensionTypes } from "@/lib/modules/queries";
 import { ImportLinkButton } from "@/components/import/ImportLinkButton";
 import { MatrixFilters } from "./MatrixFilters";
 import { MatrixGridClient } from "./MatrixGridClient";
 import { MatrixEntityPackageTree } from "./MatrixEntityPackageTree";
 
 interface PageProps {
-  // Além de ano/mes/entidade, cada dimensão extra marcada no módulo da
-  // Matriz (ver Parâmetros) ganha sua própria chave dinâmica aqui,
-  // nomeada pelo código da dimensão (ex: "projeto").
+  // Além de ano/mes/entidade, cada dimensão marcada com "Usar na Matriz
+  // Orçamentária" (ver Parâmetros > Dimensões) ganha sua própria chave
+  // dinâmica aqui, nomeada pelo código da dimensão (ex: "projeto").
   searchParams: { ano?: string; mes?: string; entidade?: string; [key: string]: string | undefined };
 }
 
@@ -29,17 +27,15 @@ export default async function MatrizPage({ searchParams }: PageProps) {
   const locale = await getLocale();
   const labels = await getTenantLabels(tenant.tenantId, locale);
 
-  const [contaType, centroCustoType, entidadeType, settings] = await Promise.all([
+  const [contaType, centroCustoType, entidadeType, extraDimensionTypes] = await Promise.all([
     getDimensionTypeByCode(tenant.tenantId, DIMENSION_CODES.CONTA),
     getDimensionTypeByCode(tenant.tenantId, DIMENSION_CODES.CENTRO_CUSTO),
     getDimensionTypeByCode(tenant.tenantId, DIMENSION_CODES.ENTIDADE),
-    getTenantSettings(tenant.tenantId),
+    getMatrizExtraDimensionTypes(tenant.tenantId),
   ]);
 
   const year = Number(searchParams.ano) || new Date().getFullYear();
   const month = Number(searchParams.mes) || new Date().getMonth() + 1;
-
-  const extraDimensionTypes = await getModuleDimensionTypes(tenant.tenantId, settings.matrizModuleId);
 
   const [accountNodes, costCenterNodes, entityNodes, extraDimensionTrees] = await Promise.all([
     contaType ? getDimensionTree(tenant.tenantId, contaType.id, year) : Promise.resolve([]),
@@ -60,8 +56,8 @@ export default async function MatrizPage({ searchParams }: PageProps) {
 
   // Só entram como eixo extra de fato as dimensões que já têm pelo menos
   // um item cadastrado (ver Dimensões) — sem isso não haveria o que
-  // selecionar, então a dimensão fica "marcada no módulo" mas ainda
-  // inerte na Matriz até a usuária cadastrar itens nela.
+  // selecionar, então a dimensão fica "marcada" mas ainda inerte na
+  // Matriz até a usuária cadastrar itens nela.
   const activeExtraDimensions = extraDimensionTypes
     .map((dimensionType, i) => ({ dimensionType, rows: buildDimensionHierarchy(extraDimensionTrees[i]).rows }))
     .filter((d) => d.rows.length > 0);

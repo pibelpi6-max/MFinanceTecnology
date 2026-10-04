@@ -250,28 +250,11 @@
       "adminOnly": "Solo los administradores pueden editarlo.",
       "deleteConfirmTitle": "Eliminar dimensión",
       "deleteConfirmBody": "¿Eliminar <b>{name}</b> permanentemente?",
-      "modulesColumn": "Módulos",
-      "modulesNone": "Ninguno",
-      "modulesLabel": "Módulos",
-      "modulesHint": "En qué módulos se puede usar esta dimensión.",
-      "modulesEmptyHint": "Aún no hay módulos creados. Crea uno en la sección de arriba para asociarlo aquí."
-    },
-    "modules": {
-      "title": "Módulos",
-      "intro": "Agrupa dimensiones por módulo (ej: Presupuesto Matricial, Capex, Proveedor, Proyecto) para organizar dónde se aplica cada una.",
-      "name": "Nombre",
-      "namePlaceholder": "ej: Capex",
-      "new": "+ Nuevo módulo",
-      "edit": "Editar",
-      "empty": "Aún no hay módulos creados.",
-      "adminOnly": "Solo los administradores pueden editarlo.",
-      "deleteConfirmTitle": "Eliminar módulo",
-      "deleteConfirmBody": "¿Eliminar <b>{name}</b> permanentemente? Las dimensiones asociadas dejarán de pertenecer a este módulo."
-    },
-    "matrizEixos": {
-      "title": "Ejes extra de la Matriz Presupuestaria",
-      "intro": "Módulo que define qué dimensiones extra aparecen como filtro en la Matriz Presupuestaria (además de Cuenta, Centro de Costo y Entidad):",
-      "none": "Ninguno (predeterminado: solo Cuenta, Centro de Costo y Entidad)"
+      "useInMatriz": "Usar en la Matriz Presupuestaria",
+      "useInMatrizHint": "Si está marcado, esta dimensión aparece como un filtro extra en la Matriz Presupuestaria.",
+      "useInMatrizColumn": "Matriz Presupuestaria",
+      "useInMatrizYes": "Sí",
+      "useInMatrizNo": "No"
     }
   },
   "import": {
