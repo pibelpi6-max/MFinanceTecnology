@@ -3,7 +3,6 @@ import { getLocale } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentTenant } from "@/lib/tenant/getCurrentTenant";
 import { getUserPreference } from "@/app/_actions/userPreferences";
-import { getDimensionTypes } from "@/lib/dimensions/queries";
 import { getTenantLabels } from "@/lib/labels/getTenantLabels";
 import { AdminHeader } from "@/components/layout/AdminHeader";
 import { AdminSidebar } from "@/components/layout/AdminSidebar";
@@ -28,8 +27,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   const locale = await getLocale();
-  const [dimensionTypes, labels, collapsedPref] = await Promise.all([
-    getDimensionTypes(tenant.tenantId),
+  const [labels, collapsedPref] = await Promise.all([
     getTenantLabels(tenant.tenantId, locale),
     getUserPreference<{ collapsed: boolean }>(`sidebar_collapsed:${tenant.tenantId}`),
   ]);
@@ -39,7 +37,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <AdminSidebar
         userEmail={tenant.userEmail}
         tenantId={tenant.tenantId}
-        dimensionTypes={dimensionTypes.map((d) => ({ code: d.code, name: d.name }))}
         packageLabelPlural={labels.budgetPackagePlural}
         initialCollapsed={collapsedPref?.collapsed ?? false}
       />

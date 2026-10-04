@@ -255,9 +255,11 @@
       "deleteConfirmBody": "Deseja excluir <b>{name}</b> permanentemente?",
       "useInMatriz": "Usar na Matriz Orçamentária",
       "useInMatrizHint": "Se marcado, esta dimensão aparece como um filtro extra na Matriz Orçamentária.",
-      "useInMatrizColumn": "Matriz Orçamentária",
-      "useInMatrizYes": "Sim",
-      "useInMatrizNo": "Não"
+      "useInMatrizColumn": "Utilizado em:",
+      "useInMatrizYes": "Matriz Orçamentária",
+      "useInMatrizNo": "Nenhum lugar",
+      "structure": "Estrutura",
+      "structureItems": "Itens desta dimensão"
     }
   },
   "import": {

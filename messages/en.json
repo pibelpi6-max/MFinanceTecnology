@@ -255,9 +255,11 @@
       "deleteConfirmBody": "Delete <b>{name}</b> permanently?",
       "useInMatriz": "Use in Budget Matrix",
       "useInMatrizHint": "When checked, this dimension shows up as an extra filter in the Budget Matrix.",
-      "useInMatrizColumn": "Budget Matrix",
-      "useInMatrizYes": "Yes",
-      "useInMatrizNo": "No"
+      "useInMatrizColumn": "Used in:",
+      "useInMatrizYes": "Budget Matrix",
+      "useInMatrizNo": "Nowhere",
+      "structure": "Structure",
+      "structureItems": "Items in this dimension"
     }
   },
   "import": {

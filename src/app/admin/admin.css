@@ -300,6 +300,45 @@
 .type-badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 600; white-space: nowrap; background: rgba(62,111,224,.1); color: #3E6FE0; }
 .type-badge--system { background: #f1f2f6; color: #5b5f76; }
 
+/* ── Estrutura de itens inline (Parâmetros > Dimensões) ───
+   Pill discreto (sem borda até o hover) que abre, dentro da própria
+   linha da dimensão, a árvore de itens dela — ver ConfiguracoesClient. */
+.settings-structure-btn {
+  display: inline-flex; align-items: center; gap: 4px; border-radius: 999px;
+  border: 1px solid transparent; padding: 3px 10px; font-size: 11.5px; font-weight: 600;
+  color: var(--text-muted); background: transparent; cursor: pointer; white-space: nowrap;
+  transition: all 120ms ease;
+}
+.settings-structure-btn:hover { background: rgba(62,111,224,.08); border-color: rgba(62,111,224,.22); color: #3E6FE0; }
+.settings-structure-btn.is-active { background: rgba(62,111,224,.1); border-color: rgba(62,111,224,.3); color: #3E6FE0; }
+.settings-structure-btn svg { transition: transform 150ms ease; transform: rotate(-90deg); }
+.settings-structure-btn.is-active svg { transform: rotate(0deg); }
+
+.settings-structure-row td { padding: 0; border-bottom: 1px solid rgba(0,0,0,.04); }
+.settings-structure-panel { background: #F8FAFD; border-top: 1px dashed rgba(0,0,0,.08); padding: 4px 20px 18px 58px; }
+.settings-structure-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 0 8px; gap: 12px; }
+.settings-structure-label { font-size: 10.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--text-muted); }
+.settings-structure-actions { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+.settings-structure-import-link { font-size: 12px; font-weight: 600; color: var(--text-muted); background: none; border: none; cursor: pointer; }
+.settings-structure-import-link:hover { color: #3E6FE0; }
+.settings-structure-empty { font-size: 12.5px; color: var(--text-muted); padding: 6px 0 8px; }
+
+.settings-item-row { display: flex; align-items: center; gap: 1px; padding: 5px 8px; border-radius: 7px; }
+.settings-item-row:hover { background: rgba(0,0,0,.03); }
+.settings-item-row:hover .settings-item-actions { opacity: 1; }
+.settings-item-name {
+  flex: 1; min-width: 0; text-align: left; background: none; border: none; cursor: pointer;
+  padding: 2px 4px; font-size: 13px; color: var(--text-strong); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.settings-item-name:hover { color: #3E6FE0; }
+.settings-item-actions { display: flex; align-items: center; gap: 2px; opacity: 0; transition: opacity .12s ease; flex-shrink: 0; }
+.settings-item-icon-btn {
+  width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 6px; color: #9ca3af; border: none; background: transparent; cursor: pointer;
+}
+.settings-item-icon-btn:hover { background: rgba(0,0,0,.06); color: #374151; }
+.settings-item-icon-btn--danger:hover { background: rgba(220,38,38,.08); color: #dc2626; }
+
 /* ── Importação assistida por IA (Dimensões, Matriz, Realizado, Pacotes) ── */
 .import-wizard { display: flex; flex-direction: column; gap: 20px; max-width: 980px; margin: 0 auto; }
 

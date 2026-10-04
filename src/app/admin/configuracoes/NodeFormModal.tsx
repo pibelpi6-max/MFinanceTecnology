@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { TreeExpand, TreeGuides } from "@/components/ui/tree";
 import { useTreeExpand } from "@/hooks/useTreeExpand";
 import { buildDimensionHierarchy, getVisibleRows } from "@/lib/dimensions/hierarchy";
-import { createDimensionNode, updateDimensionNode } from "../_actions";
+import { createDimensionNode, updateDimensionNode } from "../dimensoes/_actions";
 import type { DimensionNodeRow } from "@/lib/dimensions/types";
 
 interface NodeFormModalProps {
