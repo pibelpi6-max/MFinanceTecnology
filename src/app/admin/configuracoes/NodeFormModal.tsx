@@ -4,7 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
-import { createDimensionNode, updateDimensionNode } from "../_actions";
+import { TreeExpand, TreeGuides } from "@/components/ui/tree";
+import { useTreeExpand } from "@/hooks/useTreeExpand";
+import { buildDimensionHierarchy, getVisibleRows } from "@/lib/dimensions/hierarchy";
+import { createDimensionNode, updateDimensionNode } from "../dimensoes/_actions";
 import type { DimensionNodeRow } from "@/lib/dimensions/types";
 
 interface NodeFormModalProps {
@@ -63,6 +66,16 @@ export function NodeFormModal({
       (n) => n.id !== editing.id && !descendantIds.has(n.id) && n.level < 10
     );
   }, [nodes, editing]);
+
+  // Mesma hierarquia (ids/pais) de parentOptions -- como ela já exclui o nó
+  // em edição e todos os seus descendentes, a subárvore restante continua
+  // íntegra e dá pra construir a árvore direto em cima dela.
+  const parentTree = useMemo(() => buildDimensionHierarchy(parentOptions), [parentOptions]);
+  const parentExpand = useTreeExpand();
+  const parentVisibleRows = useMemo(
+    () => getVisibleRows(parentTree.rows, parentExpand.collapsedIds),
+    [parentTree.rows, parentExpand.collapsedIds]
+  );
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -135,19 +148,59 @@ export function NodeFormModal({
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-gray-600">{t("parent")}</label>
-          <select
-            value={parentNodeId}
-            onChange={(e) => setParentNodeId(e.target.value)}
-            className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-          >
-            <option value="">{t("noParent")}</option>
-            {parentOptions.map((n) => (
-              <option key={n.id} value={n.id}>
-                {"— ".repeat(n.level - 1)}
-                {n.name}
-              </option>
-            ))}
-          </select>
+          <p className="mb-1.5 text-xs text-gray-400">{t("selectParentHint")}</p>
+          <div className="max-h-56 overflow-y-auto rounded-lg border border-gray-200 bg-white p-1">
+            <div
+              className={`flex items-center gap-1 rounded-md px-1.5 py-1.5 ${
+                parentNodeId === "" ? "bg-primary/10" : ""
+              }`}
+            >
+              <span className="tree-expand-spacer" />
+              <button
+                type="button"
+                onClick={() => setParentNodeId("")}
+                className={`flex-1 truncate rounded px-1 py-0.5 text-left text-sm ${
+                  parentNodeId === "" ? "font-semibold text-primary" : "text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                {t("noParent")}
+              </button>
+            </div>
+            {parentVisibleRows.map((row) => {
+              const n = row.item;
+              const selected = parentNodeId === n.id;
+              return (
+                <div
+                  key={n.id}
+                  className={`flex items-center gap-1 rounded-md px-1.5 py-1 ${selected ? "bg-primary/10" : ""}`}
+                >
+                  <TreeGuides
+                    ancestorContinues={row.ancestorContinues}
+                    isLast={parentTree.isLastChild.has(n.id)}
+                    depth={row.depth}
+                  />
+                  {parentTree.hasChildren.has(n.id) ? (
+                    <TreeExpand
+                      isOpen={!parentExpand.isCollapsed(n.id)}
+                      onToggle={() => parentExpand.toggle(n.id)}
+                      label={parentExpand.isCollapsed(n.id) ? t("expandNode") : t("collapseNode")}
+                    />
+                  ) : (
+                    <span className="tree-expand-spacer" />
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setParentNodeId(n.id)}
+                    className={`flex-1 truncate rounded px-1 py-0.5 text-left text-sm ${
+                      selected ? "font-semibold text-primary" : "text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    {n.name}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
         </div>
         {error && (
           <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2">

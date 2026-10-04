@@ -67,6 +67,7 @@ export async function createDimensionNode(input: {
     if (versionError) return { error: versionError.message };
 
     revalidatePath("/admin/dimensoes");
+    revalidatePath("/admin/configuracoes");
     return { success: true };
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Erro inesperado" };
@@ -125,6 +126,7 @@ export async function updateDimensionNode(input: {
     }
 
     revalidatePath("/admin/dimensoes");
+    revalidatePath("/admin/configuracoes");
     return { success: true };
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Erro inesperado" };
@@ -197,7 +199,10 @@ export async function importDimensionNodes(input: {
     successCount++;
   }
 
-  if (successCount > 0) revalidatePath("/admin/dimensoes");
+  if (successCount > 0) {
+    revalidatePath("/admin/dimensoes");
+    revalidatePath("/admin/configuracoes");
+  }
   return { successCount, errorCount: errors.length, errors };
 }
 
@@ -215,6 +220,7 @@ export async function cancelDimensionNode(input: {
     if (error) return { error: error.message };
 
     revalidatePath("/admin/dimensoes");
+    revalidatePath("/admin/configuracoes");
     return { success: true };
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Erro inesperado" };

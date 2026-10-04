@@ -46,7 +46,8 @@ export default async function MatrizPage({ searchParams }: PageProps) {
 
   const { rows: accountRows } = buildDimensionHierarchy(accountNodes);
   const { rows: costCenterRows } = buildDimensionHierarchy(costCenterNodes);
-  const { rows: entityRows } = buildDimensionHierarchy(entityNodes);
+  const entityHierarchy = buildDimensionHierarchy(entityNodes);
+  const { rows: entityRows } = entityHierarchy;
 
   const requestedEntity = searchParams.entidade;
   const entityNodeId =
@@ -112,6 +113,8 @@ export default async function MatrizPage({ searchParams }: PageProps) {
               year={year}
               month={month}
               entityRows={entityRows}
+              entityHasChildren={entityHierarchy.hasChildren}
+              entityIsLastChild={entityHierarchy.isLastChild}
               selectedEntityId={entityNodeId ?? ""}
               packages={packages}
               packageLabelPlural={labels.budgetPackagePlural}

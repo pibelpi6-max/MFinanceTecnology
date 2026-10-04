@@ -3,7 +3,9 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import type { HierarchyRow } from "@/lib/dimensions/hierarchy";
+import { TreeExpand, TreeGuides } from "@/components/ui/tree";
+import { useTreeExpand } from "@/hooks/useTreeExpand";
+import { getVisibleRows, type HierarchyRow } from "@/lib/dimensions/hierarchy";
 import type { DimensionNodeRow } from "@/lib/dimensions/types";
 import type { BudgetPackageRow, PackageStatus } from "@/lib/packages/types";
 
@@ -11,6 +13,10 @@ interface MatrixEntityPackageTreeProps {
   year: number;
   month: number;
   entityRows: HierarchyRow<DimensionNodeRow>[];
+  /** ids de entidade que têm subentidades (mostram o botão de expandir/colapsar). */
+  entityHasChildren: Set<string>;
+  /** ids de entidade que são a última subentidade do seu pai (fecha a guia da árvore). */
+  entityIsLastChild: Set<string>;
   selectedEntityId: string;
   packages: BudgetPackageRow[];
   packageLabelPlural: string;
@@ -28,13 +34,21 @@ export function MatrixEntityPackageTree({
   year,
   month,
   entityRows,
+  entityHasChildren,
+  entityIsLastChild,
   selectedEntityId,
   packages,
   packageLabelPlural,
 }: MatrixEntityPackageTreeProps) {
   const router = useRouter();
   const t = useTranslations("budget.tree");
+  const td = useTranslations("dimensions");
   const [open, setOpen] = useState(true);
+  const entityExpand = useTreeExpand();
+  const visibleEntityRows = useMemo(
+    () => getVisibleRows(entityRows, entityExpand.collapsedIds),
+    [entityRows, entityExpand.collapsedIds]
+  );
 
   const packagesByEntity = useMemo(() => {
     const map = new Map<string, BudgetPackageRow[]>();
@@ -83,23 +97,35 @@ export function MatrixEntityPackageTree({
         </button>
       </div>
       <div className="matrix-tree-body">
-        {entityRows.map((row) => {
+        {visibleEntityRows.map((row) => {
           const entityPackages = packagesByEntity.map.get(row.item.id) ?? [];
+          const hasKids = entityHasChildren.has(row.item.id);
           return (
             <div key={row.item.id}>
-              <button
-                type="button"
-                className={`matrix-tree-entity${row.item.id === selectedEntityId ? " active" : ""}`}
-                style={{ paddingLeft: 8 + row.depth * 14 }}
-                onClick={() => selectEntity(row.item.id)}
-              >
-                <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} style={{ flexShrink: 0, opacity: 0.6 }}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 21h16.5M4.5 3h9v18m6-13.5h-6M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m4.5 4.5v-4.5" />
-                </svg>
-                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.item.name}</span>
-              </button>
+              <div className="flex items-center gap-0.5" style={{ paddingLeft: 8 }}>
+                <TreeGuides ancestorContinues={row.ancestorContinues} isLast={entityIsLastChild.has(row.item.id)} depth={row.depth} />
+                {hasKids ? (
+                  <TreeExpand
+                    isOpen={!entityExpand.isCollapsed(row.item.id)}
+                    onToggle={() => entityExpand.toggle(row.item.id)}
+                    label={entityExpand.isCollapsed(row.item.id) ? td("expandNode") : td("collapseNode")}
+                  />
+                ) : (
+                  <span className="tree-expand-spacer" />
+                )}
+                <button
+                  type="button"
+                  className={`matrix-tree-entity${row.item.id === selectedEntityId ? " active" : ""}`}
+                  onClick={() => selectEntity(row.item.id)}
+                >
+                  <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} style={{ flexShrink: 0, opacity: 0.6 }}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 21h16.5M4.5 3h9v18m6-13.5h-6M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m4.5 4.5v-4.5" />
+                  </svg>
+                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{row.item.name}</span>
+                </button>
+              </div>
               {entityPackages.length > 0 && (
-                <div className="matrix-tree-packages" style={{ paddingLeft: 8 + row.depth * 14 + 18 }}>
+                <div className="matrix-tree-packages" style={{ paddingLeft: 8 + row.depth * 16 + 42 }}>
                   {entityPackages.map((pkg) => (
                     <button key={pkg.id} type="button" className="matrix-tree-package" onClick={goToPackage} title={t("goToPackages")}>
                       <span style={{ width: 6, height: 6, borderRadius: 999, background: STATUS_DOT[pkg.status], flexShrink: 0 }} />

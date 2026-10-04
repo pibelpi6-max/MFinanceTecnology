@@ -7,14 +7,8 @@ import { createClient } from "@/lib/supabase/client";
 import { clearAppCaches } from "@/lib/pwa/clearCaches";
 import { saveUserPreference } from "@/app/_actions/userPreferences";
 
-interface DimensionNavItem {
-  code: string;
-  name: string;
-}
-
 interface AdminSidebarProps {
   userEmail: string | null;
-  dimensionTypes: DimensionNavItem[];
   packageLabelPlural: string;
   initialCollapsed?: boolean;
   tenantId: string;
@@ -22,7 +16,6 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({
   userEmail,
-  dimensionTypes,
   packageLabelPlural,
   initialCollapsed = false,
   tenantId,
@@ -32,7 +25,6 @@ export function AdminSidebar({
   const t = useTranslations("nav");
 
   const [collapsed, setCollapsed] = useState(initialCollapsed);
-  const [dimensoesOpen, setDimensoesOpen] = useState(() => pathname.startsWith("/admin/dimensoes"));
   const [showContent, setShowContent] = useState(!initialCollapsed);
 
   const collapsedRef = useRef(initialCollapsed);
@@ -48,17 +40,13 @@ export function AdminSidebar({
   }, [collapsed, tenantId]);
 
   useEffect(() => {
-    if (pathname.startsWith("/admin/dimensoes")) setDimensoesOpen(true);
-  }, [pathname]);
-
-  useEffect(() => {
     router.prefetch("/admin");
     router.prefetch("/admin/orcamento/matriz");
     router.prefetch("/admin/orcamento/realizado");
     router.prefetch("/admin/orcamento/comparativo");
     router.prefetch("/admin/pacotes");
-    for (const d of dimensionTypes) router.prefetch(`/admin/dimensoes/${d.code}`);
-  }, [router, dimensionTypes]);
+    router.prefetch("/admin/configuracoes");
+  }, [router]);
 
   function expand() {
     setCollapsed(false);
@@ -76,7 +64,6 @@ export function AdminSidebar({
     return exact ? pathname === href : pathname.startsWith(href);
   }
   const cl = (base: string, active: boolean) => `${base}${active ? " active" : ""}`;
-  const dimensoesActive = pathname.startsWith("/admin/dimensoes");
 
   return (
     <aside
@@ -153,40 +140,6 @@ export function AdminSidebar({
           </button>
 
           <div className="sb-sep" />
-
-          <button
-            className={cl("sb-cfg-toggle", dimensoesActive)}
-            onClick={(e) => {
-              e.stopPropagation();
-              if (collapsed) expand();
-              setDimensoesOpen((v) => !v);
-            }}
-          >
-            <svg className="sb-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 8.25h16.5" />
-            </svg>
-            <span className="sb-label sb-cfg-label">{t("dimensoes")}</span>
-            <svg className={`sb-chev${dimensoesOpen ? " open" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="m19 9-7 7-7-7" />
-            </svg>
-          </button>
-
-          {dimensoesOpen && (
-            <div className="sb-cfg-sub">
-              {dimensionTypes.map((d) => (
-                <button
-                  key={d.code}
-                  onClick={(e) => { e.stopPropagation(); router.push(`/admin/dimensoes/${d.code}`); }}
-                  className={cl("sb-sub-item", isActive(`/admin/dimensoes/${d.code}`))}
-                >
-                  <svg className="sb-icon" style={{ width: 14, height: 14 }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                  </svg>
-                  <span className="sb-label">{d.name}</span>
-                </button>
-              ))}
-            </div>
-          )}
 
           <button
             onClick={(e) => { e.stopPropagation(); router.push("/admin/pacotes"); }}

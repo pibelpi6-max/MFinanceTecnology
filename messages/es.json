@@ -104,6 +104,9 @@
     "name": "Nombre",
     "parent": "Ítem superior",
     "noParent": "Ninguno (raíz)",
+    "expandNode": "Expandir",
+    "collapseNode": "Contraer",
+    "selectParentHint": "Haz clic en un elemento para usarlo como padre, o déjalo sin seleccionar para crear en el nivel raíz.",
     "validFrom": "Vigente desde",
     "activeFrom": "Vigente desde {year}",
     "deleteConfirmTitle": "Finalizar vigencia",
@@ -252,9 +255,11 @@
       "deleteConfirmBody": "¿Eliminar <b>{name}</b> permanentemente?",
       "useInMatriz": "Usar en la Matriz Presupuestaria",
       "useInMatrizHint": "Si está marcado, esta dimensión aparece como un filtro extra en la Matriz Presupuestaria.",
-      "useInMatrizColumn": "Matriz Presupuestaria",
-      "useInMatrizYes": "Sí",
-      "useInMatrizNo": "No"
+      "useInMatrizColumn": "Usado en:",
+      "useInMatrizYes": "Matriz Presupuestaria",
+      "useInMatrizNo": "Ningún lugar",
+      "structure": "Estructura",
+      "structureItems": "Elementos de esta dimensión"
     }
   },
   "import": {
