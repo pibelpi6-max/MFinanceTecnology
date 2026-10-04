@@ -10,7 +10,12 @@
 -- Por isso esta migration:
 --   1) desfaz 0010_modulos.sql (dropa `dimension_type_modules` e
 --      `modules` — essas tabelas chegaram a ser criadas no banco real,
---      mas nunca tiveram uso de verdade pela usuária);
+--      mas nunca tiveram uso de verdade pela usuária). `tenants` também
+--      chegou a ganhar a coluna `matriz_module_id` (fk para `modules`)
+--      numa rodada anterior desta mesma migration ainda em rascunho —
+--      por isso ela é derrubada primeiro, senão o `drop table modules`
+--      falha com "cannot drop table modules because other objects
+--      depend on it" (a fk `tenants_matriz_module_id_fkey`);
 --   2) adiciona `dimension_types.use_in_matriz boolean`, a nova fonte
 --      de verdade de "esta dimensão é um eixo extra da Matriz";
 --   3) mantém o mecanismo de `extra_dimensions` em
@@ -36,14 +41,15 @@
 -- mecanismo.
 -- =====================================================================
 
+alter table tenants drop column if exists matriz_module_id;
 drop table if exists dimension_type_modules;
 drop table if exists modules;
 
 alter table dimension_types
-    add column use_in_matriz boolean not null default false;
+    add column if not exists use_in_matriz boolean not null default false;
 
 alter table matrix_budget_entries
-    add column extra_dimensions jsonb not null default '{}'::jsonb;
+    add column if not exists extra_dimensions jsonb not null default '{}'::jsonb;
 
 -- A unique constraint original (ver 0001_init.sql) não considerava
 -- extra_dimensions -- sem trocar ela, duas combinações diferentes de
@@ -76,6 +82,15 @@ begin
     end if;
 end $$;
 
-alter table matrix_budget_entries
-    add constraint matrix_budget_entries_unique_entry
-    unique (tenant_id, year, month, cost_center_node_id, account_node_id, entity_node_id, extra_dimensions);
+do $$
+begin
+    if not exists (
+        select 1 from pg_constraint
+        where conname = 'matrix_budget_entries_unique_entry'
+          and conrelid = 'matrix_budget_entries'::regclass
+    ) then
+        alter table matrix_budget_entries
+            add constraint matrix_budget_entries_unique_entry
+            unique (tenant_id, year, month, cost_center_node_id, account_node_id, entity_node_id, extra_dimensions);
+    end if;
+end $$;
