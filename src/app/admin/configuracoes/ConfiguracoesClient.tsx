@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
+import { Tooltip } from "@/components/ui/Tooltip";
 import type { DimensionType } from "@/lib/dimensions/types";
 import { DimensionTypeFormModal } from "./DimensionTypeFormModal";
 import { deleteDimensionType, updateFiscalYearStartMonth } from "./_actions";
@@ -125,12 +126,19 @@ export function ConfiguracoesClient({ dimensionTypes, fiscalYearStartMonth, isAd
 
         <div className="settings-block-actions">
           {!isAdmin && <p className="settings-admin-hint">{t("dimensions.adminOnly")}</p>}
-          {isAdmin && !limitReached && (
-            <Button size="sm" variant="accent-blue" className="px-4" onClick={() => setEditing("new")}>
-              {t("dimensions.new")}
-            </Button>
+          {isAdmin && (
+            <Tooltip text={limitReached ? t("dimensions.limitReached") : ""}>
+              <Button
+                size="sm"
+                variant="accent-blue"
+                className="px-4"
+                disabled={limitReached}
+                onClick={() => setEditing("new")}
+              >
+                {t("dimensions.new")}
+              </Button>
+            </Tooltip>
           )}
-          {isAdmin && limitReached && <p className="settings-admin-hint">{t("dimensions.limitReached")}</p>}
         </div>
 
         <table className="settings-table">
