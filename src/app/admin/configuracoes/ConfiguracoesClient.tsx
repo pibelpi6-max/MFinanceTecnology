@@ -64,7 +64,7 @@ export function ConfiguracoesClient({ dimensionTypes, fiscalYearStartMonth, isAd
     router.refresh();
   }
 
-  const customCount = dimensionTypes.filter((d) => !d.is_system).length;
+  const customCount = dimensionTypes.filter((d) => !d.is_system && !isProtectedDimensionCode(d.code)).length;
   const limitReached = customCount >= CUSTOM_DIMENSIONS_LIMIT;
 
   return (
@@ -153,8 +153,8 @@ export function ConfiguracoesClient({ dimensionTypes, fiscalYearStartMonth, isAd
                 </td>
                 <td className="text-gray-600">{d.description || <span className="text-gray-400">{t("dimensions.noDescription")}</span>}</td>
                 <td>
-                  <span className={`type-badge${d.is_system ? " type-badge--system" : ""}`}>
-                    {d.is_system ? t("dimensions.system") : t("dimensions.custom")}
+                  <span className={`type-badge${d.is_system || isProtectedDimensionCode(d.code) ? " type-badge--system" : ""}`}>
+                    {d.is_system || isProtectedDimensionCode(d.code) ? t("dimensions.system") : t("dimensions.custom")}
                   </span>
                 </td>
                 {isAdmin && (
