@@ -165,13 +165,15 @@ export async function deleteDimensionType(input: { id: string }): Promise<Action
 
     const { data: type, error: typeError } = await supabase
       .from("dimension_types")
-      .select("id, is_system")
+      .select("id, code, is_system")
       .eq("id", input.id)
       .eq("tenant_id", tenant.tenantId)
       .maybeSingle();
     if (typeError) return { error: typeError.message };
     if (!type) return { error: "Dimensão não encontrada." };
-    if (type.is_system) return { error: "Dimensões padrão do sistema não podem ser excluídas." };
+    if (type.is_system || isProtectedDimensionCode(type.code)) {
+      return { error: "Dimensões padrão do sistema não podem ser excluídas." };
+    }
 
     const { count, error: countError } = await supabase
       .from("dimension_nodes")
