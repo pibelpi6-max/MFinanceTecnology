@@ -17,6 +17,12 @@ const variantClasses: Record<ButtonVariant, string> = {
   warning:
     "bg-amber-500 text-white hover:bg-amber-600 dark:bg-amber-600 dark:hover:bg-amber-500",
 };
+// Estado desabilitado com cores próprias (em vez de só baixar a opacidade) para
+// variantes que, como accent-blue, ficam quase invisíveis quando apenas esmaecidas.
+const disabledVariantClasses: Partial<Record<ButtonVariant, string>> = {
+  "accent-blue":
+    "rounded-full bg-gray-100 border border-gray-300 text-gray-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400",
+};
 const sizeClasses: Record<ButtonSize, string> = {
   sm: "px-3 py-1.5 text-xs",
   md: "px-4 py-2 text-sm",
@@ -40,14 +46,16 @@ export function Button({
   disabled,
   ...props
 }: ButtonProps) {
+  const isDisabled = disabled || isLoading;
+  const hasCustomDisabledStyle = isDisabled && Boolean(disabledVariantClasses[variant]);
   return (
     <button
-      disabled={disabled || isLoading}
+      disabled={isDisabled}
       className={[
         "inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
-        "disabled:cursor-not-allowed disabled:opacity-50",
-        variantClasses[variant],
+        hasCustomDisabledStyle ? "disabled:cursor-not-allowed" : "disabled:cursor-not-allowed disabled:opacity-50",
+        hasCustomDisabledStyle ? disabledVariantClasses[variant] : variantClasses[variant],
         sizeClasses[size],
         className,
       ].join(" ")}
