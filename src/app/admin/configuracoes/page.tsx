@@ -29,6 +29,7 @@ export default async function ConfiguracoesPage() {
           modules={modules}
           dimensionTypeModuleIds={dimensionTypeModuleIds}
           fiscalYearStartMonth={settings.fiscalYearStartMonth}
+          matrizModuleId={settings.matrizModuleId}
           isAdmin={tenant.role === "admin"}
         />
       </div>

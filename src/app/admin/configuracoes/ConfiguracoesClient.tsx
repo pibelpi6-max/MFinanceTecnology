@@ -11,13 +11,14 @@ import { isProtectedDimensionCode } from "@/lib/dimensions/constants";
 import type { ModuleType } from "@/lib/modules/types";
 import { DimensionTypeFormModal } from "./DimensionTypeFormModal";
 import { ModuleFormModal } from "./ModuleFormModal";
-import { deleteDimensionType, deleteModule, updateFiscalYearStartMonth } from "./_actions";
+import { deleteDimensionType, deleteModule, updateFiscalYearStartMonth, updateMatrizModule } from "./_actions";
 
 interface ConfiguracoesClientProps {
   dimensionTypes: DimensionType[];
   modules: ModuleType[];
   dimensionTypeModuleIds: Record<string, string[]>;
   fiscalYearStartMonth: number;
+  matrizModuleId: string | null;
   isAdmin: boolean;
 }
 
@@ -29,6 +30,7 @@ export function ConfiguracoesClient({
   modules,
   dimensionTypeModuleIds,
   fiscalYearStartMonth,
+  matrizModuleId,
   isAdmin,
 }: ConfiguracoesClientProps) {
   const router = useRouter();
@@ -40,6 +42,10 @@ export function ConfiguracoesClient({
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [matrizModule, setMatrizModule] = useState(matrizModuleId);
+  const [matrizSaving, setMatrizSaving] = useState(false);
+  const [matrizSaved, setMatrizSaved] = useState(false);
   const [editing, setEditing] = useState<DimensionType | "new" | null>(null);
   const [deleting, setDeleting] = useState<DimensionType | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -63,6 +69,18 @@ export function ConfiguracoesClient({
       return;
     }
     setSaved(true);
+    router.refresh();
+  }
+
+  async function handleSaveMatrizModule(newModuleId: string | null) {
+    setMatrizSaving(true);
+    setMatrizSaved(false);
+    const result = await updateMatrizModule(newModuleId);
+    setMatrizSaving(false);
+    if (result.error) {
+      return;
+    }
+    setMatrizSaved(true);
     router.refresh();
   }
 
@@ -184,6 +202,42 @@ export function ConfiguracoesClient({
             </tbody>
           </table>
         )}
+      </section>
+
+      <div className="settings-divider" />
+
+      <section className="settings-block">
+        <h2 className="settings-block-title">{t("matrizEixos.title")}</h2>
+        <div className="settings-inline-row">
+          <span className="settings-block-intro">{t("matrizEixos.intro")}</span>
+          {isAdmin ? (
+            <>
+              <select
+                className="year-select"
+                value={matrizModule ?? ""}
+                onChange={(e) => {
+                  const v = e.target.value || null;
+                  setMatrizModule(v);
+                  handleSaveMatrizModule(v);
+                }}
+              >
+                <option value="">{t("matrizEixos.none")}</option>
+                {modules.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name}
+                  </option>
+                ))}
+              </select>
+              {matrizSaving && <span className="settings-saved-hint">{t("period.saving")}</span>}
+              {matrizSaved && !matrizSaving && <span className="settings-saved-hint">{t("period.saved")}</span>}
+            </>
+          ) : (
+            <span className="text-sm text-gray-700">
+              {modules.find((m) => m.id === matrizModule)?.name ?? t("matrizEixos.none")}
+            </span>
+          )}
+        </div>
+        {!isAdmin && <p className="settings-admin-hint">{t("period.adminOnly")}</p>}
       </section>
 
       <div className="settings-divider" />

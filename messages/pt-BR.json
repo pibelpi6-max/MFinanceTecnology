@@ -267,6 +267,11 @@
       "adminOnly": "Apenas administradores podem editar.",
       "deleteConfirmTitle": "Excluir módulo",
       "deleteConfirmBody": "Deseja excluir <b>{name}</b> permanentemente? As dimensões associadas deixam de pertencer a este módulo."
+    },
+    "matrizEixos": {
+      "title": "Eixos extras da Matriz Orçamentária",
+      "intro": "Módulo que define quais dimensões extras aparecem como filtro na Matriz Orçamentária (além de Conta, Centro de Custo e Entidade):",
+      "none": "Nenhum (padrão: só Conta, Centro de Custo e Entidade)"
     }
   },
   "import": {

@@ -267,6 +267,11 @@
       "adminOnly": "Solo los administradores pueden editarlo.",
       "deleteConfirmTitle": "Eliminar módulo",
       "deleteConfirmBody": "¿Eliminar <b>{name}</b> permanentemente? Las dimensiones asociadas dejarán de pertenecer a este módulo."
+    },
+    "matrizEixos": {
+      "title": "Ejes extra de la Matriz Presupuestaria",
+      "intro": "Módulo que define qué dimensiones extra aparecen como filtro en la Matriz Presupuestaria (además de Cuenta, Centro de Costo y Entidad):",
+      "none": "Ninguno (predeterminado: solo Cuenta, Centro de Costo y Entidad)"
     }
   },
   "import": {

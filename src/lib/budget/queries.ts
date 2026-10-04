@@ -11,7 +11,9 @@ export async function getMatrixEntries(
   tenantId: string,
   year: number,
   month: number,
-  entityNodeId: string
+  entityNodeId: string,
+  /** { [dimensionTypeId]: dimensionNodeId } dos eixos extras selecionados (ver 0011_matriz_eixos_extras.sql). */
+  extraDimensions: Record<string, string> = {}
 ): Promise<MatrixEntry[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -20,7 +22,8 @@ export async function getMatrixEntries(
     .eq("tenant_id", tenantId)
     .eq("year", year)
     .eq("month", month)
-    .eq("entity_node_id", entityNodeId);
+    .eq("entity_node_id", entityNodeId)
+    .eq("extra_dimensions", extraDimensions);
 
   if (error) throw new Error(error.message);
 

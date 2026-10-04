@@ -13,6 +13,8 @@ interface MatrixGridClientProps {
   year: number;
   month: number;
   entityNodeId: string;
+  /** { [dimensionTypeId]: dimensionNodeId } dos eixos extras selecionados nos filtros. */
+  extraDimensions: Record<string, string>;
   accounts: HierarchyRow<DimensionNodeRow>[];
   costCenters: DimensionNodeRow[];
   initialEntries: MatrixEntry[];
@@ -51,6 +53,7 @@ export function MatrixGridClient({
   year,
   month,
   entityNodeId,
+  extraDimensions,
   accounts,
   costCenters,
   initialEntries,
@@ -114,7 +117,7 @@ export function MatrixGridClient({
     if (entries.length === 0) return;
 
     startTransition(async () => {
-      const result = await saveMatrixEntries({ year, month, entityNodeId, entries });
+      const result = await saveMatrixEntries({ year, month, entityNodeId, extraDimensions, entries });
       if (result.error) {
         setError(result.error);
         return;

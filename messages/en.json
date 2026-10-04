@@ -267,6 +267,11 @@
       "adminOnly": "Only admins can edit this.",
       "deleteConfirmTitle": "Delete module",
       "deleteConfirmBody": "Delete <b>{name}</b> permanently? Associated dimensions will no longer belong to this module."
+    },
+    "matrizEixos": {
+      "title": "Budget Matrix extra axes",
+      "intro": "Module that defines which extra dimensions show up as a filter in the Budget Matrix (besides Account, Cost Center and Entity):",
+      "none": "None (default: only Account, Cost Center and Entity)"
     }
   },
   "import": {

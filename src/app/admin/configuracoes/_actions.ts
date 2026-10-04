@@ -99,6 +99,24 @@ export async function updateFiscalYearStartMonth(month: number): Promise<ActionR
   }
 }
 
+export async function updateMatrizModule(moduleId: string | null): Promise<ActionResult> {
+  try {
+    const tenant = await requireAdmin();
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from("tenants")
+      .update({ matriz_module_id: moduleId })
+      .eq("id", tenant.tenantId);
+    if (error) return { error: error.message };
+
+    afterMutation();
+    revalidatePath("/admin/orcamento/matriz");
+    return { success: true };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Erro inesperado" };
+  }
+}
+
 export async function createDimensionType(input: {
   code: string;
   name: string;
