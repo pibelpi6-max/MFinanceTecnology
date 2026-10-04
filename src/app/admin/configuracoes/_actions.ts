@@ -1,9 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentTenant } from "@/lib/tenant/getCurrentTenant";
-import { isProtectedDimensionCode } from "@/lib/dimensions/constants";
+import { isProtectedDimensionCode, PROTECTED_DIMENSION_CODES } from "@/lib/dimensions/constants";
 
 interface ActionResult {
   success?: true;
@@ -11,6 +12,22 @@ interface ActionResult {
 }
 
 const CODE_PATTERN = /^[a-z][a-z0-9_]*$/;
+
+/**
+ * Gera um code slug (minúsculo, só [a-z0-9_]) a partir de um nome livre,
+ * para tabelas como `modules` em que o code é só uma chave interna
+ * estável e a usuária só digita o nome. Em colisão, o chamador resolve
+ * (ver createModule) acrescentando um sufixo numérico.
+ */
+function slugify(name: string): string {
+  const base = name
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+  return base || "modulo";
+}
 
 async function requireAdmin() {
   const tenant = await getCurrentTenant();
@@ -26,6 +43,39 @@ function afterMutation() {
   // O layout do /admin carrega a lista de dimensões para a sidebar;
   // "layout" propaga a revalidação para todas as páginas aninhadas.
   revalidatePath("/admin", "layout");
+}
+
+/**
+ * Substitui por completo o conjunto de módulos associados a uma dimensão
+ * (delete + insert, nunca update parcial — mais simples de manter
+ * consistente do que calcular um diff). Retorna uma mensagem de erro, ou
+ * null em caso de sucesso.
+ */
+async function syncDimensionTypeModules(
+  supabase: SupabaseClient,
+  tenantId: string,
+  dimensionTypeId: string,
+  moduleIds: string[]
+): Promise<string | null> {
+  const { error: delError } = await supabase
+    .from("dimension_type_modules")
+    .delete()
+    .eq("dimension_type_id", dimensionTypeId)
+    .eq("tenant_id", tenantId);
+  if (delError) return delError.message;
+
+  const uniqueIds = Array.from(new Set(moduleIds));
+  if (uniqueIds.length === 0) return null;
+
+  const { error: insError } = await supabase.from("dimension_type_modules").insert(
+    uniqueIds.map((moduleId) => ({
+      dimension_type_id: dimensionTypeId,
+      module_id: moduleId,
+      tenant_id: tenantId,
+    }))
+  );
+  if (insError) return insError.message;
+  return null;
 }
 
 export async function updateFiscalYearStartMonth(month: number): Promise<ActionResult> {
@@ -53,6 +103,7 @@ export async function createDimensionType(input: {
   code: string;
   name: string;
   description: string | null;
+  moduleIds?: string[];
 }): Promise<ActionResult> {
   try {
     const tenant = await requireAdmin();
@@ -65,11 +116,15 @@ export async function createDimensionType(input: {
 
     const supabase = await createClient();
 
+    // Códigos protegidos (conta/centro_custo/entidade) não contam no limite:
+    // são estruturais, não "personalizados" pela usuária, mesmo quando
+    // is_system=false no banco (caso da Entidade — ver constants.ts).
     const { count, error: countError } = await supabase
       .from("dimension_types")
       .select("id", { count: "exact", head: true })
       .eq("tenant_id", tenant.tenantId)
-      .eq("is_system", false);
+      .eq("is_system", false)
+      .not("code", "in", `(${PROTECTED_DIMENSION_CODES.join(",")})`);
     if (countError) return { error: countError.message };
     if ((count ?? 0) >= 10) {
       return { error: "Limite de 10 dimensões personalizadas por empresa atingido." };
@@ -83,17 +138,26 @@ export async function createDimensionType(input: {
       .limit(1)
       .maybeSingle();
 
-    const { error } = await supabase.from("dimension_types").insert({
-      tenant_id: tenant.tenantId,
-      code,
-      name,
-      description: input.description?.trim() || null,
-      is_system: false,
-      sort_order: (last?.sort_order ?? 0) + 1,
-    });
+    const { data: created, error } = await supabase
+      .from("dimension_types")
+      .insert({
+        tenant_id: tenant.tenantId,
+        code,
+        name,
+        description: input.description?.trim() || null,
+        is_system: false,
+        sort_order: (last?.sort_order ?? 0) + 1,
+      })
+      .select("id")
+      .single();
     if (error) {
       if (error.code === "23505") return { error: "Já existe uma dimensão com esse código." };
       return { error: error.message };
+    }
+
+    if (input.moduleIds) {
+      const syncError = await syncDimensionTypeModules(supabase, tenant.tenantId, created.id, input.moduleIds);
+      if (syncError) return { error: syncError };
     }
 
     afterMutation();
@@ -108,6 +172,7 @@ export async function updateDimensionType(input: {
   code: string;
   name: string;
   description: string | null;
+  moduleIds?: string[];
 }): Promise<ActionResult> {
   try {
     const tenant = await requireAdmin();
@@ -151,6 +216,11 @@ export async function updateDimensionType(input: {
       return { error: error.message };
     }
 
+    if (input.moduleIds) {
+      const syncError = await syncDimensionTypeModules(supabase, tenant.tenantId, input.id, input.moduleIds);
+      if (syncError) return { error: syncError };
+    }
+
     afterMutation();
     return { success: true };
   } catch (e) {
@@ -190,6 +260,100 @@ export async function deleteDimensionType(input: { id: string }): Promise<Action
       .eq("id", input.id)
       .eq("tenant_id", tenant.tenantId);
     if (error) return { error: error.message };
+
+    afterMutation();
+    return { success: true };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Erro inesperado" };
+  }
+}
+
+// ---------------------------------------------------------------------
+// Módulos: classificação livre (ex: "Orçamento Matricial", "Capex",
+// "Fornecedor", "Projeto") usada para marcar em quais módulos cada
+// dimensão pode ser usada. Diferente de dimension_types, o código
+// (`code`) é só uma chave interna estável — a usuária só digita o nome,
+// sem noção de "código" na tela.
+// ---------------------------------------------------------------------
+
+export async function createModule(input: { name: string }): Promise<ActionResult> {
+  try {
+    const tenant = await requireAdmin();
+    const name = input.name.trim();
+    if (!name) return { error: "Informe um nome." };
+
+    const supabase = await createClient();
+
+    const { data: last } = await supabase
+      .from("modules")
+      .select("sort_order")
+      .eq("tenant_id", tenant.tenantId)
+      .order("sort_order", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const baseCode = slugify(name);
+    let code = baseCode;
+    for (let attempt = 0; attempt < 20; attempt++) {
+      const { error } = await supabase.from("modules").insert({
+        tenant_id: tenant.tenantId,
+        code,
+        name,
+        sort_order: (last?.sort_order ?? 0) + 1,
+      });
+      if (!error) {
+        afterMutation();
+        return { success: true };
+      }
+      if (error.code === "23505") {
+        // Colisão de code (nomes diferentes podem gerar o mesmo slug, ex:
+        // "Projeto" e "projeto!"); tenta sufixos numéricos antes de desistir.
+        code = `${baseCode}_${attempt + 2}`;
+        continue;
+      }
+      return { error: error.message };
+    }
+    return { error: "Não foi possível gerar um código único para este módulo." };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Erro inesperado" };
+  }
+}
+
+export async function updateModule(input: { id: string; name: string }): Promise<ActionResult> {
+  try {
+    const tenant = await requireAdmin();
+    const name = input.name.trim();
+    if (!name) return { error: "Informe um nome." };
+
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from("modules")
+      .update({ name })
+      .eq("id", input.id)
+      .eq("tenant_id", tenant.tenantId);
+    if (error) return { error: error.message };
+
+    afterMutation();
+    return { success: true };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Erro inesperado" };
+  }
+}
+
+export async function deleteModule(input: { id: string }): Promise<ActionResult> {
+  try {
+    const tenant = await requireAdmin();
+    const supabase = await createClient();
+
+    const { error } = await supabase
+      .from("modules")
+      .delete()
+      .eq("id", input.id)
+      .eq("tenant_id", tenant.tenantId);
+    if (error) return { error: error.message };
+    // dimension_type_modules referencia modules com "on delete cascade":
+    // as associações dessa dimensão com este módulo somem junto, sem
+    // precisar de um delete explícito aqui.
 
     afterMutation();
     return { success: true };

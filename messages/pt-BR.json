@@ -249,7 +249,24 @@
       "limitReached": "Limite de 10 dimensões personalizadas atingido.",
       "adminOnly": "Apenas administradores podem editar.",
       "deleteConfirmTitle": "Excluir dimensão",
-      "deleteConfirmBody": "Deseja excluir <b>{name}</b> permanentemente?"
+      "deleteConfirmBody": "Deseja excluir <b>{name}</b> permanentemente?",
+      "modulesColumn": "Módulos",
+      "modulesNone": "Nenhum",
+      "modulesLabel": "Módulos",
+      "modulesHint": "Em quais módulos esta dimensão pode ser usada.",
+      "modulesEmptyHint": "Nenhum módulo criado ainda. Crie um módulo na seção acima para poder associá-lo aqui."
+    },
+    "modules": {
+      "title": "Módulos",
+      "intro": "Agrupe dimensões por módulo (ex: Orçamento Matricial, Capex, Fornecedor, Projeto) para organizar onde cada uma se aplica.",
+      "name": "Nome",
+      "namePlaceholder": "ex: Capex",
+      "new": "+ Novo módulo",
+      "edit": "Editar",
+      "empty": "Nenhum módulo criado ainda.",
+      "adminOnly": "Apenas administradores podem editar.",
+      "deleteConfirmTitle": "Excluir módulo",
+      "deleteConfirmBody": "Deseja excluir <b>{name}</b> permanentemente? As dimensões associadas deixam de pertencer a este módulo."
     }
   },
   "import": {
