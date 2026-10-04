@@ -3,16 +3,26 @@
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
+interface ExtraDimensionSelection {
+  /** Código da dimensão (ex: "projeto") — usado como chave do searchParam na URL. */
+  code: string;
+  name: string;
+  nodeId: string;
+  options: { id: string; name: string }[];
+}
+
 interface MatrixFiltersProps {
   year: number;
   month: number;
   entityNodeId: string;
   entities: { id: string; name: string }[];
+  /** Eixos extras ativos (dimensões marcadas no módulo da Matriz — ver Parâmetros). */
+  extraSelections: ExtraDimensionSelection[];
 }
 
 const MONTH_KEYS = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
 
-export function MatrixFilters({ year, month, entityNodeId, entities }: MatrixFiltersProps) {
+export function MatrixFilters({ year, month, entityNodeId, entities, extraSelections }: MatrixFiltersProps) {
   const router = useRouter();
   const t = useTranslations("budget");
   const currentYear = new Date().getFullYear();
@@ -20,12 +30,18 @@ export function MatrixFilters({ year, month, entityNodeId, entities }: MatrixFil
   if (!years.includes(year)) years.unshift(year);
   years.sort((a, b) => a - b);
 
-  function update(next: Partial<{ ano: number; mes: number; entidade: string }>) {
-    const params = new URLSearchParams({
-      ano: String(next.ano ?? year),
-      mes: String(next.mes ?? month),
-      entidade: next.entidade ?? entityNodeId,
-    });
+  function update(overrides: Record<string, string | number>) {
+    const current: Record<string, string> = {
+      ano: String(year),
+      mes: String(month),
+      entidade: entityNodeId,
+    };
+    for (const sel of extraSelections) current[sel.code] = sel.nodeId;
+
+    const merged = { ...current };
+    for (const [key, value] of Object.entries(overrides)) merged[key] = String(value);
+
+    const params = new URLSearchParams(merged);
     router.push(`/admin/orcamento/matriz?${params.toString()}`);
   }
 
@@ -44,6 +60,24 @@ export function MatrixFilters({ year, month, entityNodeId, entities }: MatrixFil
             </option>
           ))}
         </select>
+      )}
+      {extraSelections.map(
+        (sel) =>
+          sel.options.length > 1 && (
+            <select
+              key={sel.code}
+              className="year-select"
+              value={sel.nodeId}
+              onChange={(e) => update({ [sel.code]: e.target.value })}
+              title={sel.name}
+            >
+              {sel.options.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.name}
+                </option>
+              ))}
+            </select>
+          )
       )}
       <select
         className="year-select"

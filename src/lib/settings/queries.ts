@@ -10,5 +10,7 @@ export async function getTenantSettings(tenantId: string): Promise<TenantSetting
     .single();
 
   if (error) throw new Error(error.message);
-  return { fiscalYearStartMonth: data.fiscal_year_start_month };
+  return {
+    fiscalYearStartMonth: data.fiscal_year_start_month,
+  };
 }

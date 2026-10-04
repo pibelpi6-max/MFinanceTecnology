@@ -13,6 +13,8 @@ export async function saveMatrixEntries(input: {
   year: number;
   month: number;
   entityNodeId: string;
+  /** { [dimensionTypeId]: dimensionNodeId } dos eixos extras selecionados (ver 0011_matriz_eixos_extras.sql). */
+  extraDimensions?: Record<string, string>;
   entries: { accountNodeId: string; costCenterNodeId: string; amount: number }[];
 }): Promise<ActionResult> {
   try {
@@ -21,6 +23,7 @@ export async function saveMatrixEntries(input: {
     if (input.entries.length === 0) return { success: true };
 
     const supabase = await createClient();
+    const extraDimensions = input.extraDimensions ?? {};
     const rows = input.entries.map((e) => ({
       tenant_id: tenant.tenantId,
       year: input.year,
@@ -28,6 +31,7 @@ export async function saveMatrixEntries(input: {
       entity_node_id: input.entityNodeId,
       cost_center_node_id: e.costCenterNodeId,
       account_node_id: e.accountNodeId,
+      extra_dimensions: extraDimensions,
       amount: e.amount,
       created_by: tenant.userId,
     }));
@@ -35,7 +39,7 @@ export async function saveMatrixEntries(input: {
     const { error } = await supabase
       .from("matrix_budget_entries")
       .upsert(rows, {
-        onConflict: "tenant_id,year,month,cost_center_node_id,account_node_id,entity_node_id",
+        onConflict: "tenant_id,year,month,cost_center_node_id,account_node_id,entity_node_id,extra_dimensions",
       });
     if (error) return { error: error.message };
 
@@ -75,10 +79,17 @@ export async function importMatrixEntries(input: {
         entity_node_id: v.entidade,
         cost_center_node_id: v.centro_custo,
         account_node_id: v.conta,
+        // A importação por planilha ainda não coleta valores de eixo
+        // extra (ver 0011_matriz_eixos_extras.sql) — todo lançamento
+        // importado cai no "sem eixo extra selecionado".
+        extra_dimensions: {},
         amount,
         created_by: tenant.userId,
       },
-      { onConflict: "tenant_id,year,month,cost_center_node_id,account_node_id,entity_node_id" }
+      {
+        onConflict:
+          "tenant_id,year,month,cost_center_node_id,account_node_id,entity_node_id,extra_dimensions",
+      }
     );
     if (error) {
       errors.push({ rowIndex, message: error.message });

@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import { getCurrentTenant } from "@/lib/tenant/getCurrentTenant";
 import { getDimensionTypes } from "@/lib/dimensions/queries";
-import { getModules, getDimensionTypeModuleIds } from "@/lib/modules/queries";
 import { getTenantSettings } from "@/lib/settings/queries";
 import { ConfiguracoesClient } from "./ConfiguracoesClient";
 
@@ -9,10 +8,8 @@ export default async function ConfiguracoesPage() {
   const tenant = await getCurrentTenant();
   if (!tenant) notFound();
 
-  const [dimensionTypes, modules, dimensionTypeModuleIds, settings] = await Promise.all([
+  const [dimensionTypes, settings] = await Promise.all([
     getDimensionTypes(tenant.tenantId),
-    getModules(tenant.tenantId),
-    getDimensionTypeModuleIds(tenant.tenantId),
     getTenantSettings(tenant.tenantId),
   ]);
 
@@ -26,8 +23,6 @@ export default async function ConfiguracoesPage() {
       <div className="admin-content admin-content--scroll">
         <ConfiguracoesClient
           dimensionTypes={dimensionTypes}
-          modules={modules}
-          dimensionTypeModuleIds={dimensionTypeModuleIds}
           fiscalYearStartMonth={settings.fiscalYearStartMonth}
           isAdmin={tenant.role === "admin"}
         />

@@ -8,15 +8,11 @@ import { Modal } from "@/components/ui/Modal";
 import { Tooltip } from "@/components/ui/Tooltip";
 import type { DimensionType } from "@/lib/dimensions/types";
 import { isProtectedDimensionCode } from "@/lib/dimensions/constants";
-import type { ModuleType } from "@/lib/modules/types";
 import { DimensionTypeFormModal } from "./DimensionTypeFormModal";
-import { ModuleFormModal } from "./ModuleFormModal";
-import { deleteDimensionType, deleteModule, updateFiscalYearStartMonth } from "./_actions";
+import { deleteDimensionType, updateFiscalYearStartMonth } from "./_actions";
 
 interface ConfiguracoesClientProps {
   dimensionTypes: DimensionType[];
-  modules: ModuleType[];
-  dimensionTypeModuleIds: Record<string, string[]>;
   fiscalYearStartMonth: number;
   isAdmin: boolean;
 }
@@ -26,8 +22,6 @@ const CUSTOM_DIMENSIONS_LIMIT = 10;
 
 export function ConfiguracoesClient({
   dimensionTypes,
-  modules,
-  dimensionTypeModuleIds,
   fiscalYearStartMonth,
   isAdmin,
 }: ConfiguracoesClientProps) {
@@ -40,15 +34,11 @@ export function ConfiguracoesClient({
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
   const [editing, setEditing] = useState<DimensionType | "new" | null>(null);
   const [deleting, setDeleting] = useState<DimensionType | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-
-  const [moduleEditing, setModuleEditing] = useState<ModuleType | "new" | null>(null);
-  const [moduleDeleting, setModuleDeleting] = useState<ModuleType | null>(null);
-  const [moduleDeleteLoading, setModuleDeleteLoading] = useState(false);
-  const [moduleDeleteError, setModuleDeleteError] = useState<string | null>(null);
 
   useEffect(() => setMonth(fiscalYearStartMonth), [fiscalYearStartMonth]);
 
@@ -77,20 +67,6 @@ export function ConfiguracoesClient({
       return;
     }
     setDeleting(null);
-    router.refresh();
-  }
-
-  async function handleConfirmDeleteModule() {
-    if (!moduleDeleting) return;
-    setModuleDeleteLoading(true);
-    setModuleDeleteError(null);
-    const result = await deleteModule({ id: moduleDeleting.id });
-    setModuleDeleteLoading(false);
-    if (result.error) {
-      setModuleDeleteError(result.error);
-      return;
-    }
-    setModuleDeleting(null);
     router.refresh();
   }
 
@@ -130,60 +106,6 @@ export function ConfiguracoesClient({
         </div>
         {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
         {!isAdmin && <p className="settings-admin-hint">{t("period.adminOnly")}</p>}
-      </section>
-
-      <div className="settings-divider" />
-
-      <section className="settings-block">
-        <h2 className="settings-block-title">{t("modules.title")}</h2>
-        <p className="settings-block-intro">{t("modules.intro")}</p>
-
-        <div className="settings-block-actions">
-          {!isAdmin && <p className="settings-admin-hint">{t("modules.adminOnly")}</p>}
-          {isAdmin && (
-            <Button size="sm" variant="accent-blue" className="px-4" onClick={() => setModuleEditing("new")}>
-              {t("modules.new")}
-            </Button>
-          )}
-        </div>
-
-        {modules.length === 0 ? (
-          <p className="settings-block-intro">{t("modules.empty")}</p>
-        ) : (
-          <table className="settings-table">
-            <thead>
-              <tr>
-                <th>{t("modules.name")}</th>
-                <th></th>
-                {isAdmin && <th></th>}
-              </tr>
-            </thead>
-            <tbody>
-              {modules.map((m) => (
-                <tr key={m.id}>
-                  <td className="font-medium text-gray-800">{m.name}</td>
-                  <td></td>
-                  {isAdmin && (
-                    <td className="text-right">
-                      <span className="settings-row-actions">
-                        <button type="button" className="settings-edit-link" onClick={() => setModuleEditing(m)}>
-                          {t("modules.edit")}
-                        </button>
-                        <button
-                          type="button"
-                          className="settings-edit-link settings-edit-link--danger"
-                          onClick={() => setModuleDeleting(m)}
-                        >
-                          {tc("delete")}
-                        </button>
-                      </span>
-                    </td>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
       </section>
 
       <div className="settings-divider" />
@@ -231,16 +153,13 @@ export function ConfiguracoesClient({
               <th>{t("dimensions.name")}</th>
               <th>{t("dimensions.code")}</th>
               <th>{t("dimensions.fieldDescription")}</th>
-              <th>{t("dimensions.modulesColumn")}</th>
+              <th>{t("dimensions.useInMatrizColumn")}</th>
               <th></th>
               {isAdmin && <th></th>}
             </tr>
           </thead>
           <tbody>
             {dimensionTypes.map((d) => {
-              const dimModules = (dimensionTypeModuleIds[d.id] ?? [])
-                .map((moduleId) => modules.find((m) => m.id === moduleId)?.name)
-                .filter((name): name is string => Boolean(name));
               return (
               <tr key={d.id}>
                 <td className="font-medium text-gray-800">{d.name}</td>
@@ -249,7 +168,11 @@ export function ConfiguracoesClient({
                 </td>
                 <td className="text-gray-600">{d.description || <span className="text-gray-400">{t("dimensions.noDescription")}</span>}</td>
                 <td className="text-gray-600">
-                  {dimModules.length > 0 ? dimModules.join(", ") : <span className="text-gray-400">{t("dimensions.modulesNone")}</span>}
+                  {d.use_in_matriz ? (
+                    t("dimensions.useInMatrizYes")
+                  ) : (
+                    <span className="text-gray-400">{t("dimensions.useInMatrizNo")}</span>
+                  )}
                 </td>
                 <td>
                   <span className={`type-badge${d.is_system || isProtectedDimensionCode(d.code) ? " type-badge--system" : ""}`}>
@@ -286,8 +209,6 @@ export function ConfiguracoesClient({
           open={editing !== null}
           onClose={() => setEditing(null)}
           editing={editing === "new" ? null : editing}
-          modules={modules}
-          initialModuleIds={editing && editing !== "new" ? dimensionTypeModuleIds[editing.id] ?? [] : []}
           onSaved={() => {
             setEditing(null);
             router.refresh();
@@ -326,60 +247,6 @@ export function ConfiguracoesClient({
             {deleteError && (
               <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
                 <p className="text-sm text-red-600">{deleteError}</p>
-              </div>
-            )}
-          </div>
-        </Modal>
-      )}
-
-      {isAdmin && (
-        <ModuleFormModal
-          open={moduleEditing !== null}
-          onClose={() => setModuleEditing(null)}
-          editing={moduleEditing === "new" ? null : moduleEditing}
-          onSaved={() => {
-            setModuleEditing(null);
-            router.refresh();
-          }}
-        />
-      )}
-
-      {isAdmin && (
-        <Modal
-          open={moduleDeleting !== null}
-          onClose={() => {
-            setModuleDeleting(null);
-            setModuleDeleteError(null);
-          }}
-          title={t("modules.deleteConfirmTitle")}
-          size="sm"
-          footer={
-            <>
-              <Button variant="ghost" onClick={() => setModuleDeleting(null)} disabled={moduleDeleteLoading}>
-                {tc("cancel")}
-              </Button>
-              <Button
-                variant="danger"
-                isLoading={moduleDeleteLoading}
-                loadingText={tc("saving")}
-                onClick={handleConfirmDeleteModule}
-              >
-                {tc("delete")}
-              </Button>
-            </>
-          }
-        >
-          <div className="space-y-3">
-            <p className="text-sm text-gray-600">
-              {moduleDeleting &&
-                t.rich("modules.deleteConfirmBody", {
-                  name: moduleDeleting.name,
-                  b: (chunks) => <strong className="font-semibold text-gray-900">{chunks}</strong>,
-                })}
-            </p>
-            {moduleDeleteError && (
-              <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
-                <p className="text-sm text-red-600">{moduleDeleteError}</p>
               </div>
             )}
           </div>
