@@ -23,7 +23,12 @@ export async function getMatrixEntries(
     .eq("year", year)
     .eq("month", month)
     .eq("entity_node_id", entityNodeId)
-    .eq("extra_dimensions", extraDimensions);
+    // supabase-js não serializa objetos em .eq() (só interpola `eq.${value}`,
+    // o que viraria "eq.[object Object]" e quebra o parser json do Postgres
+    // com "invalid input syntax for type json") — por isso o JSON.stringify
+    // explícito aqui. "{}" é texto JSON válido e casa normalmente com o
+    // default da coluna.
+    .eq("extra_dimensions", JSON.stringify(extraDimensions));
 
   if (error) throw new Error(error.message);
 
