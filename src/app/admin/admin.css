@@ -164,6 +164,41 @@
 .matrix-tree-section-label { font-size: 10px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--text-muted); padding: 10px 8px 4px; }
 .matrix-tree-empty { font-size: 11.5px; color: var(--text-muted); padding: 2px 8px 8px; }
 
+/* ── Árvore genérica (expand/collapse + conectores) ───────
+   Usada no cadastro de dimensões, no seletor de pai e no painel de
+   Entidade da Matriz — ver src/components/ui/tree e useTreeExpand. */
+.tree-expand-btn {
+  display: grid; place-items: center; width: 22px; height: 22px; border-radius: 6px;
+  background: transparent; border: 1px solid transparent; color: #9aa0ad;
+  cursor: pointer; transition: all 150ms ease; flex: 0 0 auto; padding: 0;
+}
+.tree-expand-btn:hover { background: rgba(62,111,224,.08); border-color: rgba(62,111,224,.2); color: #3E6FE0; }
+.tree-expand-btn svg { transition: transform 150ms ease; }
+.tree-expand-btn.is-open svg { transform: rotate(90deg); }
+.tree-expand-spacer { display: inline-block; width: 22px; flex: 0 0 auto; }
+
+.tree-guides { display: inline-flex; align-self: stretch; flex: 0 0 auto; }
+.tree-guide-col { position: relative; width: 16px; flex: 0 0 16px; align-self: stretch; }
+.tree-guide-col.is-continuing:not(.tree-guide-col--own)::before {
+  content: ""; position: absolute; top: 0; bottom: 0; left: 7px;
+  border-left: 1.5px dashed rgba(17,24,39,.14);
+}
+.tree-guide-col--own::before {
+  content: ""; position: absolute; top: 0; left: 7px; bottom: 50%;
+  border-left: 1.5px dashed rgba(17,24,39,.14);
+}
+.tree-guide-col--own.is-continuing::before { bottom: 0; }
+.tree-guide-col--own::after {
+  content: ""; position: absolute; top: 50%; left: 7px; width: 9px;
+  border-top: 1.5px dashed rgba(17,24,39,.14);
+}
+
+.tree-row-enter { animation: treeRowFadeIn 180ms ease; }
+@keyframes treeRowFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .matrix-wrap { display: flex; flex-direction: column; height: 100%; min-height: 0; }
 .matrix-toolbar {
   display: flex; align-items: center; justify-content: space-between;

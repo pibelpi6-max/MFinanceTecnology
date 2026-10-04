@@ -6,8 +6,11 @@ import { useTranslations } from "next-intl";
 import { DataTable } from "@/components/ui/DataTable/DataTable";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
-import type { ColumnMeta, RowMeta } from "@/components/ui/DataTable/types";
+import { TreeExpand, TreeGuides } from "@/components/ui/tree";
+import { useTreeExpand } from "@/hooks/useTreeExpand";
+import type { ColumnMeta } from "@/components/ui/DataTable/types";
 import type { DimensionNodeRow } from "@/lib/dimensions/types";
+import { buildDimensionHierarchy, getVisibleRows } from "@/lib/dimensions/hierarchy";
 import { NodeFormModal } from "./NodeFormModal";
 import { cancelDimensionNode } from "../_actions";
 
@@ -16,32 +19,6 @@ interface DimensionTreeClientProps {
   dimensionTypeName: string;
   year: number;
   nodes: DimensionNodeRow[];
-}
-
-function buildHierarchy(nodes: DimensionNodeRow[]) {
-  const byParent = new Map<string | null, DimensionNodeRow[]>();
-  for (const n of nodes) {
-    const list = byParent.get(n.parentNodeId) ?? [];
-    list.push(n);
-    byParent.set(n.parentNodeId, list);
-  }
-  byParent.forEach((list) => {
-    list.sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
-  });
-
-  const rows: RowMeta<DimensionNodeRow>[] = [];
-  const depthByNodeId = new Map<string, number>();
-
-  function walk(parentId: string | null, depth: number) {
-    for (const n of byParent.get(parentId) ?? []) {
-      rows.push({ item: n, depth });
-      depthByNodeId.set(n.id, depth);
-      walk(n.id, depth + 1);
-    }
-  }
-  walk(null, 0);
-
-  return { rows, depthByNodeId };
 }
 
 export function DimensionTreeClient({
@@ -59,7 +36,12 @@ export function DimensionTreeClient({
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  const { rows, depthByNodeId } = useMemo(() => buildHierarchy(nodes), [nodes]);
+  const hierarchy = useMemo(() => buildDimensionHierarchy(nodes), [nodes]);
+  const { depthByNodeId, hasChildren, isLastChild, rows } = hierarchy;
+  const rowById = useMemo(() => new Map(rows.map((r) => [r.item.id, r])), [rows]);
+
+  const { collapsedIds, isCollapsed, toggle } = useTreeExpand();
+  const visibleRows = useMemo(() => getVisibleRows(rows, collapsedIds), [rows, collapsedIds]);
 
   const columns: ColumnMeta<DimensionNodeRow>[] = useMemo(
     () => [
@@ -69,9 +51,19 @@ export function DimensionTreeClient({
         getText: (n) => n.name,
         render: (n) => {
           const depth = depthByNodeId.get(n.id) ?? 0;
+          const row = rowById.get(n.id);
           return (
-            <div className="flex min-w-0 items-center gap-1.5" style={{ paddingLeft: depth * 20 }}>
-              {depth > 0 && <span className="text-gray-300">└</span>}
+            <div className="flex min-w-0 items-center gap-1" style={{ paddingLeft: 4 }}>
+              {row && <TreeGuides ancestorContinues={row.ancestorContinues} isLast={isLastChild.has(n.id)} depth={depth} />}
+              {hasChildren.has(n.id) ? (
+                <TreeExpand
+                  isOpen={!isCollapsed(n.id)}
+                  onToggle={() => toggle(n.id)}
+                  label={isCollapsed(n.id) ? t("expandNode") : t("collapseNode")}
+                />
+              ) : (
+                <span className="tree-expand-spacer" />
+              )}
               <span className="truncate font-medium text-gray-800">{n.name}</span>
             </div>
           );
@@ -95,7 +87,7 @@ export function DimensionTreeClient({
         ),
       },
     ],
-    [t, depthByNodeId]
+    [t, depthByNodeId, rowById, hasChildren, isLastChild, isCollapsed, toggle]
   );
 
   async function handleConfirmDelete() {
@@ -123,7 +115,7 @@ export function DimensionTreeClient({
         onNew={() => setEditing("new")}
         newLabel={t("new")}
         emptyMessage={t("emptyMessage", { year })}
-        buildTree={() => rows}
+        buildTree={() => visibleRows}
       />
 
       <NodeFormModal
