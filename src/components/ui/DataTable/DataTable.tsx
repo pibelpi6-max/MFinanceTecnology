@@ -1114,7 +1114,11 @@ export function DataTable<T extends {
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-          <Button type="button" variant="accent-blue" size="sm" className="px-4" onClick={onNew}>
+          <button
+            type="button"
+            onClick={onNew}
+            className="inline-flex items-center gap-2 rounded-lg bg-[#5cb88a] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#4aa678]"
+          >
             <svg
               className="h-4 w-4"
               fill="none"
@@ -1129,7 +1133,7 @@ export function DataTable<T extends {
               />
             </svg>
             {newLabel}
-          </Button>
+          </button>
           {importButton}
           </div>
           {extraActions}
@@ -1153,7 +1157,11 @@ export function DataTable<T extends {
       {/* Header: botão Novo + busca + botão Colunas */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-        <Button type="button" variant="accent-blue" size="sm" className="px-4" onClick={onNew}>
+        <button
+          type="button"
+          onClick={onNew}
+          className="inline-flex items-center gap-2 rounded-lg bg-[#5cb88a] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#4aa678]"
+        >
           <svg
             className="h-4 w-4"
             fill="none"
@@ -1168,7 +1176,7 @@ export function DataTable<T extends {
             />
           </svg>
           {newLabel}
-        </Button>
+        </button>
         {importButton}
         </div>
         {extraActions}
