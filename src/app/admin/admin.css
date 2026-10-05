@@ -348,34 +348,31 @@
 .settings-item-icon-btn--danger:hover { background: rgba(220,38,38,.08); color: #dc2626; }
 
 /* ── Estruturas (Parâmetros > Dimensões > Estruturas) ───
-   Tela dividida: sidebar fixa à esquerda com a lista de Estruturas
-   (nome truncado + tooltip, status ativa/inativa via switch, ações de
-   renomear/duplicar/excluir) e, à direita, a árvore de itens da
-   estrutura selecionada — clicar num item da sidebar atualiza a árvore
-   na hora, sem expandir/recolher nada. Layout prototipado antes num
-   canvas de Design e aprovado pela usuária (05/10), substituindo o
-   desenho anterior empilhado (pills em cima, árvore embaixo). */
-.settings-structure-split { display: flex; gap: 0; align-items: flex-start; }
-.settings-structure-sidebar {
-  width: 240px; flex-shrink: 0; padding-right: 16px; margin-right: 16px;
-  border-right: 1px solid rgba(0,0,0,.06);
+   Lista vertical em acordeão: clicar numa estrutura expande, dentro da
+   própria linha, a árvore de itens dela (uma por vez). Terceira
+   iteração deste layout (05/10) — passou por um desenho empilhado e
+   depois por uma tela dividida (lista + árvore lado a lado, prototipada
+   num canvas de Design), mas a usuária preferiu voltar ao acordeão
+   depois de ver as duas rodando. Nome truncado + tooltip no hover
+   (`.settings-structure-accordion-name`), já que a largura da linha é
+   compartilhada com badge/switch/ações. */
+.settings-structure-accordion-list { display: flex; flex-direction: column; gap: 4px; }
+.settings-structure-accordion {
+  border: 1px solid rgba(0,0,0,.06); border-radius: 10px; background: #fff; overflow: hidden;
 }
-.settings-structure-sidebar-header { display: flex; align-items: center; justify-content: space-between; padding: 2px 0 8px; gap: 8px; }
-.settings-structure-content { flex: 1; min-width: 0; }
-.settings-structure-list-v { display: flex; flex-direction: column; gap: 2px; }
-.settings-structure-item {
-  display: flex; flex-direction: column; gap: 4px; padding: 7px 8px 6px;
-  border-radius: 8px; border-left: 3px solid transparent;
+.settings-structure-accordion.is-expanded { border-color: rgba(62,111,224,.3); }
+.settings-structure-accordion-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; }
+.settings-structure-accordion-toggle {
+  display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;
+  background: none; border: none; cursor: pointer; padding: 0; text-align: left;
 }
-.settings-structure-item:hover { background: rgba(0,0,0,.025); }
-.settings-structure-item.is-selected { background: rgba(62,111,224,.06); border-left-color: #3E6FE0; }
-.settings-structure-item-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.settings-structure-item-name {
-  min-width: 0; text-align: left; background: none; border: none; cursor: pointer;
-  padding: 0; font-size: 13px; font-weight: 600; color: var(--text-strong);
+.settings-structure-accordion-toggle svg { flex-shrink: 0; color: #9ca3af; transition: transform 150ms ease; }
+.settings-structure-accordion.is-expanded .settings-structure-accordion-toggle svg { transform: rotate(90deg); }
+.settings-structure-accordion-name { font-size: 13px; font-weight: 600; color: var(--text-strong); }
+.settings-structure-accordion-toggle:hover .settings-structure-accordion-name { color: #3E6FE0; }
+.settings-structure-accordion-body {
+  border-top: 1px solid rgba(0,0,0,.06); padding: 4px 14px 14px 36px; background: #FAFBFC;
 }
-.settings-structure-item-name:hover,
-.settings-structure-item.is-selected .settings-structure-item-name { color: #3E6FE0; }
 .settings-structure-status-badge {
   display: inline-flex; align-items: center; flex-shrink: 0; padding: 2px 8px; border-radius: 999px;
   font-size: 10px; font-weight: 600; white-space: nowrap; background: #f1f2f6; color: #5b5f76;
