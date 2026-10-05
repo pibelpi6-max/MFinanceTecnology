@@ -6,7 +6,6 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
-import { Tooltip } from "@/components/ui/Tooltip";
 import { DataTable } from "@/components/ui/DataTable/DataTable";
 import type { ColumnMeta } from "@/components/ui/DataTable/types";
 import { TreeExpand, TreeGuides } from "@/components/ui/tree";
@@ -22,63 +21,115 @@ import { cancelDimensionNode } from "../dimensoes/_actions";
 type Translator = (key: string, values?: Record<string, string | number>) => string;
 
 /**
- * Monta as colunas da árvore de itens (nome com indentação/guias, código,
- * vigência) usadas pelo DataTable dentro do painel "Estrutura" de cada
- * dimensão — reaproveita o mesmo desenho de árvore que o antigo
- * DimensionTreeClient.tsx usava em /admin/dimensoes/[tipo] (ver
- * claude/decisoes-arquitetura.md).
+ * Monta as colunas da lista de TIPOS de dimensão (Nome/Código/Descrição/
+ * Utilizado em/Estrutura/Tipo/Excluir) usadas pelo DataTable na tela de
+ * Parâmetros. A árvore de ITENS de cada dimensão continua sendo uma árvore
+ * simples (ver renderStructureContent, dentro do componente) igual ao
+ * desenho usado em "plano de aulas" no app irmão — só a lista de tipos é
+ * que ganhou o DataTable (busca + engrenagem de colunas). Ver
+ * claude/decisoes-arquitetura.md.
+ *
+ * Nota: o DataTable não desenha um botão de excluir próprio — seu
+ * `onDelete` é apenas repassado via prop para manter a tipagem, mas nunca é
+ * chamado pelo componente (só `onEdit`, via o ícone de lápis fixo na coluna
+ * "Ações"). Por isso a coluna "delete" abaixo existe: é o único jeito do
+ * usuário disparar a exclusão de um tipo de dimensão nessa tabela.
  */
-function buildNodeColumns(
-  hierarchy: ReturnType<typeof buildDimensionHierarchy> | undefined,
-  treeExpand: ReturnType<typeof useTreeExpand>,
-  td: Translator
-): ColumnMeta<DimensionNodeRow>[] {
-  const depthByNodeId = hierarchy?.depthByNodeId ?? new Map<string, number>();
-  const hasChildren = hierarchy?.hasChildren ?? new Set<string>();
-  const isLastChild = hierarchy?.isLastChild ?? new Set<string>();
-  const rowById = new Map((hierarchy?.rows ?? []).map((r) => [r.item.id, r]));
-
+function buildTypeColumns(
+  t: Translator,
+  tc: Translator,
+  expandedTypeId: string | null,
+  onToggleStructure: (id: string) => void,
+  onDeleteRequest: (d: DimensionType) => void
+): ColumnMeta<DimensionType>[] {
   return [
     {
       key: "name",
-      label: td("name"),
-      getText: (n) => n.name,
-      render: (n) => {
-        const depth = depthByNodeId.get(n.id) ?? 0;
-        const row = rowById.get(n.id);
-        return (
-          <div className="flex min-w-0 items-center gap-1" style={{ paddingLeft: 4 }}>
-            {row && (
-              <TreeGuides ancestorContinues={row.ancestorContinues} isLast={isLastChild.has(n.id)} depth={depth} />
-            )}
-            {hasChildren.has(n.id) ? (
-              <TreeExpand
-                isOpen={!treeExpand.isCollapsed(n.id)}
-                onToggle={() => treeExpand.toggle(n.id)}
-                label={treeExpand.isCollapsed(n.id) ? td("expandNode") : td("collapseNode")}
-              />
-            ) : (
-              <span className="tree-expand-spacer" />
-            )}
-            <span className="truncate font-medium text-gray-800">{n.name}</span>
-          </div>
-        );
-      },
+      label: t("dimensions.name"),
+      getText: (d) => d.name,
+      render: (d) => <span className="font-medium text-gray-800">{d.name}</span>,
     },
     {
       key: "code",
-      label: td("code"),
+      label: t("dimensions.code"),
       width: 140,
-      getText: (n) => n.code,
-      render: (n) => <span className="font-mono text-xs text-gray-500">{n.code}</span>,
+      getText: (d) => d.code,
+      render: (d) => <code className="settings-code">{d.code}</code>,
     },
     {
-      key: "validFrom",
-      label: td("validFrom"),
-      width: 170,
-      align: "right",
+      key: "description",
+      label: t("dimensions.fieldDescription"),
+      getText: (d) => d.description ?? "",
+      render: (d) =>
+        d.description ? (
+          <span className="text-gray-600">{d.description}</span>
+        ) : (
+          <span className="text-gray-400">{t("dimensions.noDescription")}</span>
+        ),
+    },
+    {
+      key: "useInMatriz",
+      label: t("dimensions.useInMatrizColumn"),
       noTooltip: true,
-      render: (n) => <span className="text-xs text-gray-400">{td("activeFrom", { year: n.validFromYear })}</span>,
+      filterable: true,
+      filterValueLabels: { yes: t("dimensions.useInMatrizYes"), no: t("dimensions.useInMatrizNo") },
+      filterValue: (d) => (d.use_in_matriz ? "yes" : "no"),
+      render: (d) =>
+        d.use_in_matriz ? (
+          <span className="type-badge">{t("dimensions.useInMatrizYes")}</span>
+        ) : (
+          <span className="text-gray-400">{t("dimensions.useInMatrizNo")}</span>
+        ),
+    },
+    {
+      key: "structure",
+      label: t("dimensions.structure"),
+      sortable: false,
+      noTooltip: true,
+      render: (d) => (
+        <button
+          type="button"
+          className={`settings-structure-btn${expandedTypeId === d.id ? " is-active" : ""}`}
+          onClick={() => onToggleStructure(d.id)}
+        >
+          {t("dimensions.structure")}
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
+          </svg>
+        </button>
+      ),
+    },
+    {
+      key: "type",
+      label: t("dimensions.typeLabel"),
+      noTooltip: true,
+      filterable: true,
+      filterValueLabels: { system: t("dimensions.system"), custom: t("dimensions.custom") },
+      filterValue: (d) => (d.is_system || isProtectedDimensionCode(d.code) ? "system" : "custom"),
+      render: (d) => (
+        <span className={`type-badge${d.is_system || isProtectedDimensionCode(d.code) ? " type-badge--system" : ""}`}>
+          {d.is_system || isProtectedDimensionCode(d.code) ? t("dimensions.system") : t("dimensions.custom")}
+        </span>
+      ),
+    },
+    {
+      key: "delete",
+      label: tc("delete"),
+      sortable: false,
+      noTooltip: true,
+      render: (d) =>
+        !d.is_system && !isProtectedDimensionCode(d.code) ? (
+          <button
+            type="button"
+            className="settings-item-icon-btn settings-item-icon-btn--danger"
+            title={tc("delete")}
+            onClick={() => onDeleteRequest(d)}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" />
+            </svg>
+          </button>
+        ) : null,
     },
   ];
 }
@@ -182,7 +233,90 @@ export function ConfiguracoesClient({
 
   const customCount = dimensionTypes.filter((d) => !d.is_system && !isProtectedDimensionCode(d.code)).length;
   const limitReached = customCount >= CUSTOM_DIMENSIONS_LIMIT;
-  const columnCount = isAdmin ? 7 : 6;
+  const columnCount = 6;
+
+  /**
+   * Conteúdo do painel "Estrutura" de uma dimensão — árvore simples de
+   * itens (igual ao desenho de "plano de aulas" do app irmão), não um
+   * DataTable. `embedded` troca só o wrapper externo: quando é usado dentro
+   * do `renderExpanded` do DataTable (lista de tipos), o próprio DataTable
+   * já desenha cartão arredondado/borda ao redor, então aqui a gente usa
+   * `.settings-structure-embedded` (sem fundo/borda duplicados); no
+   * fallback de leitura (usuária não-admin, tabela simples) usa-se
+   * `.settings-structure-panel` (com seu próprio fundo tracejado).
+   */
+  function renderStructureContent(d: DimensionType, embedded: boolean) {
+    const hierarchy = hierarchies.get(d.id);
+    const nodes = nodesByType[d.id] ?? [];
+    const visibleRows = hierarchy ? getVisibleRows(hierarchy.rows, treeExpand.collapsedIds) : [];
+
+    return (
+      <div className={embedded ? "settings-structure-embedded" : "settings-structure-panel"}>
+        <div className="settings-structure-header">
+          <span className="settings-structure-label">{t("dimensions.structureItems")}</span>
+          <div className="settings-structure-actions">
+            <Link href={`/admin/dimensoes/${d.code}/importar?ano=${year}`} className="settings-structure-import-link">
+              {td("importButton")}
+            </Link>
+            <Button size="sm" variant="accent-blue" className="px-3" onClick={() => setNodeEditing({ type: d, node: "new" })}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4}>
+                <path strokeLinecap="round" d="M12 5v14M5 12h14" />
+              </svg>
+              {td("new")}
+            </Button>
+          </div>
+        </div>
+
+        {nodes.length === 0 ? (
+          <p className="settings-structure-empty">{td("emptyMessage", { year })}</p>
+        ) : (
+          <div>
+            {visibleRows.map((row) => (
+              <div key={row.item.id} className="settings-item-row">
+                <TreeGuides
+                  ancestorContinues={row.ancestorContinues}
+                  isLast={hierarchy!.isLastChild.has(row.item.id)}
+                  depth={row.depth}
+                />
+                {hierarchy!.hasChildren.has(row.item.id) ? (
+                  <TreeExpand
+                    isOpen={!treeExpand.isCollapsed(row.item.id)}
+                    onToggle={() => treeExpand.toggle(row.item.id)}
+                    label={treeExpand.isCollapsed(row.item.id) ? td("expandNode") : td("collapseNode")}
+                  />
+                ) : (
+                  <span className="tree-expand-spacer" />
+                )}
+                <span className="settings-item-name">{row.item.name}</span>
+                <span className="settings-item-actions">
+                  <button
+                    type="button"
+                    className="settings-item-icon-btn"
+                    title={td("edit")}
+                    onClick={() => setNodeEditing({ type: d, node: row.item })}
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.86 4.49a1.75 1.75 0 1 1 2.47 2.47L7.5 18.79l-3.3.82.82-3.3Z" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    className="settings-item-icon-btn settings-item-icon-btn--danger"
+                    title={tc("delete")}
+                    onClick={() => setNodeDeleting({ type: d, node: row.item })}
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" />
+                    </svg>
+                  </button>
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="settings-panel">
@@ -241,130 +375,91 @@ export function ConfiguracoesClient({
           </div>
         </div>
 
-        <div className="settings-block-actions">
-          {!isAdmin && <p className="settings-admin-hint">{t("dimensions.adminOnly")}</p>}
-          {isAdmin && (
-            <Tooltip text={limitReached ? t("dimensions.limitReached") : ""}>
-              <Button
-                size="sm"
-                variant="accent-blue"
-                className="px-4"
-                disabled={limitReached}
-                onClick={() => setEditing("new")}
-              >
-                {t("dimensions.new")}
-              </Button>
-            </Tooltip>
-          )}
-        </div>
+        {!isAdmin && (
+          <div className="settings-block-actions">
+            <p className="settings-admin-hint">{t("dimensions.adminOnly")}</p>
+          </div>
+        )}
 
-        <table className="settings-table">
-          <thead>
-            <tr>
-              <th>{t("dimensions.name")}</th>
-              <th>{t("dimensions.code")}</th>
-              <th>{t("dimensions.fieldDescription")}</th>
-              <th>{t("dimensions.useInMatrizColumn")}</th>
-              <th></th>
-              <th></th>
-              {isAdmin && <th></th>}
-            </tr>
-          </thead>
-          <tbody>
-            {dimensionTypes.map((d) => {
-              const hierarchy = hierarchies.get(d.id);
-              const nodes = nodesByType[d.id] ?? [];
-              const expanded = expandedTypeId === d.id;
-              const visibleRows = hierarchy ? getVisibleRows(hierarchy.rows, treeExpand.collapsedIds) : [];
+        {isAdmin ? (
+          <DataTable<DimensionType>
+            items={dimensionTypes}
+            columns={buildTypeColumns(
+              t,
+              tc,
+              expandedTypeId,
+              (id) => setExpandedTypeId((prev) => (prev === id ? null : id)),
+              setDeleting
+            )}
+            prefsKey="configuracoes_tipos_cols"
+            onEdit={(d) => setEditing(d)}
+            onDelete={(d) => setDeleting(d)}
+            onNew={() => setEditing("new")}
+            newLabel={t("dimensions.new")}
+            expandedRowId={expandedTypeId}
+            renderExpanded={(d) => renderStructureContent(d, true)}
+          />
+        ) : (
+          <table className="settings-table">
+            <thead>
+              <tr>
+                <th>{t("dimensions.name")}</th>
+                <th>{t("dimensions.code")}</th>
+                <th>{t("dimensions.fieldDescription")}</th>
+                <th>{t("dimensions.useInMatrizColumn")}</th>
+                <th></th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {dimensionTypes.map((d) => {
+                const expanded = expandedTypeId === d.id;
 
-              return (
-                <Fragment key={d.id}>
-                  <tr>
-                    <td className="font-medium text-gray-800">{d.name}</td>
-                    <td>
-                      <code className="settings-code">{d.code}</code>
-                    </td>
-                    <td className="text-gray-600">{d.description || <span className="text-gray-400">{t("dimensions.noDescription")}</span>}</td>
-                    <td className="text-gray-600">
-                      {d.use_in_matriz ? (
-                        <span className="type-badge">{t("dimensions.useInMatrizYes")}</span>
-                      ) : (
-                        <span className="text-gray-400">{t("dimensions.useInMatrizNo")}</span>
-                      )}
-                    </td>
-                    <td>
-                      <button
-                        type="button"
-                        className={`settings-structure-btn${expanded ? " is-active" : ""}`}
-                        onClick={() => setExpandedTypeId(expanded ? null : d.id)}
-                      >
-                        {t("dimensions.structure")}
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
-                        </svg>
-                      </button>
-                    </td>
-                    <td>
-                      <span className={`type-badge${d.is_system || isProtectedDimensionCode(d.code) ? " type-badge--system" : ""}`}>
-                        {d.is_system || isProtectedDimensionCode(d.code) ? t("dimensions.system") : t("dimensions.custom")}
-                      </span>
-                    </td>
-                    {isAdmin && (
-                      <td className="text-right">
-                        <span className="settings-row-actions">
-                          <button type="button" className="settings-edit-link" onClick={() => setEditing(d)}>
-                            {t("dimensions.edit")}
-                          </button>
-                          {!d.is_system && !isProtectedDimensionCode(d.code) && (
-                            <button
-                              type="button"
-                              className="settings-edit-link settings-edit-link--danger"
-                              onClick={() => setDeleting(d)}
-                            >
-                              {tc("delete")}
-                            </button>
-                          )}
+                return (
+                  <Fragment key={d.id}>
+                    <tr>
+                      <td className="font-medium text-gray-800">{d.name}</td>
+                      <td>
+                        <code className="settings-code">{d.code}</code>
+                      </td>
+                      <td className="text-gray-600">{d.description || <span className="text-gray-400">{t("dimensions.noDescription")}</span>}</td>
+                      <td className="text-gray-600">
+                        {d.use_in_matriz ? (
+                          <span className="type-badge">{t("dimensions.useInMatrizYes")}</span>
+                        ) : (
+                          <span className="text-gray-400">{t("dimensions.useInMatrizNo")}</span>
+                        )}
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          className={`settings-structure-btn${expanded ? " is-active" : ""}`}
+                          onClick={() => setExpandedTypeId(expanded ? null : d.id)}
+                        >
+                          {t("dimensions.structure")}
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
+                          </svg>
+                        </button>
+                      </td>
+                      <td>
+                        <span className={`type-badge${d.is_system || isProtectedDimensionCode(d.code) ? " type-badge--system" : ""}`}>
+                          {d.is_system || isProtectedDimensionCode(d.code) ? t("dimensions.system") : t("dimensions.custom")}
                         </span>
                       </td>
-                    )}
-                  </tr>
-
-                  {expanded && (
-                    <tr className="settings-structure-row">
-                      <td colSpan={columnCount}>
-                        <div className="settings-structure-panel">
-                          <div className="settings-structure-header">
-                            <span className="settings-structure-label">{t("dimensions.structureItems")}</span>
-                          </div>
-
-                          <DataTable<DimensionNodeRow>
-                            items={nodes}
-                            columns={buildNodeColumns(hierarchy, treeExpand, td)}
-                            prefsKey={`dimensoes_${d.id}_cols`}
-                            onEdit={(n) => setNodeEditing({ type: d, node: n })}
-                            onDelete={(n) => setNodeDeleting({ type: d, node: n })}
-                            onNew={() => setNodeEditing({ type: d, node: "new" })}
-                            newLabel={td("new")}
-                            extraActions={
-                              <Link
-                                href={`/admin/dimensoes/${d.code}/importar?ano=${year}`}
-                                className="settings-structure-import-link"
-                              >
-                                {td("importButton")}
-                              </Link>
-                            }
-                            emptyMessage={td("emptyMessage", { year })}
-                            buildTree={() => visibleRows}
-                          />
-                        </div>
-                      </td>
                     </tr>
-                  )}
-                </Fragment>
-              );
-            })}
-          </tbody>
-        </table>
+
+                    {expanded && (
+                      <tr className="settings-structure-row">
+                        <td colSpan={columnCount}>{renderStructureContent(d, false)}</td>
+                      </tr>
+                    )}
+                  </Fragment>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
       </section>
 
       {isAdmin && (
