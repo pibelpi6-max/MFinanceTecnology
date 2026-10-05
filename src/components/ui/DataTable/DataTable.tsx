@@ -1204,7 +1204,7 @@ export function DataTable<T extends {
               type="button"
               onClick={() => setColModalOpen(true)}
               className={[
-                "flex h-9 w-9 items-center justify-center rounded-lg transition-colors",
+                "flex h-9 w-9 items-center justify-center rounded-lg transition-colors -mr-[10px]",
                 colModalOpen
                   ? "text-[#5cb88a]"
                   : "text-gray-400 hover:text-[#5cb88a]",
