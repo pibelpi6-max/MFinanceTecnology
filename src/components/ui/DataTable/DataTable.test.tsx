@@ -13,6 +13,7 @@ const messages = {
   common: {
     actions: "Ações",
     edit: "Editar",
+    delete: "Excluir",
     search: "Buscar",
     tooltips: {
       columns: "Colunas",
