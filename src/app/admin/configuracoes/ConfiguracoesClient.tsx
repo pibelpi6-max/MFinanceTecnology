@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
@@ -169,6 +169,51 @@ export function ConfiguracoesClient({
 
   useEffect(() => setMonth(fiscalYearStartMonth), [fiscalYearStartMonth]);
 
+  // A barra "Dimensões personalizadas X/10" fica alinhada (esquerda e
+  // direita) com o campo "Buscar" do DataTable logo abaixo, mesmo esse
+  // campo estando em outra árvore de componentes (dentro do DataTable).
+  //
+  // Importante: .settings-progress-block é o último item de um flex row
+  // com justify-content:space-between, então a borda DIREITA dele fica
+  // sempre colada na borda do container (.settings-block-subtitle-row),
+  // não importa o width - só ajustar o width muda a borda ESQUERDA. Por
+  // isso medimos a posição real do campo Buscar via DOM e aplicamos
+  // width (pra bater a largura) + margin-right (pra puxar a borda
+  // direita do bloco pra onde o campo Buscar realmente termina, já que
+  // a engrenagem ao lado desloca esse ponto). Reexecuta no resize e
+  // sempre que a tabela re-renderiza (mudança nos dados/colunas) - assim
+  // nunca mais desalinha se o espaçamento do header do DataTable mudar.
+  const dimensionsSectionRef = useRef<HTMLElement>(null);
+  const progressBlockRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const section = dimensionsSectionRef.current;
+    const block = progressBlockRef.current;
+    if (!section || !block) return;
+
+    function syncWidth() {
+      const input = section!.querySelector<HTMLInputElement>('input[placeholder="Buscar"]');
+      if (!input) return;
+      const inputRect = input.getBoundingClientRect();
+      if (inputRect.width === 0) return;
+
+      // Zera o margin-right antes de medir, senão a medição acumula o
+      // ajuste da rodada anterior.
+      block!.style.marginRight = "0px";
+      block!.style.width = `${Math.round(inputRect.width)}px`;
+      const blockRect = block!.getBoundingClientRect();
+      const overshoot = blockRect.right - inputRect.right;
+      block!.style.marginRight = `${Math.round(overshoot)}px`;
+    }
+
+    syncWidth();
+    const raf = requestAnimationFrame(syncWidth);
+    window.addEventListener("resize", syncWidth);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", syncWidth);
+    };
+  }, [isAdmin, dimensionTypes]);
+
   async function handleSaveMonth(newMonth: number) {
     setSaving(true);
     setError(null);
@@ -335,11 +380,11 @@ export function ConfiguracoesClient({
 
       <div className="settings-divider" />
 
-      <section className="settings-block">
+      <section className="settings-block" ref={dimensionsSectionRef}>
         <h2 className="settings-block-title">{t("dimensions.title")}</h2>
         <div className="settings-block-subtitle-row">
           <p className="settings-block-intro">{t("dimensions.intro")}</p>
-          <div className="settings-progress-block">
+          <div className="settings-progress-block" ref={progressBlockRef}>
             <div className="settings-progress-block-label">
               <span>{t("dimensions.customUsage")}</span>
               <span className="settings-progress-block-value">
