@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
+import { Tooltip } from "@/components/ui/Tooltip";
 import { DataTable } from "@/components/ui/DataTable/DataTable";
 import type { ColumnMeta } from "@/components/ui/DataTable/types";
 import { TreeExpand, TreeGuides } from "@/components/ui/tree";
@@ -271,96 +272,107 @@ export function ConfiguracoesClient({
   const columnCount = 6;
 
   /**
-   * Lista de Estruturas de uma dimensão — pills com nome, status ativa/
-   * inativa (switch) e ações de renomear/duplicar/excluir. Clicar numa
-   * pill seleciona essa estrutura pra mostrar a árvore dela logo abaixo
-   * (ver renderStructureContent). Duplicar é o fluxo central do pedido:
-   * a estrutura de centros de custo/contas/entidades muda ano após ano,
-   * então a usuária duplica a vigente, dá um nome novo (ex. "2026") e
-   * ajusta a partir dela, sem perder a anterior.
+   * Sidebar de Estruturas de uma dimensão (coluna esquerda da tela
+   * dividida — ver renderStructureContent): nome (truncado com tooltip,
+   * já que a largura é fixa e estreita), status ativa/inativa (switch) e
+   * ações de renomear/duplicar/excluir. Clicar no nome seleciona essa
+   * estrutura pra atualizar a árvore ao lado, na hora — prototipado antes
+   * num canvas de Design e aprovado pela usuária (05/10). Duplicar é o
+   * fluxo central do pedido original: a estrutura de centros de custo/
+   * contas/entidades muda ano após ano, então a usuária duplica a
+   * vigente, dá um nome novo (ex. "2026") e ajusta a partir dela, sem
+   * perder a anterior.
    */
   function renderStructuresList(d: DimensionType) {
     const list = structuresByType[d.id] ?? [];
     const selectedId = getSelectedStructureId(d.id);
 
     return (
-      <div className="settings-structures-list">
-        <div className="settings-structure-header">
+      <div className="settings-structure-sidebar">
+        <div className="settings-structure-sidebar-header">
           <span className="settings-structure-label">{t("dimensions.structuresOfDimension")}</span>
-          <Button
-            size="sm"
-            variant="accent-blue"
-            className="px-3"
+          <button
+            type="button"
+            className="settings-item-icon-btn"
+            title={t("dimensions.newStructure")}
             onClick={() => setStructureModal({ type: d, mode: "create", source: null })}
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4}>
               <path strokeLinecap="round" d="M12 5v14M5 12h14" />
             </svg>
-            {t("dimensions.newStructure")}
-          </Button>
+          </button>
         </div>
 
         {list.length === 0 ? (
           <p className="settings-structure-empty">{t("dimensions.noStructures")}</p>
         ) : (
-          <div className="settings-structure-pills">
+          <div className="settings-structure-list-v">
             {list.map((s) => (
-              <div key={s.id} className={`settings-structure-pill${selectedId === s.id ? " is-selected" : ""}`}>
-                <button
-                  type="button"
-                  className="settings-structure-pill-name"
-                  onClick={() => setSelectedStructureId((prev) => ({ ...prev, [d.id]: s.id }))}
-                >
-                  {s.name}
-                </button>
-                <span className={`settings-structure-status-badge${s.is_active ? " is-active" : ""}`}>
-                  {s.is_active ? t("dimensions.structureActive") : t("dimensions.structureInactive")}
-                </span>
-                <label
-                  className="settings-structure-switch"
-                  title={s.is_active ? t("dimensions.structureActive") : t("dimensions.structureInactive")}
-                >
-                  <input
-                    type="checkbox"
-                    checked={s.is_active}
-                    disabled={structureToggleId === s.id}
-                    onChange={() => handleToggleStructureActive(d, s)}
-                  />
-                  <span className="settings-structure-switch-track" />
-                </label>
-                <span className="settings-item-actions settings-item-actions--static">
-                  <button
-                    type="button"
-                    className="settings-item-icon-btn"
-                    title={t("dimensions.renameStructure")}
-                    onClick={() => setStructureModal({ type: d, mode: "rename", source: s })}
+              <div key={s.id} className={`settings-structure-item${selectedId === s.id ? " is-selected" : ""}`}>
+                <div className="settings-structure-item-row">
+                  <div className="flex-1 min-w-0">
+                    <Tooltip text={s.name} onlyWhenTruncated side="top" fullWidth>
+                      <button
+                        type="button"
+                        data-truncate
+                        className="settings-structure-item-name block w-full truncate"
+                        onClick={() => setSelectedStructureId((prev) => ({ ...prev, [d.id]: s.id }))}
+                      >
+                        {s.name}
+                      </button>
+                    </Tooltip>
+                  </div>
+                  <span className={`settings-structure-status-badge${s.is_active ? " is-active" : ""}`}>
+                    {s.is_active ? t("dimensions.structureActive") : t("dimensions.structureInactive")}
+                  </span>
+                </div>
+                <div className="settings-structure-item-row">
+                  <label
+                    className="settings-structure-switch"
+                    title={s.is_active ? t("dimensions.structureActive") : t("dimensions.structureInactive")}
                   >
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.86 4.49a1.75 1.75 0 1 1 2.47 2.47L7.5 18.79l-3.3.82.82-3.3Z" />
-                    </svg>
-                  </button>
-                  <button
-                    type="button"
-                    className="settings-item-icon-btn"
-                    title={t("dimensions.duplicateStructure")}
-                    onClick={() => setStructureModal({ type: d, mode: "duplicate", source: s })}
-                  >
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                      <rect x="8" y="8" width="12" height="12" rx="2" />
-                      <path d="M4 16a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2" />
-                    </svg>
-                  </button>
-                  <button
-                    type="button"
-                    className="settings-item-icon-btn settings-item-icon-btn--danger"
-                    title={tc("delete")}
-                    onClick={() => setStructureDeleting(s)}
-                  >
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" />
-                    </svg>
-                  </button>
-                </span>
+                    <input
+                      type="checkbox"
+                      checked={s.is_active}
+                      disabled={structureToggleId === s.id}
+                      onChange={() => handleToggleStructureActive(d, s)}
+                    />
+                    <span className="settings-structure-switch-track" />
+                  </label>
+                  <span className="settings-item-actions settings-item-actions--static">
+                    <button
+                      type="button"
+                      className="settings-item-icon-btn"
+                      title={t("dimensions.renameStructure")}
+                      onClick={() => setStructureModal({ type: d, mode: "rename", source: s })}
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.86 4.49a1.75 1.75 0 1 1 2.47 2.47L7.5 18.79l-3.3.82.82-3.3Z" />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      className="settings-item-icon-btn"
+                      title={t("dimensions.duplicateStructure")}
+                      onClick={() => setStructureModal({ type: d, mode: "duplicate", source: s })}
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                        <rect x="8" y="8" width="12" height="12" rx="2" />
+                        <path d="M4 16a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2" />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      className="settings-item-icon-btn settings-item-icon-btn--danger"
+                      title={tc("delete")}
+                      onClick={() => setStructureDeleting(s)}
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" />
+                      </svg>
+                    </button>
+                  </span>
+                </div>
               </div>
             ))}
           </div>
@@ -382,6 +394,17 @@ export function ConfiguracoesClient({
    * tabela simples) usa-se `.settings-structure-panel` (com seu próprio
    * fundo tracejado).
    */
+  /**
+   * Painel "Estrutura" de uma dimensão: tela dividida — sidebar de
+   * Estruturas (renderStructuresList) fixa à esquerda, árvore de itens da
+   * estrutura selecionada à direita, atualizando na hora ao trocar de
+   * estrutura (sem expandir/recolher nada) — layout aprovado pela
+   * usuária a partir de um protótipo no canvas de Design (05/10),
+   * substituindo o desenho anterior empilhado (lista em cima, árvore
+   * embaixo). `embedded` só troca o wrapper externo (ver comentário
+   * original: sem fundo/borda quando usado dentro do renderExpanded do
+   * DataTable, que já desenha o cartão ao redor).
+   */
   function renderStructureContent(d: DimensionType, embedded: boolean) {
     const selectedId = getSelectedStructureId(d.id);
     const selectedStructure = (structuresByType[d.id] ?? []).find((s) => s.id === selectedId) ?? null;
@@ -391,82 +414,85 @@ export function ConfiguracoesClient({
 
     return (
       <div className={embedded ? "settings-structure-embedded" : "settings-structure-panel"}>
-        {renderStructuresList(d)}
+        <div className="settings-structure-split">
+          {renderStructuresList(d)}
 
-        {selectedStructure && (
-          <>
-            <div className="settings-structure-divider" />
-            <div className="settings-structure-header">
-              <span className="settings-structure-label">
-                {t("dimensions.structureItems")} — {selectedStructure.name}
-              </span>
-              <div className="settings-structure-actions">
-                <Link href={`/admin/dimensoes/${d.code}/importar?ano=${year}`} className="settings-structure-import-link">
-                  {td("importButton")}
-                </Link>
-                <Button
-                  size="sm"
-                  variant="accent-blue"
-                  className="px-3"
-                  onClick={() => setNodeEditing({ type: d, node: "new", structureId: selectedStructure.id })}
-                >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4}>
-                    <path strokeLinecap="round" d="M12 5v14M5 12h14" />
-                  </svg>
-                  {td("new")}
-                </Button>
-              </div>
-            </div>
-
-            {nodes.length === 0 ? (
-              <p className="settings-structure-empty">{td("emptyMessage", { year })}</p>
-            ) : (
-              <div>
-                {visibleRows.map((row) => (
-                  <div key={row.item.id} className="settings-item-row">
-                    <TreeGuides
-                      ancestorContinues={row.ancestorContinues}
-                      isLast={hierarchy!.isLastChild.has(row.item.id)}
-                      depth={row.depth}
-                    />
-                    {hierarchy!.hasChildren.has(row.item.id) ? (
-                      <TreeExpand
-                        isOpen={!treeExpand.isCollapsed(row.item.id)}
-                        onToggle={() => treeExpand.toggle(row.item.id)}
-                        label={treeExpand.isCollapsed(row.item.id) ? td("expandNode") : td("collapseNode")}
-                      />
-                    ) : (
-                      <span className="tree-expand-spacer" />
-                    )}
-                    <span className="settings-item-name">{row.item.name}</span>
-                    <span className="settings-item-actions">
-                      <button
-                        type="button"
-                        className="settings-item-icon-btn"
-                        title={td("edit")}
-                        onClick={() => setNodeEditing({ type: d, node: row.item, structureId: selectedStructure.id })}
-                      >
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.86 4.49a1.75 1.75 0 1 1 2.47 2.47L7.5 18.79l-3.3.82.82-3.3Z" />
-                        </svg>
-                      </button>
-                      <button
-                        type="button"
-                        className="settings-item-icon-btn settings-item-icon-btn--danger"
-                        title={tc("delete")}
-                        onClick={() => setNodeDeleting({ type: d, node: row.item })}
-                      >
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" />
-                        </svg>
-                      </button>
-                    </span>
+          <div className="settings-structure-content">
+            {selectedStructure && (
+              <>
+                <div className="settings-structure-header">
+                  <span className="settings-structure-label">
+                    {t("dimensions.structureItems")} — {selectedStructure.name}
+                  </span>
+                  <div className="settings-structure-actions">
+                    <Link href={`/admin/dimensoes/${d.code}/importar?ano=${year}`} className="settings-structure-import-link">
+                      {td("importButton")}
+                    </Link>
+                    <Button
+                      size="sm"
+                      variant="accent-blue"
+                      className="px-3"
+                      onClick={() => setNodeEditing({ type: d, node: "new", structureId: selectedStructure.id })}
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4}>
+                        <path strokeLinecap="round" d="M12 5v14M5 12h14" />
+                      </svg>
+                      {td("new")}
+                    </Button>
                   </div>
-                ))}
-              </div>
+                </div>
+
+                {nodes.length === 0 ? (
+                  <p className="settings-structure-empty">{td("emptyMessage", { year })}</p>
+                ) : (
+                  <div>
+                    {visibleRows.map((row) => (
+                      <div key={row.item.id} className="settings-item-row">
+                        <TreeGuides
+                          ancestorContinues={row.ancestorContinues}
+                          isLast={hierarchy!.isLastChild.has(row.item.id)}
+                          depth={row.depth}
+                        />
+                        {hierarchy!.hasChildren.has(row.item.id) ? (
+                          <TreeExpand
+                            isOpen={!treeExpand.isCollapsed(row.item.id)}
+                            onToggle={() => treeExpand.toggle(row.item.id)}
+                            label={treeExpand.isCollapsed(row.item.id) ? td("expandNode") : td("collapseNode")}
+                          />
+                        ) : (
+                          <span className="tree-expand-spacer" />
+                        )}
+                        <span className="settings-item-name">{row.item.name}</span>
+                        <span className="settings-item-actions">
+                          <button
+                            type="button"
+                            className="settings-item-icon-btn"
+                            title={td("edit")}
+                            onClick={() => setNodeEditing({ type: d, node: row.item, structureId: selectedStructure.id })}
+                          >
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M16.86 4.49a1.75 1.75 0 1 1 2.47 2.47L7.5 18.79l-3.3.82.82-3.3Z" />
+                            </svg>
+                          </button>
+                          <button
+                            type="button"
+                            className="settings-item-icon-btn settings-item-icon-btn--danger"
+                            title={tc("delete")}
+                            onClick={() => setNodeDeleting({ type: d, node: row.item })}
+                          >
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" />
+                            </svg>
+                          </button>
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
             )}
-          </>
-        )}
+          </div>
+        </div>
       </div>
     );
   }
