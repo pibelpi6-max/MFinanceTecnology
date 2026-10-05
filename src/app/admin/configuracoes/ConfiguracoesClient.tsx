@@ -43,6 +43,7 @@ function buildTypeColumns(
       key: "name",
       label: t("dimensions.name"),
       getText: (d) => d.name,
+      filterable: true,
       render: (d) => <span className="font-medium text-gray-800">{d.name}</span>,
     },
     {
@@ -50,12 +51,14 @@ function buildTypeColumns(
       label: t("dimensions.code"),
       width: 140,
       getText: (d) => d.code,
+      filterable: true,
       render: (d) => <code className="settings-code">{d.code}</code>,
     },
     {
       key: "description",
       label: t("dimensions.fieldDescription"),
       getText: (d) => d.description ?? "",
+      filterable: true,
       render: (d) =>
         d.description ? (
           <span className="text-gray-600">{d.description}</span>
