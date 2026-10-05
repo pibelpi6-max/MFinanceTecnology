@@ -1,3 +1,20 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Esconde scrollbar nativa quando fake scrollbar está ativa */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  scrollbar-width: none;
+}
+
+/* Fake scrollbar das tabelas (DataTable) — scrollbar nativa oculta, thumb via JS */
+.datatable-fake-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.datatable-fake-scrollbar::-webkit-scrollbar {
+  display: none;
+}
