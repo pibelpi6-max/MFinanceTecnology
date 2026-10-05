@@ -61,6 +61,7 @@ function buildTypeColumns(
     {
       key: "description",
       label: t("dimensions.fieldDescription"),
+      maxWidth: 260,
       getText: (d) => d.description ?? "",
       filterable: true,
       render: (d) =>
