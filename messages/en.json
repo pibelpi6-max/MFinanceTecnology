@@ -259,7 +259,8 @@
       "useInMatrizYes": "Budget Matrix",
       "useInMatrizNo": "Nowhere",
       "structure": "Structure",
-      "structureItems": "Items in this dimension"
+      "structureItems": "Items in this dimension",
+      "typeLabel": "Type"
     }
   },
   "import": {

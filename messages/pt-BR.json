@@ -259,7 +259,8 @@
       "useInMatrizYes": "Matriz Orçamentária",
       "useInMatrizNo": "Nenhum lugar",
       "structure": "Estrutura",
-      "structureItems": "Itens desta dimensão"
+      "structureItems": "Itens desta dimensão",
+      "typeLabel": "Tipo"
     }
   },
   "import": {

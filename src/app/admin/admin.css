@@ -316,6 +316,11 @@
 
 .settings-structure-row td { padding: 0; border-bottom: 1px solid rgba(0,0,0,.04); }
 .settings-structure-panel { background: #F8FAFD; border-top: 1px dashed rgba(0,0,0,.08); padding: 4px 20px 18px 58px; }
+/* Variante usada dentro do renderExpanded do DataTable (lista de tipos de
+   dimensão) — o DataTable já desenha seu próprio cartão arredondado/borda
+   ao redor do conteúdo expandido, então aqui a gente não duplica fundo nem
+   borda, só mantém o respiro interno. */
+.settings-structure-embedded { padding: 0; }
 .settings-structure-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 0 8px; gap: 12px; }
 .settings-structure-label { font-size: 10.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--text-muted); }
 .settings-structure-actions { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
