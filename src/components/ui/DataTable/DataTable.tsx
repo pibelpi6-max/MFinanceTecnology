@@ -419,13 +419,35 @@ export function DataTable<T extends {
   }, [colState]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Larguras das colunas (lazy init pra evitar flash) ─────
+  // IMPORTANTE: uma largura salva (seja de um resize manual antigo, seja de
+  // uma medição automática de antes da coluna ganhar maxWidth) nunca pode
+  // ultrapassar o maxWidth atual da coluna — senão o teto vira decorativo:
+  // o valor persistido sempre vencia o merge e a tabela voltava a estourar
+  // largura mesmo com maxWidth certo no código (bug real já visto neste
+  // projeto). clampColWidth() é a única porta de entrada pra colWidths,
+  // usada aqui, na medição automática (abaixo) e no resize manual.
+  const clampColWidth = useCallback(
+    (key: string, w: number) => {
+      const col = columns.find((c) => c.key === key);
+      let v = w;
+      if (col?.minWidth !== undefined) v = Math.max(v, col.minWidth);
+      if (col?.maxWidth !== undefined) v = Math.min(v, col.maxWidth);
+      return v;
+    },
+    [columns],
+  );
+
   const [colWidths, setColWidths] = useState<Record<string, number>>(() => {
     const defaults = Object.fromEntries(
       columns.map((c) => [c.key, c.width ?? 150]),
     );
-    return initialPrefs?.widths
+    const merged = initialPrefs?.widths
       ? { ...defaults, ...initialPrefs.widths }
       : defaults;
+    Object.keys(merged).forEach((key) => {
+      merged[key] = clampColWidth(key, merged[key]);
+    });
+    return merged;
   });
 
   const colWidthsRef = useRef<Record<string, number>>(colWidths);
@@ -815,11 +837,15 @@ export function DataTable<T extends {
       widths[col.key] =
         col.maxWidth !== undefined ? Math.min(floored, col.maxWidth) : floored;
     });
-    setColWidths(
-      initialPrefs?.widths ? { ...widths, ...initialPrefs.widths } : widths,
-    );
+    const merged = initialPrefs?.widths
+      ? { ...widths, ...initialPrefs.widths }
+      : widths;
+    Object.keys(merged).forEach((key) => {
+      merged[key] = clampColWidth(key, merged[key]);
+    });
+    setColWidths(merged);
     setMeasured(true);
-  }, [items, columns, measured, measureText, initialPrefs?.widths]);
+  }, [items, columns, measured, measureText, initialPrefs?.widths, clampColWidth]);
 
   // ── Drag-and-drop de colunas ──────────────────────────────
   const [ghostCol, setGhostCol] = useState<string | null>(null);
@@ -1028,7 +1054,10 @@ export function DataTable<T extends {
         if (!r) return;
         setColWidths((prev) => ({
           ...prev,
-          [r.key]: Math.max(30, r.startW + ev.clientX - r.startX),
+          [r.key]: clampColWidth(
+            r.key,
+            Math.max(30, r.startW + ev.clientX - r.startX),
+          ),
         }));
       };
       const onUp = () => {
@@ -1041,7 +1070,7 @@ export function DataTable<T extends {
       window.addEventListener("mousemove", onMove);
       window.addEventListener("mouseup", onUp);
     },
-    [colWidths, persist],
+    [colWidths, persist, clampColWidth],
   );
 
   // ── Construção de rows (com hierarquia opcional) ─────────
