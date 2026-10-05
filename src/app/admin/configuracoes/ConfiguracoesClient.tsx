@@ -177,12 +177,12 @@ export function ConfiguracoesClient({
   // com justify-content:space-between, então a borda DIREITA dele fica
   // sempre colada na borda do container (.settings-block-subtitle-row),
   // não importa o width - só ajustar o width muda a borda ESQUERDA. Por
-  // isso medimos a posição real do campo Buscar via DOM e aplicamos
-  // width (pra bater a largura) + margin-right (pra puxar a borda
-  // direita do bloco pra onde o campo Buscar realmente termina, já que
-  // a engrenagem ao lado desloca esse ponto). Reexecuta no resize e
-  // sempre que a tabela re-renderiza (mudança nos dados/colunas) - assim
-  // nunca mais desalinha se o espaçamento do header do DataTable mudar.
+  // isso medimos a posição real do campo Buscar + engrenagem via DOM e
+  // aplicamos width (esquerda do Buscar até a direita da engrenagem) +
+  // margin-right (pra puxar a borda direita do bloco pra onde a
+  // engrenagem realmente termina). Reexecuta no resize e sempre que a
+  // tabela re-renderiza (mudança nos dados/colunas) - assim nunca mais
+  // desalinha se o espaçamento do header do DataTable mudar.
   const dimensionsSectionRef = useRef<HTMLElement>(null);
   const progressBlockRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
@@ -193,15 +193,25 @@ export function ConfiguracoesClient({
     function syncWidth() {
       const input = section!.querySelector<HTMLInputElement>('input[placeholder="Buscar"]');
       if (!input) return;
+      // A engrenagem é o último elemento do mesmo grupo flex do campo
+      // Buscar (ver DataTable.tsx: <div className="flex items-center
+      // gap-1"> envolvendo [campo Buscar, Tooltip com o botão da
+      // engrenagem]) - pegamos pelo irmão, não por texto/aria-label, já
+      // que o label muda por idioma (pt-BR/en/es).
+      const searchWrapper = input.closest(".relative");
+      const group = searchWrapper?.parentElement;
+      const rightEdgeEl = (group?.lastElementChild as HTMLElement | null) ?? input;
+
       const inputRect = input.getBoundingClientRect();
-      if (inputRect.width === 0) return;
+      const rightRect = rightEdgeEl.getBoundingClientRect();
+      if (inputRect.width === 0 || rightRect.width === 0) return;
 
       // Zera o margin-right antes de medir, senão a medição acumula o
       // ajuste da rodada anterior.
       block!.style.marginRight = "0px";
-      block!.style.width = `${Math.round(inputRect.width)}px`;
+      block!.style.width = `${Math.round(rightRect.right - inputRect.left)}px`;
       const blockRect = block!.getBoundingClientRect();
-      const overshoot = blockRect.right - inputRect.right;
+      const overshoot = blockRect.right - rightRect.right;
       block!.style.marginRight = `${Math.round(overshoot)}px`;
     }
 
