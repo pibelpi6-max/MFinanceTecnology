@@ -7,6 +7,8 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { Tooltip } from "@/components/ui/Tooltip";
+import { DataTable } from "@/components/ui/DataTable/DataTable";
+import type { ColumnMeta } from "@/components/ui/DataTable/types";
 import { TreeExpand, TreeGuides } from "@/components/ui/tree";
 import { useTreeExpand } from "@/hooks/useTreeExpand";
 import { buildDimensionHierarchy, getVisibleRows } from "@/lib/dimensions/hierarchy";
@@ -16,6 +18,70 @@ import { DimensionTypeFormModal } from "./DimensionTypeFormModal";
 import { NodeFormModal } from "./NodeFormModal";
 import { deleteDimensionType, updateFiscalYearStartMonth } from "./_actions";
 import { cancelDimensionNode } from "../dimensoes/_actions";
+
+type Translator = (key: string, values?: Record<string, string | number>) => string;
+
+/**
+ * Monta as colunas da árvore de itens (nome com indentação/guias, código,
+ * vigência) usadas pelo DataTable dentro do painel "Estrutura" de cada
+ * dimensão — reaproveita o mesmo desenho de árvore que o antigo
+ * DimensionTreeClient.tsx usava em /admin/dimensoes/[tipo] (ver
+ * claude/decisoes-arquitetura.md).
+ */
+function buildNodeColumns(
+  hierarchy: ReturnType<typeof buildDimensionHierarchy> | undefined,
+  treeExpand: ReturnType<typeof useTreeExpand>,
+  td: Translator
+): ColumnMeta<DimensionNodeRow>[] {
+  const depthByNodeId = hierarchy?.depthByNodeId ?? new Map<string, number>();
+  const hasChildren = hierarchy?.hasChildren ?? new Set<string>();
+  const isLastChild = hierarchy?.isLastChild ?? new Set<string>();
+  const rowById = new Map((hierarchy?.rows ?? []).map((r) => [r.item.id, r]));
+
+  return [
+    {
+      key: "name",
+      label: td("name"),
+      getText: (n) => n.name,
+      render: (n) => {
+        const depth = depthByNodeId.get(n.id) ?? 0;
+        const row = rowById.get(n.id);
+        return (
+          <div className="flex min-w-0 items-center gap-1" style={{ paddingLeft: 4 }}>
+            {row && (
+              <TreeGuides ancestorContinues={row.ancestorContinues} isLast={isLastChild.has(n.id)} depth={depth} />
+            )}
+            {hasChildren.has(n.id) ? (
+              <TreeExpand
+                isOpen={!treeExpand.isCollapsed(n.id)}
+                onToggle={() => treeExpand.toggle(n.id)}
+                label={treeExpand.isCollapsed(n.id) ? td("expandNode") : td("collapseNode")}
+              />
+            ) : (
+              <span className="tree-expand-spacer" />
+            )}
+            <span className="truncate font-medium text-gray-800">{n.name}</span>
+          </div>
+        );
+      },
+    },
+    {
+      key: "code",
+      label: td("code"),
+      width: 140,
+      getText: (n) => n.code,
+      render: (n) => <span className="font-mono text-xs text-gray-500">{n.code}</span>,
+    },
+    {
+      key: "validFrom",
+      label: td("validFrom"),
+      width: 170,
+      align: "right",
+      noTooltip: true,
+      render: (n) => <span className="text-xs text-gray-400">{td("activeFrom", { year: n.validFromYear })}</span>,
+    },
+  ];
+}
 
 interface ConfiguracoesClientProps {
   dimensionTypes: DimensionType[];
@@ -269,74 +335,27 @@ export function ConfiguracoesClient({
                         <div className="settings-structure-panel">
                           <div className="settings-structure-header">
                             <span className="settings-structure-label">{t("dimensions.structureItems")}</span>
-                            <div className="settings-structure-actions">
+                          </div>
+
+                          <DataTable<DimensionNodeRow>
+                            items={nodes}
+                            columns={buildNodeColumns(hierarchy, treeExpand, td)}
+                            prefsKey={`dimensoes_${d.id}_cols`}
+                            onEdit={(n) => setNodeEditing({ type: d, node: n })}
+                            onDelete={(n) => setNodeDeleting({ type: d, node: n })}
+                            onNew={() => setNodeEditing({ type: d, node: "new" })}
+                            newLabel={td("new")}
+                            extraActions={
                               <Link
                                 href={`/admin/dimensoes/${d.code}/importar?ano=${year}`}
                                 className="settings-structure-import-link"
                               >
                                 {td("importButton")}
                               </Link>
-                              <Button
-                                size="sm"
-                                variant="accent-blue"
-                                className="px-3"
-                                onClick={() => setNodeEditing({ type: d, node: "new" })}
-                              >
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4}>
-                                  <path strokeLinecap="round" d="M12 5v14M5 12h14" />
-                                </svg>
-                                {td("new")}
-                              </Button>
-                            </div>
-                          </div>
-
-                          {nodes.length === 0 ? (
-                            <p className="settings-structure-empty">{td("emptyMessage", { year })}</p>
-                          ) : (
-                            <div>
-                              {visibleRows.map((row) => (
-                                <div key={row.item.id} className="settings-item-row">
-                                  <TreeGuides
-                                    ancestorContinues={row.ancestorContinues}
-                                    isLast={hierarchy!.isLastChild.has(row.item.id)}
-                                    depth={row.depth}
-                                  />
-                                  {hierarchy!.hasChildren.has(row.item.id) ? (
-                                    <TreeExpand
-                                      isOpen={!treeExpand.isCollapsed(row.item.id)}
-                                      onToggle={() => treeExpand.toggle(row.item.id)}
-                                      label={treeExpand.isCollapsed(row.item.id) ? td("expandNode") : td("collapseNode")}
-                                    />
-                                  ) : (
-                                    <span className="tree-expand-spacer" />
-                                  )}
-                                  <span className="settings-item-name">{row.item.name}</span>
-                                  <span className="settings-item-actions">
-                                    <button
-                                      type="button"
-                                      className="settings-item-icon-btn"
-                                      title={td("edit")}
-                                      onClick={() => setNodeEditing({ type: d, node: row.item })}
-                                    >
-                                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.86 4.49a1.75 1.75 0 1 1 2.47 2.47L7.5 18.79l-3.3.82.82-3.3Z" />
-                                      </svg>
-                                    </button>
-                                    <button
-                                      type="button"
-                                      className="settings-item-icon-btn settings-item-icon-btn--danger"
-                                      title={tc("delete")}
-                                      onClick={() => setNodeDeleting({ type: d, node: row.item })}
-                                    >
-                                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" />
-                                      </svg>
-                                    </button>
-                                  </span>
-                                </div>
-                              ))}
-                            </div>
-                          )}
+                            }
+                            emptyMessage={td("emptyMessage", { year })}
+                            buildTree={() => visibleRows}
+                          />
                         </div>
                       </td>
                     </tr>
