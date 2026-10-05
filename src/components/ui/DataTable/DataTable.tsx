@@ -1175,7 +1175,7 @@ export function DataTable<T extends {
         {importButton}
         </div>
         {extraActions}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           {/* Campo de busca */}
           <div className="relative w-full sm:w-64">
             <svg
