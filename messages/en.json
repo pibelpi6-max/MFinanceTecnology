@@ -245,7 +245,7 @@
       "custom": "Custom",
       "customUsage": "Custom dimensions",
       "noDescription": "No description.",
-      "new": "+ New dimension",
+      "new": "New dimension",
       "edit": "Edit",
       "codeHint": "Used internally; lowercase letters, numbers and _ only.",
       "codeLockedHint": "Code of a system-default dimension; cannot be changed.",
