@@ -16,6 +16,7 @@ interface NodeFormModalProps {
   editing: DimensionNodeRow | null;
   dimensionTypeId: string;
   dimensionTypeName: string;
+  structureId: string;
   year: number;
   nodes: DimensionNodeRow[];
   onSaved: () => void;
@@ -27,6 +28,7 @@ export function NodeFormModal({
   editing,
   dimensionTypeId,
   dimensionTypeName,
+  structureId,
   year,
   nodes,
   onSaved,
@@ -94,6 +96,7 @@ export function NodeFormModal({
         })
       : await createDimensionNode({
           dimensionTypeId,
+          structureId,
           code: code.trim(),
           name: name.trim(),
           parentNodeId: parent,

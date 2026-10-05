@@ -11,11 +11,13 @@ import type { ColumnMeta } from "@/components/ui/DataTable/types";
 import { TreeExpand, TreeGuides } from "@/components/ui/tree";
 import { useTreeExpand } from "@/hooks/useTreeExpand";
 import { buildDimensionHierarchy, getVisibleRows } from "@/lib/dimensions/hierarchy";
-import type { DimensionType, DimensionNodeRow } from "@/lib/dimensions/types";
+import type { DimensionType, DimensionNodeRow, DimensionStructure } from "@/lib/dimensions/types";
 import { isProtectedDimensionCode } from "@/lib/dimensions/constants";
 import { DimensionTypeFormModal } from "./DimensionTypeFormModal";
 import { NodeFormModal } from "./NodeFormModal";
+import { StructureFormModal } from "./StructureFormModal";
 import { deleteDimensionType, updateFiscalYearStartMonth } from "./_actions";
+import { setDimensionStructureActive, deleteDimensionStructure } from "./_structureActions";
 import { cancelDimensionNode } from "../dimensoes/_actions";
 
 type Translator = (key: string, values?: Record<string, string | number>) => string;
@@ -82,7 +84,7 @@ function buildTypeColumns(
     },
     {
       key: "structure",
-      label: t("dimensions.structure"),
+      label: t("dimensions.structures"),
       sortable: false,
       noTooltip: true,
       render: (d) => (
@@ -91,7 +93,7 @@ function buildTypeColumns(
           className={`settings-structure-btn${expandedTypeId === d.id ? " is-active" : ""}`}
           onClick={() => onToggleStructure(d.id)}
         >
-          {t("dimensions.structure")}
+          {t("dimensions.structures")}
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
           </svg>
@@ -116,7 +118,8 @@ function buildTypeColumns(
 
 interface ConfiguracoesClientProps {
   dimensionTypes: DimensionType[];
-  nodesByType: Record<string, DimensionNodeRow[]>;
+  structuresByType: Record<string, DimensionStructure[]>;
+  nodesByStructure: Record<string, DimensionNodeRow[]>;
   year: number;
   fiscalYearStartMonth: number;
   isAdmin: boolean;
@@ -127,7 +130,8 @@ const CUSTOM_DIMENSIONS_LIMIT = 10;
 
 export function ConfiguracoesClient({
   dimensionTypes,
-  nodesByType,
+  structuresByType,
+  nodesByStructure,
   year,
   fiscalYearStartMonth,
   isAdmin,
@@ -149,23 +153,73 @@ export function ConfiguracoesClient({
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // Árvore de itens inline — abre dentro da própria linha da dimensão
-  // quando a usuária clica em "Estrutura" (ver claude/decisoes-arquitetura.md,
+  // quando a usuária clica em "Estruturas" (ver claude/decisoes-arquitetura.md,
   // decisão de trazer a árvore pra dentro de Parâmetros em vez de uma rota
-  // separada em /admin/dimensoes).
+  // separada em /admin/dimensoes). Desde a migration 0012, cada dimensão
+  // pode ter várias Estruturas nomeadas — o painel mostra a lista delas e,
+  // ao selecionar uma, a árvore de itens dela logo abaixo.
   const [expandedTypeId, setExpandedTypeId] = useState<string | null>(null);
+  const [selectedStructureId, setSelectedStructureId] = useState<Record<string, string>>({});
   const treeExpand = useTreeExpand();
-  const [nodeEditing, setNodeEditing] = useState<{ type: DimensionType; node: DimensionNodeRow | "new" } | null>(null);
+  const [nodeEditing, setNodeEditing] = useState<{ type: DimensionType; node: DimensionNodeRow | "new"; structureId: string } | null>(null);
   const [nodeDeleting, setNodeDeleting] = useState<{ type: DimensionType; node: DimensionNodeRow } | null>(null);
   const [nodeDeleteLoading, setNodeDeleteLoading] = useState(false);
   const [nodeDeleteError, setNodeDeleteError] = useState<string | null>(null);
 
+  const [structureModal, setStructureModal] = useState<{
+    type: DimensionType;
+    mode: "create" | "rename" | "duplicate";
+    source: DimensionStructure | null;
+  } | null>(null);
+  const [structureDeleting, setStructureDeleting] = useState<DimensionStructure | null>(null);
+  const [structureDeleteLoading, setStructureDeleteLoading] = useState(false);
+  const [structureDeleteError, setStructureDeleteError] = useState<string | null>(null);
+  const [structureToggleId, setStructureToggleId] = useState<string | null>(null);
+  const [structureToggleError, setStructureToggleError] = useState<string | null>(null);
+
   const hierarchies = useMemo(() => {
     const map = new Map<string, ReturnType<typeof buildDimensionHierarchy>>();
-    for (const d of dimensionTypes) {
-      map.set(d.id, buildDimensionHierarchy(nodesByType[d.id] ?? []));
+    for (const list of Object.values(structuresByType)) {
+      for (const s of list) {
+        map.set(s.id, buildDimensionHierarchy(nodesByStructure[s.id] ?? []));
+      }
     }
     return map;
-  }, [dimensionTypes, nodesByType]);
+  }, [structuresByType, nodesByStructure]);
+
+  // Estrutura mostrada no painel de uma dimensão: a que a usuária
+  // selecionou explicitamente, ou a ativa, ou a primeira da lista.
+  function getSelectedStructureId(typeId: string): string | null {
+    const list = structuresByType[typeId] ?? [];
+    if (list.length === 0) return null;
+    return selectedStructureId[typeId] ?? list.find((s) => s.is_active)?.id ?? list[0].id;
+  }
+
+  async function handleToggleStructureActive(d: DimensionType, s: DimensionStructure) {
+    setStructureToggleId(s.id);
+    setStructureToggleError(null);
+    const result = await setDimensionStructureActive({ id: s.id, dimensionTypeId: d.id, isActive: !s.is_active });
+    setStructureToggleId(null);
+    if (result.error) {
+      setStructureToggleError(result.error);
+      return;
+    }
+    router.refresh();
+  }
+
+  async function handleConfirmDeleteStructure() {
+    if (!structureDeleting) return;
+    setStructureDeleteLoading(true);
+    setStructureDeleteError(null);
+    const result = await deleteDimensionStructure({ id: structureDeleting.id });
+    setStructureDeleteLoading(false);
+    if (result.error) {
+      setStructureDeleteError(result.error);
+      return;
+    }
+    setStructureDeleting(null);
+    router.refresh();
+  }
 
   useEffect(() => setMonth(fiscalYearStartMonth), [fiscalYearStartMonth]);
 
@@ -216,64 +270,69 @@ export function ConfiguracoesClient({
   const columnCount = 6;
 
   /**
-   * Conteúdo do painel "Estrutura" de uma dimensão — árvore simples de
-   * itens (igual ao desenho de "plano de aulas" do app irmão), não um
-   * DataTable. `embedded` troca só o wrapper externo: quando é usado dentro
-   * do `renderExpanded` do DataTable (lista de tipos), o próprio DataTable
-   * já desenha cartão arredondado/borda ao redor, então aqui a gente usa
-   * `.settings-structure-embedded` (sem fundo/borda duplicados); no
-   * fallback de leitura (usuária não-admin, tabela simples) usa-se
-   * `.settings-structure-panel` (com seu próprio fundo tracejado).
+   * Lista de Estruturas de uma dimensão — pills com nome, status ativa/
+   * inativa (switch) e ações de renomear/duplicar/excluir. Clicar numa
+   * pill seleciona essa estrutura pra mostrar a árvore dela logo abaixo
+   * (ver renderStructureContent). Duplicar é o fluxo central do pedido:
+   * a estrutura de centros de custo/contas/entidades muda ano após ano,
+   * então a usuária duplica a vigente, dá um nome novo (ex. "2026") e
+   * ajusta a partir dela, sem perder a anterior.
    */
-  function renderStructureContent(d: DimensionType, embedded: boolean) {
-    const hierarchy = hierarchies.get(d.id);
-    const nodes = nodesByType[d.id] ?? [];
-    const visibleRows = hierarchy ? getVisibleRows(hierarchy.rows, treeExpand.collapsedIds) : [];
+  function renderStructuresList(d: DimensionType) {
+    const list = structuresByType[d.id] ?? [];
+    const selectedId = getSelectedStructureId(d.id);
 
     return (
-      <div className={embedded ? "settings-structure-embedded" : "settings-structure-panel"}>
+      <div className="settings-structures-list">
         <div className="settings-structure-header">
-          <span className="settings-structure-label">{t("dimensions.structureItems")}</span>
-          <div className="settings-structure-actions">
-            <Link href={`/admin/dimensoes/${d.code}/importar?ano=${year}`} className="settings-structure-import-link">
-              {td("importButton")}
-            </Link>
-            <Button size="sm" variant="accent-blue" className="px-3" onClick={() => setNodeEditing({ type: d, node: "new" })}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4}>
-                <path strokeLinecap="round" d="M12 5v14M5 12h14" />
-              </svg>
-              {td("new")}
-            </Button>
-          </div>
+          <span className="settings-structure-label">{t("dimensions.structuresOfDimension")}</span>
+          <Button
+            size="sm"
+            variant="accent-blue"
+            className="px-3"
+            onClick={() => setStructureModal({ type: d, mode: "create", source: null })}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4}>
+              <path strokeLinecap="round" d="M12 5v14M5 12h14" />
+            </svg>
+            {t("dimensions.newStructure")}
+          </Button>
         </div>
 
-        {nodes.length === 0 ? (
-          <p className="settings-structure-empty">{td("emptyMessage", { year })}</p>
+        {list.length === 0 ? (
+          <p className="settings-structure-empty">{t("dimensions.noStructures")}</p>
         ) : (
-          <div>
-            {visibleRows.map((row) => (
-              <div key={row.item.id} className="settings-item-row">
-                <TreeGuides
-                  ancestorContinues={row.ancestorContinues}
-                  isLast={hierarchy!.isLastChild.has(row.item.id)}
-                  depth={row.depth}
-                />
-                {hierarchy!.hasChildren.has(row.item.id) ? (
-                  <TreeExpand
-                    isOpen={!treeExpand.isCollapsed(row.item.id)}
-                    onToggle={() => treeExpand.toggle(row.item.id)}
-                    label={treeExpand.isCollapsed(row.item.id) ? td("expandNode") : td("collapseNode")}
+          <div className="settings-structure-pills">
+            {list.map((s) => (
+              <div key={s.id} className={`settings-structure-pill${selectedId === s.id ? " is-selected" : ""}`}>
+                <button
+                  type="button"
+                  className="settings-structure-pill-name"
+                  onClick={() => setSelectedStructureId((prev) => ({ ...prev, [d.id]: s.id }))}
+                >
+                  {s.name}
+                </button>
+                <span className={`settings-structure-status-badge${s.is_active ? " is-active" : ""}`}>
+                  {s.is_active ? t("dimensions.structureActive") : t("dimensions.structureInactive")}
+                </span>
+                <label
+                  className="settings-structure-switch"
+                  title={s.is_active ? t("dimensions.structureActive") : t("dimensions.structureInactive")}
+                >
+                  <input
+                    type="checkbox"
+                    checked={s.is_active}
+                    disabled={structureToggleId === s.id}
+                    onChange={() => handleToggleStructureActive(d, s)}
                   />
-                ) : (
-                  <span className="tree-expand-spacer" />
-                )}
-                <span className="settings-item-name">{row.item.name}</span>
-                <span className="settings-item-actions">
+                  <span className="settings-structure-switch-track" />
+                </label>
+                <span className="settings-item-actions settings-item-actions--static">
                   <button
                     type="button"
                     className="settings-item-icon-btn"
-                    title={td("edit")}
-                    onClick={() => setNodeEditing({ type: d, node: row.item })}
+                    title={t("dimensions.renameStructure")}
+                    onClick={() => setStructureModal({ type: d, mode: "rename", source: s })}
                   >
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M16.86 4.49a1.75 1.75 0 1 1 2.47 2.47L7.5 18.79l-3.3.82.82-3.3Z" />
@@ -281,9 +340,20 @@ export function ConfiguracoesClient({
                   </button>
                   <button
                     type="button"
+                    className="settings-item-icon-btn"
+                    title={t("dimensions.duplicateStructure")}
+                    onClick={() => setStructureModal({ type: d, mode: "duplicate", source: s })}
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                      <rect x="8" y="8" width="12" height="12" rx="2" />
+                      <path d="M4 16a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
                     className="settings-item-icon-btn settings-item-icon-btn--danger"
                     title={tc("delete")}
-                    onClick={() => setNodeDeleting({ type: d, node: row.item })}
+                    onClick={() => setStructureDeleting(s)}
                   >
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" />
@@ -293,6 +363,108 @@ export function ConfiguracoesClient({
               </div>
             ))}
           </div>
+        )}
+        {structureToggleError && <p className="mt-1 text-xs text-red-600">{structureToggleError}</p>}
+      </div>
+    );
+  }
+
+  /**
+   * Conteúdo do painel "Estruturas" de uma dimensão: a lista de
+   * estruturas (renderStructuresList) + a árvore simples de itens da
+   * estrutura selecionada (igual ao desenho de "plano de aulas" do app
+   * irmão), não um DataTable. `embedded` troca só o wrapper externo:
+   * quando é usado dentro do `renderExpanded` do DataTable (lista de
+   * tipos), o próprio DataTable já desenha cartão arredondado/borda ao
+   * redor, então aqui a gente usa `.settings-structure-embedded` (sem
+   * fundo/borda duplicados); no fallback de leitura (usuária não-admin,
+   * tabela simples) usa-se `.settings-structure-panel` (com seu próprio
+   * fundo tracejado).
+   */
+  function renderStructureContent(d: DimensionType, embedded: boolean) {
+    const selectedId = getSelectedStructureId(d.id);
+    const selectedStructure = (structuresByType[d.id] ?? []).find((s) => s.id === selectedId) ?? null;
+    const hierarchy = selectedId ? hierarchies.get(selectedId) : undefined;
+    const nodes = selectedId ? nodesByStructure[selectedId] ?? [] : [];
+    const visibleRows = hierarchy ? getVisibleRows(hierarchy.rows, treeExpand.collapsedIds) : [];
+
+    return (
+      <div className={embedded ? "settings-structure-embedded" : "settings-structure-panel"}>
+        {renderStructuresList(d)}
+
+        {selectedStructure && (
+          <>
+            <div className="settings-structure-divider" />
+            <div className="settings-structure-header">
+              <span className="settings-structure-label">
+                {t("dimensions.structureItems")} — {selectedStructure.name}
+              </span>
+              <div className="settings-structure-actions">
+                <Link href={`/admin/dimensoes/${d.code}/importar?ano=${year}`} className="settings-structure-import-link">
+                  {td("importButton")}
+                </Link>
+                <Button
+                  size="sm"
+                  variant="accent-blue"
+                  className="px-3"
+                  onClick={() => setNodeEditing({ type: d, node: "new", structureId: selectedStructure.id })}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4}>
+                    <path strokeLinecap="round" d="M12 5v14M5 12h14" />
+                  </svg>
+                  {td("new")}
+                </Button>
+              </div>
+            </div>
+
+            {nodes.length === 0 ? (
+              <p className="settings-structure-empty">{td("emptyMessage", { year })}</p>
+            ) : (
+              <div>
+                {visibleRows.map((row) => (
+                  <div key={row.item.id} className="settings-item-row">
+                    <TreeGuides
+                      ancestorContinues={row.ancestorContinues}
+                      isLast={hierarchy!.isLastChild.has(row.item.id)}
+                      depth={row.depth}
+                    />
+                    {hierarchy!.hasChildren.has(row.item.id) ? (
+                      <TreeExpand
+                        isOpen={!treeExpand.isCollapsed(row.item.id)}
+                        onToggle={() => treeExpand.toggle(row.item.id)}
+                        label={treeExpand.isCollapsed(row.item.id) ? td("expandNode") : td("collapseNode")}
+                      />
+                    ) : (
+                      <span className="tree-expand-spacer" />
+                    )}
+                    <span className="settings-item-name">{row.item.name}</span>
+                    <span className="settings-item-actions">
+                      <button
+                        type="button"
+                        className="settings-item-icon-btn"
+                        title={td("edit")}
+                        onClick={() => setNodeEditing({ type: d, node: row.item, structureId: selectedStructure.id })}
+                      >
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.86 4.49a1.75 1.75 0 1 1 2.47 2.47L7.5 18.79l-3.3.82.82-3.3Z" />
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
+                        className="settings-item-icon-btn settings-item-icon-btn--danger"
+                        title={tc("delete")}
+                        onClick={() => setNodeDeleting({ type: d, node: row.item })}
+                      >
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" />
+                        </svg>
+                      </button>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
     );
@@ -415,7 +587,7 @@ export function ConfiguracoesClient({
                           className={`settings-structure-btn${expanded ? " is-active" : ""}`}
                           onClick={() => setExpandedTypeId(expanded ? null : d.id)}
                         >
-                          {t("dimensions.structure")}
+                          {t("dimensions.structures")}
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
                           </svg>
@@ -496,13 +668,74 @@ export function ConfiguracoesClient({
         editing={nodeEditing && nodeEditing.node !== "new" ? nodeEditing.node : null}
         dimensionTypeId={nodeEditing?.type.id ?? ""}
         dimensionTypeName={nodeEditing?.type.name ?? ""}
+        structureId={nodeEditing?.structureId ?? ""}
         year={year}
-        nodes={nodeEditing ? nodesByType[nodeEditing.type.id] ?? [] : []}
+        nodes={nodeEditing ? nodesByStructure[nodeEditing.structureId] ?? [] : []}
         onSaved={() => {
           setNodeEditing(null);
           router.refresh();
         }}
       />
+
+      {isAdmin && (
+        <StructureFormModal
+          open={structureModal !== null}
+          onClose={() => setStructureModal(null)}
+          dimensionTypeId={structureModal?.type.id ?? ""}
+          mode={structureModal?.mode ?? "create"}
+          source={structureModal?.source ?? null}
+          year={year}
+          onSaved={(newStructureId) => {
+            if (structureModal) {
+              setSelectedStructureId((prev) => ({ ...prev, [structureModal.type.id]: newStructureId }));
+            }
+            setStructureModal(null);
+            router.refresh();
+          }}
+        />
+      )}
+
+      {isAdmin && (
+        <Modal
+          open={structureDeleting !== null}
+          onClose={() => {
+            setStructureDeleting(null);
+            setStructureDeleteError(null);
+          }}
+          title={t("dimensions.deleteStructureConfirmTitle")}
+          size="sm"
+          footer={
+            <>
+              <Button variant="ghost" onClick={() => setStructureDeleting(null)} disabled={structureDeleteLoading}>
+                {tc("cancel")}
+              </Button>
+              <Button
+                variant="danger"
+                isLoading={structureDeleteLoading}
+                loadingText={tc("saving")}
+                onClick={handleConfirmDeleteStructure}
+              >
+                {tc("delete")}
+              </Button>
+            </>
+          }
+        >
+          <div className="space-y-3">
+            <p className="text-sm text-gray-600">
+              {structureDeleting &&
+                t.rich("dimensions.deleteStructureConfirmBody", {
+                  name: structureDeleting.name,
+                  b: (chunks) => <strong className="font-semibold text-gray-900">{chunks}</strong>,
+                })}
+            </p>
+            {structureDeleteError && (
+              <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+                <p className="text-sm text-red-600">{structureDeleteError}</p>
+              </div>
+            )}
+          </div>
+        </Modal>
+      )}
 
       <Modal
         open={nodeDeleting !== null}

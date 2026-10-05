@@ -347,6 +347,54 @@
 .settings-item-icon-btn:hover { background: rgba(0,0,0,.06); color: #374151; }
 .settings-item-icon-btn--danger:hover { background: rgba(220,38,38,.08); color: #dc2626; }
 
+/* ── Estruturas (Parâmetros > Dimensões > Estruturas) ───
+   Lista de árvores nomeadas de uma dimensão — pills com nome, status
+   ativa/inativa (switch) e ações de renomear/duplicar/excluir. Clicar
+   numa pill seleciona essa estrutura pra mostrar a árvore de itens dela
+   logo abaixo (.settings-structure-divider separa as duas seções). */
+.settings-structures-list { padding-bottom: 2px; }
+.settings-structure-divider { height: 1px; background: rgba(0,0,0,.06); margin: 2px 0 0; }
+.settings-structure-pills { display: flex; flex-direction: column; gap: 3px; }
+.settings-structure-pill {
+  display: flex; align-items: center; gap: 8px; padding: 5px 6px 5px 10px;
+  border-radius: 8px; background: #fff; border: 1px solid rgba(0,0,0,.06);
+}
+.settings-structure-pill.is-selected { border-color: rgba(62,111,224,.35); background: rgba(62,111,224,.04); }
+.settings-structure-pill-name {
+  flex: 1; min-width: 0; text-align: left; background: none; border: none; cursor: pointer;
+  padding: 2px 2px; font-size: 13px; font-weight: 600; color: var(--text-strong);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.settings-structure-pill-name:hover { color: #3E6FE0; }
+.settings-structure-status-badge {
+  display: inline-flex; align-items: center; flex-shrink: 0; padding: 2px 8px; border-radius: 999px;
+  font-size: 10px; font-weight: 600; white-space: nowrap; background: #f1f2f6; color: #5b5f76;
+}
+.settings-structure-status-badge.is-active { background: rgba(92,184,138,.14); color: #0F6E56; }
+
+/* Switch compacto ativa/inativa — reaproveita o azul de marca pro "on". */
+.settings-structure-switch { position: relative; flex-shrink: 0; display: inline-block; width: 30px; height: 17px; }
+.settings-structure-switch input {
+  position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; z-index: 1;
+}
+.settings-structure-switch input:disabled { cursor: not-allowed; }
+.settings-structure-switch-track {
+  position: absolute; inset: 0; border-radius: 999px; background: #d1d5db; transition: background-color 150ms ease;
+}
+.settings-structure-switch-track::before {
+  content: ""; position: absolute; top: 2px; left: 2px; width: 13px; height: 13px; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.25); transition: transform 150ms ease;
+}
+.settings-structure-switch input:checked + .settings-structure-switch-track { background: #3E6FE0; }
+.settings-structure-switch input:checked + .settings-structure-switch-track::before { transform: translateX(13px); }
+.settings-structure-switch input:disabled + .settings-structure-switch-track { opacity: .5; }
+
+/* Ações da pill (renomear/duplicar/excluir) ficam sempre visíveis — ao
+   contrário de .settings-item-actions (itens da árvore, só no hover),
+   aqui são poucas linhas e ações pouco frequentes, então não vale
+   esconder: a usuária precisa enxergar que dá pra duplicar. */
+.settings-item-actions--static { opacity: 1; flex-shrink: 0; }
+
 /* ── Importação assistida por IA (Dimensões, Matriz, Realizado, Pacotes) ── */
 .import-wizard { display: flex; flex-direction: column; gap: 20px; max-width: 980px; margin: 0 auto; }
 

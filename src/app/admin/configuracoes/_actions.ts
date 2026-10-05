@@ -88,19 +88,34 @@ export async function createDimensionType(input: {
       .limit(1)
       .maybeSingle();
 
-    const { error } = await supabase.from("dimension_types").insert({
-      tenant_id: tenant.tenantId,
-      code,
-      name,
-      description: input.description?.trim() || null,
-      is_system: false,
-      sort_order: (last?.sort_order ?? 0) + 1,
-      use_in_matriz: input.useInMatriz ?? false,
-    });
+    const { data: newType, error } = await supabase
+      .from("dimension_types")
+      .insert({
+        tenant_id: tenant.tenantId,
+        code,
+        name,
+        description: input.description?.trim() || null,
+        is_system: false,
+        sort_order: (last?.sort_order ?? 0) + 1,
+        use_in_matriz: input.useInMatriz ?? false,
+      })
+      .select("id")
+      .single();
     if (error) {
       if (error.code === "23505") return { error: "Já existe uma dimensão com esse código." };
       return { error: error.message };
     }
+
+    // Toda dimensão nasce com 1 Estrutura ativa, pra poder receber itens
+    // direto — ver "Estruturas" (migration 0012_dimension_structures.sql).
+    const { error: structureError } = await supabase.from("dimension_structures").insert({
+      tenant_id: tenant.tenantId,
+      dimension_type_id: newType.id,
+      name: "Estrutura Principal",
+      is_active: true,
+      sort_order: 0,
+    });
+    if (structureError) return { error: structureError.message };
 
     afterMutation();
     return { success: true };
