@@ -275,10 +275,10 @@
 .settings-saved-hint { color: #15803d; font-size: 12px; font-weight: 600; }
 .settings-admin-hint { font-size: 11.5px; color: var(--text-muted); margin-top: 6px; }
 
-/* 300px = largura do campo Buscar do DataTable (256px) + gap (8px) +
-   engrenagem de colunas (36px), pra barra cobrir exatamente a mesma faixa
-   horizontal que a busca + engrenagem logo abaixo. */
-.settings-progress-block { width: 300px; flex-shrink: 0; }
+/* 256px = largura do campo Buscar do DataTable (w-64), pra barra terminar
+   alinhada com a borda direita do campo de busca logo abaixo (a engrenagem
+   de colunas fica um pouco além, fora da faixa da barra). */
+.settings-progress-block { width: 256px; flex-shrink: 0; }
 .settings-progress-block-label { display: flex; justify-content: space-between; align-items: baseline; font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
 .settings-progress-block-value { font-weight: 700; color: var(--text-strong); font-variant-numeric: tabular-nums; }
 .settings-progress-block-bar { height: 6px; border-radius: 4px; background: rgba(62,111,224,.12); overflow: hidden; }
