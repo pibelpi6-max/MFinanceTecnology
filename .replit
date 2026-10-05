@@ -1,0 +1,15 @@
+modules = ["nodejs-22"]
+
+run = "pnpm dev"
+
+[nix]
+channel = "stable-24_05"
+
+[deployment]
+deploymentTarget = "autoscale"
+build = ["pnpm", "build"]
+run = ["pnpm", "start"]
+
+[[ports]]
+localPort = 3000
+externalPort = 80

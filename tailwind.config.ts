@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import { BRAND } from "./src/config/brand";
 
 const config: Config = {
   darkMode: "class",
@@ -10,11 +11,21 @@ const config: Config = {
     extend: {
       colors: {
         primary: {
-          DEFAULT: "#1d4ed8",
-          hover: "#1e40af",
-          light: "#dbeafe",
-          border: "#93c5fd",
+          DEFAULT: BRAND.primary,
+          hover:   BRAND.primaryHover,
+          light:   BRAND.primaryLight,
+          glow:    BRAND.primaryGlow,
+          border:  BRAND.primaryBorder,
         },
+      },
+      ringColor: {
+        primary: BRAND.primary,
+      },
+      borderColor: {
+        primary: BRAND.primary,
+      },
+      fontFamily: {
+        display: ["Syne", "sans-serif"],
       },
     },
   },

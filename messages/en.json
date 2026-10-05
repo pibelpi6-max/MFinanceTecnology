@@ -1,0 +1,339 @@
+{
+  "common": {
+    "actions": "Actions",
+    "edit": "Edit",
+    "search": "Search",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving...",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "loading": "Loading...",
+    "tooltips": {
+      "columns": "Columns",
+      "dragColumn": "Drag column",
+      "noInfo": "No information",
+      "viewDetails": "View details",
+      "close": "Close"
+    },
+    "columns": {
+      "allVisible": "All columns are visible.",
+      "noMatch": "No available column matches the search.",
+      "subtitle": "Enable, disable or drag to reorder",
+      "title": "Columns",
+      "search": "Search column"
+    }
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "dimensoes": "Dimensions",
+    "matriz": "Budget Matrix",
+    "realizado": "Actual Expenses",
+    "comparativo": "Budget vs. Actual",
+    "pacotes": "Packages",
+    "configuracoes": "Settings",
+    "sistema": "System",
+    "logout": "Sign out",
+    "langPT": "Portuguese",
+    "langEN": "English",
+    "langES": "Spanish"
+  },
+  "labels": {
+    "budgetPackage": "Package",
+    "budgetPackagePlural": "Packages"
+  },
+  "auth": {
+    "brandLabel": "Sistema Financeiro",
+    "headline": "Full visibility into your budget.",
+    "headlineDesc": "From the budget matrix to month-end close, every cost center in a single corporate dashboard.",
+    "welcomeTitle": "Welcome back",
+    "welcomeSubtitle": "Sign in with your corporate credentials.",
+    "slides": [
+      {
+        "title": "Real-time budget matrix",
+        "desc": "Enter, review and approve values by cost center, with totals recalculated instantly.",
+        "badge": "▲ 12.4% vs budget"
+      },
+      {
+        "title": "Multi-company consolidation",
+        "desc": "Track subsidiaries and business units in a single dashboard, no more loose spreadsheets.",
+        "badge": "3 units consolidated"
+      },
+      {
+        "title": "From budget to actuals",
+        "desc": "Compare targets with the month's results and explain variances without leaving the system.",
+        "badge": "▲ 23.5% in results"
+      }
+    ],
+    "visual": {
+      "matrixTitle": "Budget matrix — March",
+      "consolidated": "Consolidated",
+      "colSP": "SP Branch",
+      "colRJ": "RJ Branch",
+      "colHQ": "HQ",
+      "rowRevenue": "Revenue",
+      "rowCosts": "Costs",
+      "rowResult": "Result",
+      "consolidationTitle": "Consolidation — units",
+      "budgetActualTitle": "Budget vs. actual — March"
+    },
+    "localeLabel": "Language",
+    "email": "Corporate email",
+    "emailPlaceholder": "you@yourcompany.com",
+    "password": "Password",
+    "passwordPlaceholder": "••••••••",
+    "rememberMe": "Remember me",
+    "signIn": "Sign in",
+    "signingIn": "Signing in...",
+    "forgotPassword": "Forgot password",
+    "showPassword": "Show",
+    "hidePassword": "Hide",
+    "invalidCredentials": "Incorrect email or password.",
+    "invalidEmail": "Enter a valid email address.",
+    "emailNotConfirmed": "Please confirm your email before signing in.",
+    "tooManyRequests": "Too many attempts. Please try again shortly.",
+    "connectionTimeout": "Connection timed out. Please try again.",
+    "generic": "Couldn't sign in. Please try again."
+  },
+  "dimensions": {
+    "title": "Dimensions",
+    "year": "Year",
+    "new": "New item",
+    "edit": "Edit item",
+    "code": "Code",
+    "name": "Name",
+    "parent": "Parent item",
+    "noParent": "None (root)",
+    "expandNode": "Expand",
+    "collapseNode": "Collapse",
+    "selectParentHint": "Click an item to use it as the parent, or leave unselected to create at the root level.",
+    "validFrom": "Effective from",
+    "activeFrom": "Effective since {year}",
+    "deleteConfirmTitle": "End validity",
+    "deleteConfirmBody": "\"{name}\" stops applying starting {year}. History from earlier years is preserved.",
+    "emptyMessage": "No items registered for {year}.",
+    "searchPlaceholder": "Search by name or code",
+    "maxDepthReached": "Maximum depth of 10 levels reached.",
+    "importFields": {
+      "code": "Code",
+      "name": "Name",
+      "parent": "Parent item",
+      "parentHelp": "Must already exist in the system; leave blank for a top-level item."
+    },
+    "importButton": "Import"
+  },
+  "budget": {
+    "title": "Budget Matrix",
+    "entity": "Entity",
+    "account": "Account",
+    "rowTotal": "Total",
+    "columnTotal": "Total",
+    "save": "Save",
+    "saving": "Saving...",
+    "discard": "Discard",
+    "savedSuccess": "Changes saved.",
+    "unsavedChanges": "{count} unsaved cell(s)",
+    "missingSetup": "Set up at least one Entity, Cost Center and Account in Dimensions before entering the budget.",
+    "months": {
+      "jan": "Jan",
+      "fev": "Feb",
+      "mar": "Mar",
+      "abr": "Apr",
+      "mai": "May",
+      "jun": "Jun",
+      "jul": "Jul",
+      "ago": "Aug",
+      "set": "Sep",
+      "out": "Oct",
+      "nov": "Nov",
+      "dez": "Dec"
+    },
+    "tree": {
+      "title": "Entities and {packages}",
+      "otherPackages": "Other {packages}",
+      "noPackages": "No packages in {year}.",
+      "hide": "Hide tree",
+      "show": "Show tree",
+      "goToPackages": "View in Packages"
+    },
+    "importButton": "Import"
+  },
+  "packages": {
+    "name": "Name",
+    "costCenter": "Cost Center",
+    "allCostCenters": "All cost centers",
+    "status": "Status",
+    "actions": "Actions",
+    "statusValues": {
+      "rascunho": "Draft",
+      "em_elaboracao": "In progress",
+      "submetido": "Submitted",
+      "aprovado": "Approved",
+      "rejeitado": "Rejected"
+    },
+    "transitionButtons": {
+      "em_elaboracao": "Start elaboration",
+      "submetido": "Submit",
+      "aprovado": "Approve",
+      "rejeitado": "Reject"
+    },
+    "history": "History",
+    "historyTitle": "Package history",
+    "historyEmpty": "No changes recorded yet.",
+    "loading": "Loading...",
+    "byYou": "by you",
+    "new": "New {label}",
+    "edit": "Edit package",
+    "emptyMessage": "No packages registered for {year}.",
+    "deleteConfirmTitle": "Delete package",
+    "deleteConfirmBody": "\"{name}\" will be permanently deleted. This action cannot be undone.",
+    "entity": "Entity",
+    "noEntity": "No entity",
+    "importButton": "Import"
+  },
+  "actuals": {
+    "title": "Actual Expenses",
+    "missingSetup": "Set up at least one Entity, Cost Center and Account in Dimensions before logging expenses.",
+    "account": "Account",
+    "costCenter": "Cost Center",
+    "description": "Description",
+    "date": "Date",
+    "amount": "Amount",
+    "totalLancado": "Total logged this month",
+    "goToComparison": "View budget vs. actual",
+    "new": "New expense",
+    "edit": "Edit expense",
+    "emptyMessage": "No expenses logged for this period.",
+    "deleteConfirmTitle": "Delete expense",
+    "deleteConfirmBody": "This entry will be permanently deleted. This action cannot be undone.",
+    "selectAccountAndCostCenter": "Select the account and cost center.",
+    "selectPlaceholder": "Select...",
+    "comparisonTitle": "Budget vs. Actual",
+    "comparisonEmpty": "No entries (budgeted or actual) for this period.",
+    "budgeted": "Budgeted",
+    "actual": "Actual",
+    "variance": "Variance",
+    "varianceStatus": "Status",
+    "overTolerance": "Over tolerance",
+    "withinTolerance": "Within tolerance",
+    "explain": "Explain",
+    "viewExplanation": "View explanation",
+    "explainDeviation": "Deviation explanation",
+    "explanationLabel": "Explanation",
+    "explanationPlaceholder": "Describe the reason for the deviation...",
+    "suggestWithAI": "Suggest with AI",
+    "suggesting": "Generating suggestion...",
+    "importButton": "Import"
+  },
+  "settings": {
+    "period": {
+      "title": "Budget period",
+      "intro": "Fiscal year start month.",
+      "startMonth": "Fiscal year start month",
+      "save": "Save",
+      "saving": "Saving...",
+      "saved": "Saved.",
+      "adminOnly": "Only admins can change this."
+    },
+    "dimensions": {
+      "title": "Dimensions",
+      "intro": "Name, description and custom dimensions for your company.",
+      "name": "Name",
+      "code": "Code",
+      "fieldDescription": "Description",
+      "system": "System default",
+      "custom": "Custom",
+      "customUsage": "Custom dimensions",
+      "noDescription": "No description.",
+      "new": "+ New dimension",
+      "edit": "Edit",
+      "codeHint": "Used internally; lowercase letters, numbers and _ only.",
+      "codeLockedHint": "Code of a system-default dimension; cannot be changed.",
+      "limitReached": "Limit of 10 custom dimensions reached.",
+      "adminOnly": "Only admins can edit this.",
+      "deleteConfirmTitle": "Delete dimension",
+      "deleteConfirmBody": "Delete <b>{name}</b> permanently?",
+      "useInMatriz": "Use in Budget Matrix",
+      "useInMatrizHint": "When checked, this dimension shows up as an extra filter in the Budget Matrix.",
+      "useInMatrizColumn": "Used in:",
+      "useInMatrizYes": "Budget Matrix",
+      "useInMatrizNo": "Nowhere",
+      "structure": "Structure",
+      "structureItems": "Items in this dimension"
+    }
+  },
+  "import": {
+    "steps": {
+      "mapping": "Columns",
+      "review": "Review",
+      "done": "Done"
+    },
+    "cancel": "Cancel",
+    "back": "Back",
+    "continue": "Continue",
+    "upload": {
+      "dropzoneTitle": "Drag a file here or click to choose one",
+      "dropzoneHint": "Accepts .csv, .xlsx or .xls",
+      "mappingInProgress": "AI is identifying your spreadsheet columns…",
+      "genericError": "Could not read this file. Check the format and try again."
+    },
+    "mapping": {
+      "hint": "Check which field each spreadsheet column will fill. Fields marked * are required.",
+      "column": "Spreadsheet column",
+      "preview": "Example",
+      "field": "Target field",
+      "ignoreColumn": "Ignore this column",
+      "missingRequired": "Still need to map: {fields}."
+    },
+    "review": {
+      "status": "Status",
+      "includeRow": "Include this row in the import",
+      "ready": "Ready",
+      "hasErrors": "Has errors",
+      "skipped": "Skipped",
+      "total": "{count} row(s) in the spreadsheet",
+      "readyCount": "{count} ready",
+      "errorCount": "{count} with errors",
+      "skippedCount": "{count} skipped",
+      "importButton": "Import {count} row(s)"
+    },
+    "done": {
+      "title": "{count} record(s) imported successfully",
+      "someFailed": "{count} row(s) could not be imported",
+      "rowLabel": "Row {row}",
+      "backToScreen": "Back to screen"
+    },
+    "titlePrefix": "Import",
+    "matrizFields": {
+      "title": "Budget Matrix entries",
+      "description": "Each row becomes a budgeted value for the entity + cost center + account + year + month combination. An existing value for the same combination is replaced.",
+      "entidade": "Entity",
+      "centroCusto": "Cost Center",
+      "conta": "Account",
+      "ano": "Year",
+      "mes": "Month",
+      "valor": "Amount",
+      "anoInvalid": "Invalid year.",
+      "mesInvalid": "Month must be between 1 and 12."
+    },
+    "realizadoFields": {
+      "title": "Actual Expenses",
+      "description": "Each row becomes a new expense entry (existing entries are not replaced).",
+      "entidade": "Entity",
+      "centroCusto": "Cost Center",
+      "conta": "Account",
+      "ano": "Year",
+      "mes": "Month",
+      "valor": "Amount",
+      "descricao": "Description",
+      "anoInvalid": "Invalid year.",
+      "mesInvalid": "Month must be between 1 and 12."
+    },
+    "pacotesFields": {
+      "description": "Each row becomes a new package, always created as draft (the initial status cannot be set by the import).",
+      "nome": "Name",
+      "centroCusto": "Cost Center",
+      "entidade": "Entity"
+    }
+  }
+}
