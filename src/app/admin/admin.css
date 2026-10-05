@@ -269,13 +269,16 @@
 .settings-divider { height: 1px; background: rgba(0,0,0,.06); }
 .settings-block-title { font-size: 14.5px; font-weight: 700; color: var(--text-strong); margin: 0; }
 .settings-block-intro { font-size: 12.5px; color: var(--text-muted); line-height: 1.5; margin: 0; }
-.settings-block-subtitle-row { display: flex; justify-content: space-between; align-items: center; gap: 24px; margin-top: -6px; margin-bottom: 14px; }
+.settings-block-subtitle-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; margin-top: -6px; margin-bottom: 14px; }
 .settings-block-actions { margin-top: 14px; margin-bottom: 12px; }
 .settings-inline-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
 .settings-saved-hint { color: #15803d; font-size: 12px; font-weight: 600; }
 .settings-admin-hint { font-size: 11.5px; color: var(--text-muted); margin-top: 6px; }
 
-.settings-progress-block { width: 230px; flex-shrink: 0; }
+/* 300px = largura do campo Buscar do DataTable (256px) + gap (8px) +
+   engrenagem de colunas (36px), pra barra cobrir exatamente a mesma faixa
+   horizontal que a busca + engrenagem logo abaixo. */
+.settings-progress-block { width: 300px; flex-shrink: 0; }
 .settings-progress-block-label { display: flex; justify-content: space-between; align-items: baseline; font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
 .settings-progress-block-value { font-weight: 700; color: var(--text-strong); font-variant-numeric: tabular-nums; }
 .settings-progress-block-bar { height: 6px; border-radius: 4px; background: rgba(62,111,224,.12); overflow: hidden; }
