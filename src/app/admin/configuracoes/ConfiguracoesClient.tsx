@@ -44,6 +44,7 @@ function buildTypeColumns(
     {
       key: "name",
       label: t("dimensions.name"),
+      maxWidth: 200,
       getText: (d) => d.name,
       filterable: true,
       render: (d) => <span className="font-medium text-gray-800">{d.name}</span>,

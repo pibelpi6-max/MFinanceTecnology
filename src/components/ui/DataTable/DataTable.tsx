@@ -811,7 +811,9 @@ export function DataTable<T extends {
         const w = measureText(text, false) + PAD;
         if (w > max) max = w;
       });
-      widths[col.key] = Math.max(Math.ceil(max), col.minWidth ?? 50);
+      const floored = Math.max(Math.ceil(max), col.minWidth ?? 50);
+      widths[col.key] =
+        col.maxWidth !== undefined ? Math.min(floored, col.maxWidth) : floored;
     });
     setColWidths(
       initialPrefs?.widths ? { ...widths, ...initialPrefs.widths } : widths,
