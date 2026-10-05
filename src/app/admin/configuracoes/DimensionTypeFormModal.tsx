@@ -120,20 +120,18 @@ export function DimensionTypeFormModal({
             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
           />
         </div>
-        {!isCodeLocked && (
-          <div>
-            <label className="flex items-center gap-1.5 text-sm text-gray-700">
-              <input
-                type="checkbox"
-                checked={useInMatriz}
-                onChange={(e) => setUseInMatriz(e.target.checked)}
-                className="h-3.5 w-3.5 rounded border-gray-300 text-primary focus:ring-primary/30"
-              />
-              {t("useInMatriz")}
-            </label>
-            <p className="mt-1 text-[11px] text-gray-400">{t("useInMatrizHint")}</p>
-          </div>
-        )}
+        <div>
+          <label className="flex items-center gap-1.5 text-sm text-gray-700">
+            <input
+              type="checkbox"
+              checked={useInMatriz}
+              onChange={(e) => setUseInMatriz(e.target.checked)}
+              className="h-3.5 w-3.5 rounded border-gray-300 text-primary focus:ring-primary/30"
+            />
+            {t("useInMatriz")}
+          </label>
+          <p className="mt-1 text-[11px] text-gray-400">{t("useInMatrizHint")}</p>
+        </div>
         {error && (
           <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2">
             <p className="text-xs text-red-600">{error}</p>

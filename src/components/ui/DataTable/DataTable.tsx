@@ -112,6 +112,9 @@ export function DataTable<T extends {
   onDelete,
   editIcon,
   editLabel,
+  deleteIcon,
+  deleteLabel,
+  canDelete,
   renderExpanded,
   expandedRowId,
   onNew,
@@ -686,7 +689,7 @@ export function DataTable<T extends {
       isDragging      = true;
       dragStartX      = e.clientX;
       dragStartScroll = fake!.scrollLeft;
-      thumb!.style.backgroundColor = "#34a878";
+      thumb!.style.backgroundColor = "#2F56C4";
       thumb!.style.height = "12px";
       thumb!.style.bottom = "4px";
       (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
@@ -703,7 +706,7 @@ export function DataTable<T extends {
     function onPointerUp() {
       if (!isDragging) return;
       isDragging = false;
-      thumb!.style.backgroundColor = "#4dbb8f";
+      thumb!.style.backgroundColor = "#3E6FE0";
       applyHover(hovered);
     }
 
@@ -1201,7 +1204,7 @@ export function DataTable<T extends {
               type="button"
               onClick={() => setColModalOpen(true)}
               className={[
-                "flex h-9 w-9 items-center justify-center rounded-lg transition-colors",
+                "flex h-9 w-9 items-center justify-center rounded-lg transition-colors -mr-[10px]",
                 colModalOpen
                   ? "text-[#5cb88a]"
                   : "text-gray-400 hover:text-[#5cb88a]",
@@ -1306,8 +1309,8 @@ export function DataTable<T extends {
                 ))}
                 {/* Spacer obrigatório: absorve espaço extra em table-layout:fixed */}
                 <col />
-                {/* Ações: 80px fixo */}
-                <col style={{ width: "80px" }} />
+                {/* Ações: 104px fixo (editar + excluir) */}
+                <col style={{ width: "104px" }} />
               </colgroup>
               <thead
                 ref={theadRef}
@@ -1652,10 +1655,10 @@ export function DataTable<T extends {
                         do resto da linha, sem re-compor alpha sobre alpha.
                       */}
                       <td
-                          className="px-4 py-3 text-center sticky right-0 z-20 bg-white dark:bg-gray-900 group-hover:bg-[#f2f9f6] dark:group-hover:bg-[#17252f]"
+                          className="px-2 py-3 text-center sticky right-0 z-20 bg-white dark:bg-gray-900 group-hover:bg-[#f2f9f6] dark:group-hover:bg-[#17252f]"
                           style={rowBorderBottom?.(item) ? { borderBottom: "2px solid #5cb88a" } : undefined}
                         >
-                        <div className="flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
+                        <div className="flex items-center justify-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                           <button
                             type="button"
                             onClick={() => onEdit(item)}
@@ -1679,6 +1682,31 @@ export function DataTable<T extends {
                             </svg>
                             )}
                           </button>
+                          {onDelete && (canDelete?.(item) ?? true) && (
+                            <button
+                              type="button"
+                              onClick={() => onDelete(item)}
+                              className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40"
+                              aria-label={deleteLabel ?? tCommon("delete")}
+                              title={deleteLabel ?? tCommon("delete")}
+                            >
+                              {deleteIcon ?? (
+                              <svg
+                                className="h-4 w-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                strokeWidth={2}
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"
+                                />
+                              </svg>
+                              )}
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -1905,7 +1933,7 @@ export function DataTable<T extends {
               height: "5px",
               width: "80px",
               borderRadius: "999px",
-              backgroundColor: "#4dbb8f",
+              backgroundColor: "#3E6FE0",
               cursor: "pointer",
               zIndex: 46,
               display: "none",

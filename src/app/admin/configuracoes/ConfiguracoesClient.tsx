@@ -22,31 +22,28 @@ type Translator = (key: string, values?: Record<string, string | number>) => str
 
 /**
  * Monta as colunas da lista de TIPOS de dimensão (Nome/Código/Descrição/
- * Utilizado em/Estrutura/Tipo/Excluir) usadas pelo DataTable na tela de
- * Parâmetros. A árvore de ITENS de cada dimensão continua sendo uma árvore
- * simples (ver renderStructureContent, dentro do componente) igual ao
- * desenho usado em "plano de aulas" no app irmão — só a lista de tipos é
- * que ganhou o DataTable (busca + engrenagem de colunas). Ver
- * claude/decisoes-arquitetura.md.
+ * Utilizado em/Estrutura/Tipo) usadas pelo DataTable na tela de Parâmetros.
+ * A árvore de ITENS de cada dimensão continua sendo uma árvore simples (ver
+ * renderStructureContent, dentro do componente) igual ao desenho usado em
+ * "plano de aulas" no app irmão — só a lista de tipos é que ganhou o
+ * DataTable (busca + engrenagem de colunas). Ver claude/decisoes-arquitetura.md.
  *
- * Nota: o DataTable não desenha um botão de excluir próprio — seu
- * `onDelete` é apenas repassado via prop para manter a tipagem, mas nunca é
- * chamado pelo componente (só `onEdit`, via o ícone de lápis fixo na coluna
- * "Ações"). Por isso a coluna "delete" abaixo existe: é o único jeito do
- * usuário disparar a exclusão de um tipo de dimensão nessa tabela.
+ * Excluir fica na coluna "Ações" (editar + excluir), junto com o lápis de
+ * editar — ver `onDelete`/`canDelete` passados ao DataTable. Tipos de
+ * sistema/protegidos (centro_custo, conta, entidade) não podem ser
+ * excluídos, então `canDelete` barra o botão para eles.
  */
 function buildTypeColumns(
   t: Translator,
-  tc: Translator,
   expandedTypeId: string | null,
-  onToggleStructure: (id: string) => void,
-  onDeleteRequest: (d: DimensionType) => void
+  onToggleStructure: (id: string) => void
 ): ColumnMeta<DimensionType>[] {
   return [
     {
       key: "name",
       label: t("dimensions.name"),
       getText: (d) => d.name,
+      filterable: true,
       render: (d) => <span className="font-medium text-gray-800">{d.name}</span>,
     },
     {
@@ -54,12 +51,14 @@ function buildTypeColumns(
       label: t("dimensions.code"),
       width: 140,
       getText: (d) => d.code,
+      filterable: true,
       render: (d) => <code className="settings-code">{d.code}</code>,
     },
     {
       key: "description",
       label: t("dimensions.fieldDescription"),
       getText: (d) => d.description ?? "",
+      filterable: true,
       render: (d) =>
         d.description ? (
           <span className="text-gray-600">{d.description}</span>
@@ -111,25 +110,6 @@ function buildTypeColumns(
           {d.is_system || isProtectedDimensionCode(d.code) ? t("dimensions.system") : t("dimensions.custom")}
         </span>
       ),
-    },
-    {
-      key: "delete",
-      label: tc("delete"),
-      sortable: false,
-      noTooltip: true,
-      render: (d) =>
-        !d.is_system && !isProtectedDimensionCode(d.code) ? (
-          <button
-            type="button"
-            className="settings-item-icon-btn settings-item-icon-btn--danger"
-            title={tc("delete")}
-            onClick={() => onDeleteRequest(d)}
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" />
-            </svg>
-          </button>
-        ) : null,
     },
   ];
 }
@@ -386,14 +366,13 @@ export function ConfiguracoesClient({
             items={dimensionTypes}
             columns={buildTypeColumns(
               t,
-              tc,
               expandedTypeId,
-              (id) => setExpandedTypeId((prev) => (prev === id ? null : id)),
-              setDeleting
+              (id) => setExpandedTypeId((prev) => (prev === id ? null : id))
             )}
             prefsKey="configuracoes_tipos_cols"
             onEdit={(d) => setEditing(d)}
             onDelete={(d) => setDeleting(d)}
+            canDelete={(d) => !d.is_system && !isProtectedDimensionCode(d.code)}
             onNew={() => setEditing("new")}
             newLabel={t("dimensions.new")}
             expandedRowId={expandedTypeId}

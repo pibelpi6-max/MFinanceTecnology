@@ -76,6 +76,14 @@ export interface DataTableProps<T extends { id: string }> {
   onDelete: (item: T) => void;
   editIcon?: React.ReactNode;
   editLabel?: string;
+  deleteIcon?: React.ReactNode;
+  deleteLabel?: string;
+  /**
+   * OPCIONAL: quando retorna false, o botão de excluir não é desenhado para
+   * essa linha na coluna "Ações" (ex: itens de sistema que não podem ser
+   * removidos). Default: true (todas as linhas podem ser excluídas).
+   */
+  canDelete?: (item: T) => boolean;
   onNew: () => void;
   newLabel: string;
   /** OPCIONAL: acoes extras no topo, ao lado do botao "Novo" (ex: botao Importar). */

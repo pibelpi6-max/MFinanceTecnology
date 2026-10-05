@@ -245,7 +245,7 @@
       "custom": "Personalizada",
       "customUsage": "Dimensiones personalizadas",
       "noDescription": "Sin descripción.",
-      "new": "+ Nueva dimensión",
+      "new": "Nueva dimensión",
       "edit": "Editar",
       "codeHint": "Uso interno; solo minúsculas, números y _.",
       "codeLockedHint": "Código de una dimensión estándar del sistema; no se puede modificar.",
