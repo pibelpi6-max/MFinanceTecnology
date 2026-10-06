@@ -1328,7 +1328,7 @@ export function DataTable<T extends {
         ref={tableCardRef}
         className="relative rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900"
       >
-        <div ref={tableRef} className="relative overflow-x-auto">
+        <div ref={tableRef} className="relative overflow-x-auto datatable-native-scrollbar">
           <div ref={tableWrapperRef} style={{ position: "relative" }}>
             <table
               className={`w-full ${bodyTextClassName}`}

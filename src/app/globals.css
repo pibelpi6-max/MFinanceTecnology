@@ -18,3 +18,25 @@
 .datatable-fake-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* Scrollbar horizontal NATIVA das tabelas (DataTable) — mesma cor da fake,
+   usada quando a tabela está visível no viewport (hide-scrollbar ausente) */
+.datatable-native-scrollbar:not(.hide-scrollbar) {
+  scrollbar-width: thin;
+  scrollbar-color: #7dabc9 rgba(125, 171, 201, 0.12);
+}
+.datatable-native-scrollbar:not(.hide-scrollbar)::-webkit-scrollbar {
+  height: 10px;
+}
+.datatable-native-scrollbar:not(.hide-scrollbar)::-webkit-scrollbar-track {
+  background: rgba(125, 171, 201, 0.12);
+  border-radius: 999px;
+}
+.datatable-native-scrollbar:not(.hide-scrollbar)::-webkit-scrollbar-thumb {
+  background: #7dabc9;
+  border-radius: 999px;
+}
+.datatable-native-scrollbar:not(.hide-scrollbar)::-webkit-scrollbar-thumb:hover,
+.datatable-native-scrollbar:not(.hide-scrollbar)::-webkit-scrollbar-thumb:active {
+  background: #4f7f9c;
+}
