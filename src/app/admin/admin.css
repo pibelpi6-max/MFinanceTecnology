@@ -435,6 +435,29 @@
 .settings-item-row .tree-guide-col--own.is-continuing::before {
   bottom: -7px;
 }
+/* O -26px acima assume que a linha logo ACIMA (na ordem do DOM) é o
+   PAI desta, terminando num cotovelo a meia altura (a "degrau" clássico
+   da escada) — por isso precisa subir mais pra alcançar esse meio da
+   linha de cima. Isso só é verdade quando este nó é o PRIMEIRO filho
+   do pai (primeiro `<div key={node.id}>` dentro do
+   `.settings-item-children` do pai — ver renderNodeRow). Quando é um
+   IRMÃO seguinte (ex.: "Zebra irmao" depois de "Novo item", que por
+   sua vez tem seus próprios filhos), a linha logo acima no DOM não é
+   o pai — é o último descendente da subárvore do irmão anterior,
+   cujo traço de ancestral "is-continuing" já vem descendo reto (sem
+   cotovelo, só 7px de borda) bem na mesma posição X (ver correções de
+   alinhamento acima). Nesse caso o -26px soma 19px A MAIS do que
+   precisa, invadindo pra cima da borda da linha anterior e desenhando
+   por cima do traço que já está ali — duas bolinhas no mesmo lugar,
+   parecendo uma linha "grossa"/dobrada (reportado pela usuária).
+   `.settings-item-children > div:not(:first-child) > .settings-item-row`
+   identifica exatamente esse caso de "irmão seguinte, não o primeiro
+   filho" sem precisar de prop nova — e vale pra qualquer profundidade,
+   por isso uma regra só resolve tanto "Zebra irmao" (1º nível) quanto
+   um irmão de um neto mais fundo. */
+.settings-item-children > div:not(:first-child) > .settings-item-row .tree-guide-col--own::before {
+  top: -7px;
+}
 /* O traço horizontal (base, 9px) termina exatamente na borda da coluna
    de 16px — mas o botão de expandir/colapsar (TreeExpand, compartilhado
    com as outras árvores) tem 22px com o ícone centralizado nele, então
