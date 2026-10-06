@@ -530,9 +530,23 @@
    traço estende até a primeira letra do nome em vez de parar na
    posição onde um chevron ficaria. `:has(+ .tree-expand-spacer)`
    detecta esse caso (TreeGuides seguido do spacer, não do botão) sem
-   precisar de uma prop/classe nova no componente. */
+   precisar de uma prop/classe nova no componente.
+   width:37px aqui pressupõe left:7px (o valor-base, usado quando
+   nenhuma das regras de profundidade acima se aplica) — fim fixo em
+   44 (7+37), onde a primeira letra do nome começa. Como left muda
+   por profundidade (ver regras acima), as duas regras seguintes
+   corrigem a largura PRA CADA CASO, mantendo esse mesmo fim em 44
+   (44 − left = width), senão o traço some demais (left:-5, 1º nível)
+   ou invade a letra (left:11, 2º nível em diante — foi exatamente
+   esse o bug relatado: o traço cruzando por cima do texto). */
 .settings-item-row .tree-guides:has(+ .tree-expand-spacer) .tree-guide-col--own::after {
   width: 37px;
+}
+.settings-item-row .tree-guides:has(+ .tree-expand-spacer) .tree-guide-col--own:nth-child(2)::after {
+  width: 49px;
+}
+.settings-item-row .tree-guides:has(+ .tree-expand-spacer) .tree-guide-col--own:nth-child(n+3)::after {
+  width: 33px;
 }
 
 /* Wrapper dos filhos de um item. Não leva mais indentação/borda própria
