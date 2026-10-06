@@ -9,7 +9,7 @@ import { Modal } from "@/components/ui/Modal";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { DataTable } from "@/components/ui/DataTable/DataTable";
 import type { ColumnMeta } from "@/components/ui/DataTable/types";
-import { TreeExpand } from "@/components/ui/tree";
+import { TreeExpand, TreeGuides } from "@/components/ui/tree";
 import { useTreeExpand } from "@/hooks/useTreeExpand";
 import type { DimensionType, DimensionNodeRow, DimensionStructure } from "@/lib/dimensions/types";
 import { isProtectedDimensionCode } from "@/lib/dimensions/constants";
@@ -358,23 +358,40 @@ export function ConfiguracoesClient({
   }
 
   /** Uma linha da árvore e, se expandida, seus filhos — JSX recursivo de
-   * verdade (cada filho literalmente dentro do wrapper bordado do pai),
-   * igual ao `NodeRow` de EspecialidadePlanoDeAulasPanel.tsx na
-   * desenhe-app: lá a árvore também vive dentro do corpo expansível de
-   * uma linha de DataTable, mas o conteúdo desse corpo é `<div>` livre
-   * (não `<tr>`), então nada impede aninhar de verdade. Antes eu tentei
-   * simular a indentação numa lista plana (`renderIndent`) — funcionava,
-   * mas media diferente do `ml-5 pl-3.5 border-l` real. Recursar de
-   * verdade elimina essa diferença por completo: é o mesmo mecanismo. */
+   * verdade (cada filho literalmente dentro do wrapper do pai), igual ao
+   * `NodeRow` de EspecialidadePlanoDeAulasPanel.tsx na desenhe-app: lá a
+   * árvore também vive dentro do corpo expansível de uma linha de
+   * DataTable, mas o conteúdo desse corpo é `<div>` livre (não `<tr>`),
+   * então nada impede aninhar de verdade.
+   *
+   * As guias verticais (quem liga cada item ao pai) NÃO vêm mais de um
+   * border-left no wrapper `.settings-item-children` — um border-left
+   * num bloco aninhado cobre sempre a altura inteira do conteúdo dele,
+   * então numa cadeia de filho único a linha do avô, do pai e do filho
+   * ficam todas paralelas até o fim, nunca "terminando" (foi exatamente
+   * o que a usuária reportou: "a tree view não é finita verticalmente").
+   * Em vez disso cada linha desenha sua própria guia com `TreeGuides`
+   * (mesmo componente usado no seletor de pai e na árvore da Matriz,
+   * ver src/components/ui/tree): cada coluna da guia é um irmão flex
+   * dentro da própria `.settings-item-row` (`align-self: stretch`), ou
+   * seja, ela se estica só até a altura DESSA linha — não da subárvore
+   * inteira. Se o item é o último irmão do seu nível, a guia dele para
+   * na metade (um "L" clássico); senão ela desenha a coluna inteira,
+   * pra continuar até o próximo irmão. `ancestorContinues` carrega esse
+   * mesmo sim/não pra cada nível acima, exatamente como
+   * `buildDimensionHierarchy` calcula pra lista plana do seletor de pai
+   * (`ancestorContinues: [...ancestorContinues, !isLast]` a cada nível). */
   function renderNodeRow(opts: {
     node: DimensionNodeRow;
     depth: number;
+    isLast: boolean;
+    ancestorContinues: boolean[];
     childrenByParent: Map<string | null, DimensionNodeRow[]>;
     d: DimensionType;
     s: DimensionStructure;
     addKeyFor: (parentId: string | null) => string;
   }) {
-    const { node, depth, childrenByParent, d, s, addKeyFor } = opts;
+    const { node, depth, isLast, ancestorContinues, childrenByParent, d, s, addKeyFor } = opts;
     const children = childrenByParent.get(node.id) ?? [];
     const hasChildren = children.length > 0;
     const isOpen = !treeExpand.isCollapsed(node.id);
@@ -382,6 +399,7 @@ export function ConfiguracoesClient({
     return (
       <div key={node.id}>
         <div className="settings-item-row">
+          <TreeGuides ancestorContinues={ancestorContinues} isLast={isLast} depth={depth} />
           {hasChildren ? (
             <TreeExpand
               isOpen={isOpen}
@@ -429,7 +447,18 @@ export function ConfiguracoesClient({
 
         {hasChildren && isOpen && (
           <div className="settings-item-children">
-            {children.map((child) => renderNodeRow({ node: child, depth: depth + 1, childrenByParent, d, s, addKeyFor }))}
+            {children.map((child, i) =>
+              renderNodeRow({
+                node: child,
+                depth: depth + 1,
+                isLast: i === children.length - 1,
+                ancestorContinues: [...ancestorContinues, !isLast],
+                childrenByParent,
+                d,
+                s,
+                addKeyFor,
+              })
+            )}
           </div>
         )}
       </div>
@@ -572,7 +601,18 @@ export function ConfiguracoesClient({
                         // adicionar vira só o "+" inline de cada linha.
                         return (
                           <div>
-                            {rootNodes.map((node) => renderNodeRow({ node, depth: 0, childrenByParent, d, s, addKeyFor }))}
+                            {rootNodes.map((node, i) =>
+                              renderNodeRow({
+                                node,
+                                depth: 0,
+                                isLast: i === rootNodes.length - 1,
+                                ancestorContinues: [],
+                                childrenByParent,
+                                d,
+                                s,
+                                addKeyFor,
+                              })
+                            )}
                             {rootNodes.length === 0 &&
                               renderAddItemRow({
                                 rowKey: "add-root",
