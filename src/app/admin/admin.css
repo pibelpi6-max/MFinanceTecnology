@@ -467,6 +467,40 @@
     transparent 4px
   );
 }
+/* A partir do segundo nível de indentação em diante (neto do item
+   raiz, bisneto, ...), o traço vertical da coluna "own" não pode
+   ficar preso no grid fixo de 16px por profundidade (left: 7px,
+   regra base acima) — isso faz ele nascer alguns pixels à ESQUERDA
+   de onde o cotovelo da linha de cima realmente termina, abrindo um
+   "degrau errado" visível (reportado pela usuária: o traço aparece
+   descolado, não embaixo do chevron de cima).
+   Toda coluna "own" tem sempre 16px de largura, e o cotovelo de
+   qualquer linha sempre termina no mesmo deslocamento LOCAL dentro
+   da própria caixa — 7px (início) + 20px (traço) = 27px — que é onde
+   o chevron DAQUELA linha fica, não importa a profundidade (ver
+   comentário acima sobre os 20px). Então o deslocamento que a
+   PRÓXIMA coluna "own" precisa usar pra pousar exatamente nesse
+   ponto também não depende da profundidade: 27 (fim do cotovelo de
+   cima) − 16 (largura de uma coluna) = 11px, sempre. A largura do
+   traço horizontal cai de 20 pra 16 pra manter o fim fixo em 27
+   (11 + 16 = 27) — sem isso o traço passaria do próprio chevron.
+   Isso só vale a partir da profundidade 2: a primeira coluna "own"
+   (filha direta da raiz) continua com 7px porque a raiz não desenha
+   cotovelo nenhum pra alinhar (TreeGuides retorna null em depth 0).
+   `:nth-child(n+3)` identifica essa posição sem precisar de uma prop
+   nova: dentro de `.tree-guides`, a coluna "own" é sempre o último
+   filho, e só é o 3º filho (ou mais) quando há pelo menos 2 colunas
+   de ancestral antes dela — ou seja, profundidade ≥ 2.
+   Em itens-folha (sem chevron), a regra de `width: 37px` logo abaixo
+   tem mais especificidade (usa :has()) e continua valendo por cima
+   desta — só o `left` desta regra se aplica ali, a largura não. */
+.settings-item-row .tree-guide-col--own:nth-child(n+3)::before {
+  left: 11px;
+}
+.settings-item-row .tree-guide-col--own:nth-child(n+3)::after {
+  left: 11px;
+  width: 16px;
+}
 /* Nos itens sem filho (folha da árvore) não existe chevron — o
    TreeExpand vira um spacer vazio de 22px, e o texto do item começa
    logo depois dele. Sem um ícone pra "mirar", a pedido da usuária o
