@@ -471,8 +471,11 @@
    pai e filho ficavam todas paralelas até o fundo, sem nunca "terminar"
    (ver comentário em renderNodeRow). A indentação e as guias agora vêm
    de `TreeGuides` desenhado dentro de cada `.settings-item-row` — este
-   div só existe pra agrupar os filhos no DOM (recursão de verdade). */
-.settings-item-children { margin-top: 2px; }
+   div só existe pra agrupar os filhos no DOM (recursão de verdade).
+   Sem margin-top: com a correção do traço esticando até a borda real da
+   linha (ver `.tree-guide-col--own::before` acima), qualquer margem aqui
+   volta a abrir um vão entre o traço do pai e o do filho logo abaixo. */
+.settings-item-children { margin-top: 0; }
 .settings-item-name {
   flex: 1; min-width: 0; text-align: left; background: none; border: none; cursor: pointer;
   padding: 2px 4px; font-size: 13px; color: var(--text-strong); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
