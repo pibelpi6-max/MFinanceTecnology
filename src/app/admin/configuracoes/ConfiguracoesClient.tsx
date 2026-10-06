@@ -275,6 +275,8 @@ export function ConfiguracoesClient({
 
   const customCount = dimensionTypes.filter((d) => !d.is_system && !isProtectedDimensionCode(d.code)).length;
   const limitReached = customCount >= CUSTOM_DIMENSIONS_LIMIT;
+  // Aviso (laranja) a partir de 7/10 — abaixo disso a barra fica no azul normal.
+  const limitWarning = customCount >= 7 && !limitReached;
   const columnCount = 6;
 
   /**
@@ -523,7 +525,7 @@ export function ConfiguracoesClient({
             </div>
             <div className="settings-progress-block-bar">
               <div
-                className={`settings-progress-block-fill${limitReached ? " settings-progress-block-fill--full" : ""}`}
+                className={`settings-progress-block-fill${limitReached ? " settings-progress-block-fill--full" : limitWarning ? " settings-progress-block-fill--warning" : ""}`}
                 style={{ width: `${(Math.min(customCount, CUSTOM_DIMENSIONS_LIMIT) / CUSTOM_DIMENSIONS_LIMIT) * 100}%` }}
               />
             </div>
