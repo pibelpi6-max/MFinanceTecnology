@@ -9,7 +9,7 @@ import { Modal } from "@/components/ui/Modal";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { DataTable } from "@/components/ui/DataTable/DataTable";
 import type { ColumnMeta } from "@/components/ui/DataTable/types";
-import { TreeExpand, TreeGuides } from "@/components/ui/tree";
+import { TreeExpand } from "@/components/ui/tree";
 import { useTreeExpand } from "@/hooks/useTreeExpand";
 import { buildDimensionHierarchy, getVisibleRows } from "@/lib/dimensions/hierarchy";
 import type { DimensionType, DimensionNodeRow, DimensionStructure } from "@/lib/dimensions/types";
@@ -336,18 +336,37 @@ export function ConfiguracoesClient({
    * (lista de tipos), que já desenha o cartão ao redor; com fundo
    * tracejado próprio no fallback de leitura (usuária não-admin).
    */
-  /** Linha "+ item" da árvore inline — mesma indentação/guias de um filho
-   * (ghost row), pra nascer exatamente onde o novo item vai aparecer. */
+  /** Indentação de um nível da árvore — uma linha vertical sólida e
+   * contínua por ancestral (`ml-5 pl-3.5 border-l` do EspecialidadePlano
+   * DeAulasPanel.tsx da desenhe-app: cada nível é só uma div aninhada com
+   * borda à esquerda, sem cotovelo "└" nem corte no último filho). Aqui a
+   * árvore é uma lista plana (não JSX aninhado, ver buildDimensionHierarchy),
+   * então em vez de aninhar divs de verdade, cada linha desenha sozinha as
+   * `depth` colunas de borda que ficariam "por fora" dela nos ancestrais —
+   * como elas não dependem de isLast/ancestorContinues, ficam idênticas e
+   * alinhadas de uma linha pra outra, dando a mesma continuidade visual. */
+  function renderIndent(depth: number) {
+    if (depth === 0) return null;
+    return (
+      <span className="settings-item-indent">
+        {Array.from({ length: depth }).map((_, i) => (
+          <span key={i} className="settings-item-indent-col" />
+        ))}
+      </span>
+    );
+  }
+
+  /** Linha "+ item" da árvore inline — mesma indentação de um filho (ghost
+   * row), pra nascer exatamente onde o novo item vai aparecer. */
   function renderAddItemRow(opts: {
     rowKey: string;
-    ancestorContinues: boolean[];
     depth: number;
     busy: boolean;
     onClick: () => void;
   }) {
     return (
       <div key={opts.rowKey} className="settings-item-row settings-item-row--add">
-        <TreeGuides ancestorContinues={opts.ancestorContinues} isLast depth={opts.depth} />
+        {renderIndent(opts.depth)}
         <span className="tree-expand-spacer" />
         <button type="button" className="settings-item-add-btn" disabled={opts.busy} onClick={opts.onClick}>
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.6}>
@@ -491,11 +510,7 @@ export function ConfiguracoesClient({
                           <div>
                             {visibleRows.map((row) => (
                               <div key={row.item.id} className="settings-item-row">
-                                <TreeGuides
-                                  ancestorContinues={row.ancestorContinues}
-                                  isLast={hierarchy!.isLastChild.has(row.item.id)}
-                                  depth={row.depth}
-                                />
+                                {renderIndent(row.depth)}
                                 {hierarchy!.hasChildren.has(row.item.id) ? (
                                   <TreeExpand
                                     isOpen={!treeExpand.isCollapsed(row.item.id)}
@@ -543,7 +558,6 @@ export function ConfiguracoesClient({
                             ))}
                             {renderAddItemRow({
                               rowKey: "add-root",
-                              ancestorContinues: [],
                               depth: 0,
                               busy: addingNodeKey === addKeyFor(null),
                               onClick: () => handleInlineAddNode(d, s, null),

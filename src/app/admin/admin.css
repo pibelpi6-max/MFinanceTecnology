@@ -370,6 +370,15 @@
 .settings-item-row { display: flex; align-items: center; gap: 1px; padding: 7px 8px; border-radius: 7px; }
 .settings-item-row:hover { background: rgba(0,0,0,.03); }
 .settings-item-row:hover .settings-item-actions { opacity: 1; }
+
+/* Indentação da árvore — uma linha vertical sólida e contínua por nível
+   ancestral, igual ao `ml-5 pl-3.5 border-l border-gray-200` do
+   EspecialidadePlanoDeAulasPanel.tsx da desenhe-app (fonte real, ver
+   renderIndent em ConfiguracoesClient). Sem cotovelo "└", sem corte no
+   último filho — só colunas de borda que se alinham de uma linha de
+   árvore pra outra, dando a mesma continuidade visual de divs aninhadas. */
+.settings-item-indent { display: inline-flex; align-self: stretch; flex: 0 0 auto; }
+.settings-item-indent-col { width: 20px; flex: 0 0 20px; align-self: stretch; border-left: 1px solid rgba(17,24,39,.12); }
 .settings-item-name {
   flex: 1; min-width: 0; text-align: left; background: none; border: none; cursor: pointer;
   padding: 2px 4px; font-size: 13px; color: var(--text-strong); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -389,11 +398,11 @@
    filho na hora — sem abrir modal. Ver handleInlineAddNode. */
 .settings-item-row--add { padding: 3px 8px 5px; }
 .settings-item-add-btn {
-  display: inline-flex; align-items: center; gap: 4px;
-  padding: 3px 10px; border-radius: 999px;
-  border: 1px dashed rgba(62,111,224,.35);
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: 7px;
+  border: 1px dashed rgba(62,111,224,.4);
   color: #3E6FE0; background: transparent;
-  font-size: 11.5px; font-weight: 600;
+  font-size: 11px; font-weight: 500;
   cursor: pointer; transition: all 120ms ease;
 }
 .settings-item-add-btn:hover { background: rgba(62,111,224,.08); border-style: solid; }
