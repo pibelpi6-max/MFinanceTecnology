@@ -711,7 +711,7 @@ export function DataTable<T extends {
       isDragging      = true;
       dragStartX      = e.clientX;
       dragStartScroll = fake!.scrollLeft;
-      thumb!.style.backgroundColor = "#0f766e";
+      thumb!.style.backgroundColor = "#0284c7";
       thumb!.style.height = "12px";
       thumb!.style.bottom = "4px";
       (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
@@ -728,7 +728,7 @@ export function DataTable<T extends {
     function onPointerUp() {
       if (!isDragging) return;
       isDragging = false;
-      thumb!.style.backgroundColor = "#14b8a6";
+      thumb!.style.backgroundColor = "#38bdf8";
       applyHover(hovered);
     }
 
@@ -1235,7 +1235,7 @@ export function DataTable<T extends {
               type="button"
               onClick={() => setColModalOpen(true)}
               className={[
-                "flex h-9 w-9 items-center justify-center rounded-lg transition-colors -mr-[10px]",
+                "flex h-9 w-9 items-center justify-center rounded-lg transition-colors",
                 colModalOpen
                   ? "text-[#5cb88a]"
                   : "text-gray-400 hover:text-[#5cb88a]",
@@ -1964,7 +1964,7 @@ export function DataTable<T extends {
               height: "5px",
               width: "80px",
               borderRadius: "999px",
-              backgroundColor: "#14b8a6",
+              backgroundColor: "#38bdf8",
               cursor: "pointer",
               zIndex: 46,
               display: "none",
