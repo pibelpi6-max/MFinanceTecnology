@@ -484,13 +484,13 @@
    cima) − 16 (largura de uma coluna) = 11px, sempre. A largura do
    traço horizontal cai de 20 pra 16 pra manter o fim fixo em 27
    (11 + 16 = 27) — sem isso o traço passaria do próprio chevron.
-   Isso só vale a partir da profundidade 2: a primeira coluna "own"
-   (filha direta da raiz) continua com 7px porque a raiz não desenha
-   cotovelo nenhum pra alinhar (TreeGuides retorna null em depth 0).
-   `:nth-child(n+3)` identifica essa posição sem precisar de uma prop
-   nova: dentro de `.tree-guides`, a coluna "own" é sempre o último
-   filho, e só é o 3º filho (ou mais) quando há pelo menos 2 colunas
-   de ancestral antes dela — ou seja, profundidade ≥ 2.
+   Essa fórmula (27 − 16 = 11) só vale a partir da profundidade 2,
+   porque ela depende da linha de cima TER um cotovelo pra herdar o
+   fim fixo de 27px. `:nth-child(n+3)` identifica essa posição sem
+   precisar de uma prop nova: dentro de `.tree-guides`, a coluna
+   "own" é sempre o último filho, e só é o 3º filho (ou mais) quando
+   há pelo menos 2 colunas de ancestral antes dela — ou seja,
+   profundidade ≥ 2.
    Em itens-folha (sem chevron), a regra de `width: 37px` logo abaixo
    tem mais especificidade (usa :has()) e continua valendo por cima
    desta — só o `left` desta regra se aplica ali, a largura não. */
@@ -500,6 +500,29 @@
 .settings-item-row .tree-guide-col--own:nth-child(n+3)::after {
   left: 11px;
   width: 16px;
+}
+/* A PRIMEIRA coluna "own" (filha direta da raiz, 2º filho de
+   `.tree-guides`) é um caso à parte: a linha de cima (a raiz) não
+   passa pelo TreeGuides — ele retorna null em depth 0 — então não
+   existe cotovelo nenhum ali pra herdar o "fim fixo em 27px" que a
+   regra acima usa. O alvo, nesse caso, é o chevron da PRÓPRIA raiz
+   (medido direto, via getBoundingClientRect do <path> do ícone):
+   fica 5px à ESQUERDA do início da caixa "own" de 16px (em vez de
+   dentro dela), porque a raiz não tem nenhuma coluna de guia
+   ocupando espaço antes do chevron dela — só esta primeira coluna
+   "own" tem, então ela "avança demais" para a direita em relação ao
+   chevron da raiz se usar o mesmo left:7px das demais.
+   left: -5px (fora da própria caixa, invadindo a coluna vizinha à
+   esquerda — não tem problema, não há nada desenhado ali) e
+   width: 32px no traço horizontal pra manter o fim em 27px (-5 + 32
+   = 27), continuando a tocar o chevron da PRÓPRIA linha (não o da
+   raiz) normalmente. */
+.settings-item-row .tree-guide-col--own:nth-child(2)::before {
+  left: -5px;
+}
+.settings-item-row .tree-guide-col--own:nth-child(2)::after {
+  left: -5px;
+  width: 32px;
 }
 /* Nos itens sem filho (folha da árvore) não existe chevron — o
    TreeExpand vira um spacer vazio de 22px, e o texto do item começa
