@@ -412,18 +412,34 @@
    sobra ~5.5px de espaço em branco entre o fim do traço e o chevron.
    15px fecha esse vão (7px de offset + 15px cobre até ~x=22, onde o
    ícone começa) sem precisar mexer no TreeExpand em si (ele é usado
-   também no seletor de pai e na árvore da Matriz). */
+   também no seletor de pai e na árvore da Matriz).
+   O gradiente é ancorado em "to left" (não "to right"): como o período
+   de 4px nem sempre cabe um número inteiro de vezes dentro da largura,
+   ancorar pela esquerda podia deixar a ÚLTIMA bolinha alguns px antes
+   do fim da caixa (a reportada "linha não está colando no chevron") —
+   ancorando pela direita, a bolinha final sempre cai exatamente na
+   borda direita da caixa, não importa a largura. */
 .settings-item-row .tree-guide-col--own::after {
   border-top: none;
   height: 1.5px;
   width: 15px;
   background-image: repeating-linear-gradient(
-    to right,
+    to left,
     rgba(17,24,39,.4) 0,
     rgba(17,24,39,.4) 1.5px,
     transparent 1.5px,
     transparent 4px
   );
+}
+/* Nos itens sem filho (folha da árvore) não existe chevron — o
+   TreeExpand vira um spacer vazio de 22px, e o texto do item começa
+   logo depois dele. Sem um ícone pra "mirar", a pedido da usuária o
+   traço estende até a primeira letra do nome em vez de parar na
+   posição onde um chevron ficaria. `:has(+ .tree-expand-spacer)`
+   detecta esse caso (TreeGuides seguido do spacer, não do botão) sem
+   precisar de uma prop/classe nova no componente. */
+.settings-item-row .tree-guides:has(+ .tree-expand-spacer) .tree-guide-col--own::after {
+  width: 37px;
 }
 
 /* Wrapper dos filhos de um item. Não leva mais indentação/borda própria
