@@ -524,6 +524,34 @@
   left: -5px;
   width: 32px;
 }
+/* As duas regras acima só reposicionam a coluna "own" — o cotovelo
+   da PRÓPRIA linha. Mas o mesmo traço, quando esse nó TEM mais
+   irmãos depois dele (ex.: "Novo item" não é o último filho de
+   "agfdsgs"), continua para baixo como uma coluna de ANCESTRAL
+   "is-continuing" em toda linha descendente (filhos, netos...) —
+   ou seja, a MESMA linha visual, só que desenhada por um elemento
+   diferente (`.tree-guide-col.is-continuing`, não `--own`) nas
+   linhas de baixo. Essa coluna de ancestral continuava usando o
+   left:7px antigo (regra-base, nunca tocada pelas correções acima,
+   que mexeram só em `--own`) — por isso ficava rodando em paralelo,
+   a poucos pixels de distância do cotovelo que a originou, dando a
+   impressão de DUAS linhas sobrepostas em vez de uma só contínua
+   (reportado pela usuária). A posição de cada coluna de ancestral
+   depende de QUAL profundidade ela representa, não da profundidade
+   da linha atual — e por sorte do grid de 16px, o índice do filho
+   dentro de `.tree-guides` é o mesmo nos dois casos: a coluna que
+   representa a profundidade 1 é sempre o 2º filho (`nth-child(2)`),
+   seja como cotovelo "own" (quando a própria linha está nessa
+   profundidade) ou como coluna de ancestral "is-continuing" (nas
+   linhas mais fundas) — por isso os mesmos valores (-5px / 11px)
+   se aplicam aqui, só trocando o seletor de `--own` para
+   `.is-continuing:not(--own)` (a variante "reta", sem cotovelo). */
+.settings-item-row .tree-guide-col.is-continuing:not(.tree-guide-col--own):nth-child(2)::before {
+  left: -5px;
+}
+.settings-item-row .tree-guide-col.is-continuing:not(.tree-guide-col--own):nth-child(n+3)::before {
+  left: 11px;
+}
 /* Nos itens sem filho (folha da árvore) não existe chevron — o
    TreeExpand vira um spacer vazio de 22px, e o texto do item começa
    logo depois dele. Sem um ícone pra "mirar", a pedido da usuária o
