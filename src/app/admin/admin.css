@@ -208,16 +208,16 @@
 .tree-guide-col { position: relative; width: 16px; flex: 0 0 16px; align-self: stretch; }
 .tree-guide-col.is-continuing:not(.tree-guide-col--own)::before {
   content: ""; position: absolute; top: 0; bottom: 0; left: 7px;
-  border-left: 1.5px dashed rgba(17,24,39,.14);
+  border-left: 1.5px solid rgba(17,24,39,.16);
 }
 .tree-guide-col--own::before {
   content: ""; position: absolute; top: 0; left: 7px; bottom: 50%;
-  border-left: 1.5px dashed rgba(17,24,39,.14);
+  border-left: 1.5px solid rgba(17,24,39,.16);
 }
 .tree-guide-col--own.is-continuing::before { bottom: 0; }
 .tree-guide-col--own::after {
   content: ""; position: absolute; top: 50%; left: 7px; width: 9px;
-  border-top: 1.5px dashed rgba(17,24,39,.14);
+  border-top: 1.5px solid rgba(17,24,39,.16);
 }
 
 .tree-row-enter { animation: treeRowFadeIn 180ms ease; }
@@ -368,7 +368,7 @@
   padding: 2px 4px; font-size: 13px; color: var(--text-strong); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .settings-item-name:hover { color: #3E6FE0; }
-.settings-item-actions { display: flex; align-items: center; gap: 2px; opacity: 0; transition: opacity .12s ease; flex-shrink: 0; }
+.settings-item-actions { display: flex; align-items: center; gap: 2px; opacity: .45; transition: opacity .12s ease; flex-shrink: 0; }
 .settings-item-icon-btn {
   width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center;
   border-radius: 6px; color: #9ca3af; border: none; background: transparent; cursor: pointer;
