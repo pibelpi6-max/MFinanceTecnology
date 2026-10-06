@@ -476,91 +476,80 @@ export function ConfiguracoesClient({
 
                       {(() => {
                         const addKeyFor = (parentId: string | null) => `${s.id}:${parentId ?? "root"}`;
-                        const elements: JSX.Element[] = [];
-                        const stack: typeof visibleRows = [];
 
-                        // Fecha (emite o "+ item" de) todo ancestral empilhado cujo
-                        // bloco de descendentes já terminou — ver renderAddItemRow.
-                        const closeStack = (untilDepth: number) => {
-                          while (stack.length && stack[stack.length - 1].depth >= untilDepth) {
-                            const popped = stack.pop()!;
-                            const nodeId = popped.item.id;
-                            const hasKids = hierarchy!.hasChildren.has(nodeId);
-                            if (hasKids && treeExpand.isCollapsed(nodeId)) continue;
-                            const childDepth = popped.depth + 1;
-                            if (childDepth > 9) continue; // profundidade máxima de 10 níveis
-                            elements.push(
-                              renderAddItemRow({
-                                rowKey: `add-${nodeId}`,
-                                ancestorContinues: [...popped.ancestorContinues, !hierarchy!.isLastChild.has(nodeId)],
-                                depth: childDepth,
-                                busy: addingNodeKey === addKeyFor(nodeId),
-                                onClick: () => handleInlineAddNode(d, s, nodeId),
-                              })
-                            );
-                          }
-                        };
-
-                        visibleRows.forEach((row) => {
-                          closeStack(row.depth);
-                          elements.push(
-                            <div key={row.item.id} className="settings-item-row">
-                              <TreeGuides
-                                ancestorContinues={row.ancestorContinues}
-                                isLast={hierarchy!.isLastChild.has(row.item.id)}
-                                depth={row.depth}
-                              />
-                              {hierarchy!.hasChildren.has(row.item.id) ? (
-                                <TreeExpand
-                                  isOpen={!treeExpand.isCollapsed(row.item.id)}
-                                  onToggle={() => treeExpand.toggle(row.item.id)}
-                                  label={treeExpand.isCollapsed(row.item.id) ? td("expandNode") : td("collapseNode")}
+                        // Cada linha ganha seu próprio "+" inline (junto com
+                        // editar/excluir, só aparece no hover da linha) pra
+                        // adicionar um filho ali mesmo — qualquer item pode
+                        // virar pai, sem precisar abrir um ghost-row à parte
+                        // embaixo de cada um (isso empilhava um "+ item" por
+                        // ancestral toda vez que um ramo fundo terminava,
+                        // dobrando a altura da árvore). Só o "+ item" de
+                        // nível raiz (equivalente ao "+ módulo" da
+                        // desenhe-app) continua como botão tracejado sempre
+                        // visível, por ser a ação principal da tela.
+                        return (
+                          <div>
+                            {visibleRows.map((row) => (
+                              <div key={row.item.id} className="settings-item-row">
+                                <TreeGuides
+                                  ancestorContinues={row.ancestorContinues}
+                                  isLast={hierarchy!.isLastChild.has(row.item.id)}
+                                  depth={row.depth}
                                 />
-                              ) : (
-                                <span className="tree-expand-spacer" />
-                              )}
-                              <span className="settings-item-name">{row.item.name}</span>
-                              <span className="settings-item-actions">
-                                <button
-                                  type="button"
-                                  className="settings-item-icon-btn"
-                                  title={td("edit")}
-                                  onClick={() => setNodeEditing({ type: d, node: row.item, structureId: s.id })}
-                                >
-                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.86 4.49a1.75 1.75 0 1 1 2.47 2.47L7.5 18.79l-3.3.82.82-3.3Z" />
-                                  </svg>
-                                </button>
-                                <button
-                                  type="button"
-                                  className="settings-item-icon-btn settings-item-icon-btn--danger"
-                                  title={tc("delete")}
-                                  onClick={() => setNodeDeleting({ type: d, node: row.item })}
-                                >
-                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" />
-                                  </svg>
-                                </button>
-                              </span>
-                            </div>
-                          );
-                          stack.push(row);
-                        });
-                        closeStack(-1); // esvazia o resto da pilha (mais fundo → mais raso)
-
-                        // "+ item" de nível raiz (sem recuo), sempre por último —
-                        // equivalente ao "+ módulo" da desenhe-app.
-                        elements.push(
-                          renderAddItemRow({
-                            rowKey: "add-root",
-                            ancestorContinues: [],
-                            depth: 0,
-                            busy: addingNodeKey === addKeyFor(null),
-                            onClick: () => handleInlineAddNode(d, s, null),
-                          })
+                                {hierarchy!.hasChildren.has(row.item.id) ? (
+                                  <TreeExpand
+                                    isOpen={!treeExpand.isCollapsed(row.item.id)}
+                                    onToggle={() => treeExpand.toggle(row.item.id)}
+                                    label={treeExpand.isCollapsed(row.item.id) ? td("expandNode") : td("collapseNode")}
+                                  />
+                                ) : (
+                                  <span className="tree-expand-spacer" />
+                                )}
+                                <span className="settings-item-name">{row.item.name}</span>
+                                <span className="settings-item-actions">
+                                  <button
+                                    type="button"
+                                    className="settings-item-icon-btn"
+                                    title={td("addItem")}
+                                    disabled={addingNodeKey === addKeyFor(row.item.id) || row.depth >= 9}
+                                    onClick={() => handleInlineAddNode(d, s, row.item.id)}
+                                  >
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2}>
+                                      <path strokeLinecap="round" d="M12 5v14M5 12h14" />
+                                    </svg>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="settings-item-icon-btn"
+                                    title={td("edit")}
+                                    onClick={() => setNodeEditing({ type: d, node: row.item, structureId: s.id })}
+                                  >
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.86 4.49a1.75 1.75 0 1 1 2.47 2.47L7.5 18.79l-3.3.82.82-3.3Z" />
+                                    </svg>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="settings-item-icon-btn settings-item-icon-btn--danger"
+                                    title={tc("delete")}
+                                    onClick={() => setNodeDeleting({ type: d, node: row.item })}
+                                  >
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" />
+                                    </svg>
+                                  </button>
+                                </span>
+                              </div>
+                            ))}
+                            {renderAddItemRow({
+                              rowKey: "add-root",
+                              ancestorContinues: [],
+                              depth: 0,
+                              busy: addingNodeKey === addKeyFor(null),
+                              onClick: () => handleInlineAddNode(d, s, null),
+                            })}
+                          </div>
                         );
-
-                        return <div>{elements}</div>;
                       })()}
                       {addNodeError && <p className="mt-1 px-2 text-xs text-red-600">{addNodeError}</p>}
                     </div>
