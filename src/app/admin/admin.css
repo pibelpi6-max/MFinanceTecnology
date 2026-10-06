@@ -372,9 +372,24 @@
 .settings-structure-import-link:hover { color: #3E6FE0; }
 .settings-structure-empty { font-size: 12.5px; color: var(--text-muted); padding: 6px 0 8px; }
 
-.settings-item-row { display: flex; align-items: center; gap: 1px; padding: 7px 8px; border-radius: 7px; }
+.settings-item-row { position: relative; display: flex; align-items: center; gap: 1px; padding: 7px 8px; border-radius: 7px; }
 .settings-item-row:hover { background: rgba(0,0,0,.03); }
 .settings-item-row:hover .settings-item-actions { opacity: 1; }
+
+/* Traço horizontal ligando a linha vertical do pai até cada item filho —
+   pedido da usuária depois de ver a árvore renderizada: só a linha
+   vertical contínua (ver .settings-item-children acima) não deixava
+   explícito qual item pertence a qual ramo. O seletor pega só linhas que
+   estão de fato dentro de um .settings-item-children (ou seja, não a
+   raiz da estrutura nem o botão "+ item", que não têm pai pra ligar). */
+.settings-item-children > div > .settings-item-row::before {
+  content: "";
+  position: absolute;
+  left: -14px;
+  top: 50%;
+  width: 14px;
+  border-top: 1px solid rgba(17,24,39,.12);
+}
 
 /* Wrapper dos filhos de um item — mesma geometria do
    `ml-5 pl-3.5 border-l border-gray-200 mt-0.5` que envolve `children.map`
