@@ -406,9 +406,17 @@
     transparent 4px
   );
 }
+/* O traço horizontal (base, 9px) termina exatamente na borda da coluna
+   de 16px — mas o botão de expandir/colapsar (TreeExpand, compartilhado
+   com as outras árvores) tem 22px com o ícone centralizado nele, então
+   sobra ~5.5px de espaço em branco entre o fim do traço e o chevron.
+   15px fecha esse vão (7px de offset + 15px cobre até ~x=22, onde o
+   ícone começa) sem precisar mexer no TreeExpand em si (ele é usado
+   também no seletor de pai e na árvore da Matriz). */
 .settings-item-row .tree-guide-col--own::after {
   border-top: none;
   height: 1.5px;
+  width: 15px;
   background-image: repeating-linear-gradient(
     to right,
     rgba(17,24,39,.4) 0,
