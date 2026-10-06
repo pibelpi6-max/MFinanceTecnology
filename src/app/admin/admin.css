@@ -289,7 +289,14 @@
 .comparativo-row-over td { background: rgba(220,38,38,.04); }
 
 /* ── Parâmetros (Configurações) ───────────────────────── */
-.admin-content--scroll { overflow-y: auto; overflow-x: hidden; }
+/* padding-bottom extra: a DataTable (Tipos de dimensão) tem uma
+   "fake scrollbar" horizontal fixa no rodapé do BROWSER (20px, ver
+   DataTable.tsx) que assume quando a real sai da tela — o que acontece
+   sempre que uma Estrutura é expandida (a árvore de itens deixa a linha
+   bem alta). Sem essa folga, o botão "+ item" final acaba renderizando
+   bem na hora em que essa barra fixa aparece, parecendo um bug visual.
+   20px da barra + 20px de respiro. */
+.admin-content--scroll { overflow-y: auto; overflow-x: hidden; padding-bottom: 40px; }
 
 .settings-panel { background: #fff; border-radius: 14px; border: 1px solid rgba(0,0,0,.06); width: 100%; overflow: hidden; }
 .settings-block { padding: 18px 32px; }
