@@ -13,34 +13,31 @@
  * anterior: meia altura + cotovelo horizontal quando é o último filho,
  * altura cheia quando há mais irmãos depois.
  *
- * `hasVisibleChildren` (opcional, default false — não afeta o seletor de
- * pai nem o painel da Matriz, que não passam essa prop) faz a própria
- * coluna também continuar até o fim da linha quando ESTE nó tem filhos
- * renderizados logo abaixo (expandido e com children), mesmo sendo o
- * último irmão. Sem isso, um nó "último irmão mas com filhos" desenhava
- * só a meia-altura + cotovelo e a metade de baixo da própria linha ficava
- * em branco, cortando visualmente a conexão com o filho (que começa um
- * nível mais à direita, mas logo em seguida verticalmente).
+ * A ligação visual entre o cotovelo de um nó e o filho logo abaixo dele
+ * (quando o nó é filho único, sem mais irmãos) não é feita esticando a
+ * PRÓPRIA coluna deste nó — é o traço do FILHO que sobe (ver
+ * `.tree-guide-col--own::before { top: -26px }` em admin.css) até a
+ * altura do cotovelo do pai. Isso cria o efeito "escada" pedido pela
+ * usuária: o traço desce reto, dá um passo pro lado no cotovelo, desce
+ * reto de novo a partir dali — em vez de duas colunas paralelas (uma do
+ * pai esticada pra baixo, outra do filho) ligeiramente desencontradas.
  */
 export function TreeGuides({
   ancestorContinues,
   isLast,
   depth,
-  hasVisibleChildren = false,
 }: {
   ancestorContinues: boolean[];
   isLast: boolean;
   depth: number;
-  hasVisibleChildren?: boolean;
 }) {
   if (depth === 0) return null;
-  const ownContinues = !isLast || hasVisibleChildren;
   return (
     <span className="tree-guides" aria-hidden="true">
       {ancestorContinues.map((continues, i) => (
         <span key={i} className={`tree-guide-col${continues ? " is-continuing" : ""}`} />
       ))}
-      <span className={`tree-guide-col tree-guide-col--own${ownContinues ? " is-continuing" : ""}`} />
+      <span className={`tree-guide-col tree-guide-col--own${isLast ? "" : " is-continuing"}`} />
     </span>
   );
 }

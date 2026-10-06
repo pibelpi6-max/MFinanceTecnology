@@ -399,12 +399,7 @@ export function ConfiguracoesClient({
     return (
       <div key={node.id}>
         <div className="settings-item-row">
-          <TreeGuides
-            ancestorContinues={ancestorContinues}
-            isLast={isLast}
-            depth={depth}
-            hasVisibleChildren={hasChildren && isOpen}
-          />
+          <TreeGuides ancestorContinues={ancestorContinues} isLast={isLast} depth={depth} />
           {hasChildren ? (
             <TreeExpand
               isOpen={isOpen}

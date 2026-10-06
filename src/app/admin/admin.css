@@ -408,22 +408,29 @@
 }
 /* .tree-guide-col só "esticava" (align-self: stretch) até a CAIXA DE
    CONTEÚDO da linha — o padding vertical de 7px da .settings-item-row
-   (ver regra logo acima) fica de fora. Então mesmo com a coluna
-   "continuando" (altura cheia), o traço parava 7px antes da borda real
-   da linha, em cima e embaixo — e isso se repetia na linha seguinte,
-   somando ~16px de vão sempre que um item com filho devia conectar com
-   o filho logo abaixo (e idem entre guias de ancestral de uma linha pra
-   outra). Esticar o próprio traço 7px pra cima/baixo (compensando esse
-   padding) faz ele encostar na borda real da linha; a única sobra é a
-   margin-top de 2px do wrapper dos filhos (ver mais abaixo), bem menos
-   perceptível. Topo sempre estica (a linha sempre "vem de algum lugar"
-   acima); embaixo só estica quando a coluna está "continuing". */
+   (ver regra logo acima) fica de fora. Pras colunas de ancestral (retas,
+   sem "degrau" — mesma profundidade entre uma linha e outra) isso já
+   basta: esticar 7px pra cima/baixo encosta na borda real da linha.
+   Mas a coluna "own" é diferente: ela é quem desenha o "degrau" pedido
+   pela usuária — em vez de duas colunas paralelas (traço do pai
+   esticado pra baixo + traço do filho, ligeiramente desencontrados em
+   X), o traço do FILHO sobe direto até a altura do COTOVELO do pai (ou
+   do irmão anterior), criando um zigue-zague único: desce reto, dá um
+   passo pro lado no cotovelo, desce reto de novo dali. A altura de uma
+   linha é fixa (38px = 7px padding + 24px conteúdo), e o cotovelo fica
+   a meia altura do conteúdo (12px) — então o topo da coluna "own"
+   precisa subir 7 (padding da própria linha) + 19 (padding da linha de
+   cima + metade do conteúdo dela) = 26px pra alcançar exatamente o
+   cotovelo de quem está acima, não só a borda da linha de cima.
+   Embaixo, só estica quando a própria coluna está "continuing" (mais
+   IRMÃOS de verdade depois — mesma profundidade, sem degrau, por isso
+   7px de borda real já basta ali). */
 .settings-item-row .tree-guide-col.is-continuing:not(.tree-guide-col--own)::before {
   top: -7px;
   bottom: -7px;
 }
 .settings-item-row .tree-guide-col--own::before {
-  top: -7px;
+  top: -26px;
 }
 .settings-item-row .tree-guide-col--own.is-continuing::before {
   bottom: -7px;
