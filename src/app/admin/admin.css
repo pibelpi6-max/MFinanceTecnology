@@ -380,16 +380,42 @@
    Configurações, a pedido da usuária depois de ver uma referência com
    linha pontilhada (em vez da sólida que o TreeGuides desenha por
    padrão). Reaproveita o mesmo .tree-guide-col do seletor de pai
-   (NodeFormModal) e da árvore da Matriz, só trocando o *estilo* do
-   traço (border-*-style) dentro do escopo de .settings-item-row — não
-   mexe na regra base em si, então as outras duas árvores continuam com
-   a linha sólida de sempre. */
+   (NodeFormModal) e da árvore da Matriz, mas sem tocar na regra base —
+   as outras duas árvores continuam com a linha sólida de sempre.
+   Primeira tentativa foi só trocar border-*-style pra "dotted", mas o
+   resultado saiu com espaçamento irregular entre uma linha e outra: o
+   border-style:dotted nativo do navegador tenta encaixar um número
+   inteiro de bolinhas dentro de CADA segmento, e como cada segmento é
+   uma caixinha curta e independente (ver comentário acima, em
+   renderNodeRow, sobre a guia não ser mais uma borda contínua), caixas
+   de altura ligeiramente diferente ficam com bolinhas mais ou menos
+   espaçadas entre si. Trocar o border por um background-image com
+   período fixo (4px) resolve: em vez do navegador decidir quantas
+   bolinhas cabem em cada caixa, o mesmo padrão de 4px é sempre repetido
+   e simplesmente cortado na borda — todo segmento mostra o mesmo ritmo,
+   não importa a altura dele. */
 .settings-item-row .tree-guide-col.is-continuing:not(.tree-guide-col--own)::before,
 .settings-item-row .tree-guide-col--own::before {
-  border-left-style: dotted;
+  border-left: none;
+  width: 1.5px;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(17,24,39,.4) 0,
+    rgba(17,24,39,.4) 1.5px,
+    transparent 1.5px,
+    transparent 4px
+  );
 }
 .settings-item-row .tree-guide-col--own::after {
-  border-top-style: dotted;
+  border-top: none;
+  height: 1.5px;
+  background-image: repeating-linear-gradient(
+    to right,
+    rgba(17,24,39,.4) 0,
+    rgba(17,24,39,.4) 1.5px,
+    transparent 1.5px,
+    transparent 4px
+  );
 }
 
 /* Wrapper dos filhos de um item. Não leva mais indentação/borda própria
