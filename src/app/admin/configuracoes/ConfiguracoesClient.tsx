@@ -74,7 +74,7 @@ function buildTypeColumns(
     {
       key: "useInMatriz",
       label: t("dimensions.useInMatrizColumn"),
-      maxWidth: 150,
+      maxWidth: 170,
       noTooltip: true,
       filterable: true,
       filterValueLabels: { yes: t("dimensions.useInMatrizYes"), no: t("dimensions.useInMatrizNo") },
@@ -89,7 +89,7 @@ function buildTypeColumns(
     {
       key: "structure",
       label: t("dimensions.structures"),
-      maxWidth: 110,
+      maxWidth: 165,
       sortable: false,
       noTooltip: true,
       render: (d) => (
