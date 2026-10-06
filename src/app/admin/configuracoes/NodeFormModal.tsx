@@ -50,6 +50,16 @@ export function NodeFormModal({
     setError(null);
   }, [open, editing]);
 
+  // Só é permitido um item raiz por estrutura (regra da tela de
+  // Configurações — ver ConfiguracoesClient). Reparentar um item existente
+  // pra "Nenhum (raiz)" também criaria um segundo nó paralelo no nível 0,
+  // então essa opção só fica disponível quando não há outro raiz (ou o
+  // próprio item em edição já é o raiz atual).
+  const hasOtherRoot = useMemo(
+    () => nodes.some((n) => n.parentNodeId === null && n.id !== editing?.id),
+    [nodes, editing]
+  );
+
   const parentOptions = useMemo(() => {
     if (!editing) return nodes.filter((n) => n.level < 10);
 
@@ -164,9 +174,15 @@ export function NodeFormModal({
               <span className="tree-expand-spacer" />
               <button
                 type="button"
+                disabled={hasOtherRoot}
+                title={hasOtherRoot ? t("onlyOneRootAllowed") : undefined}
                 onClick={() => setParentNodeId("")}
                 className={`flex-1 truncate rounded px-1 py-0.5 text-left text-sm ${
-                  parentNodeId === "" ? "font-semibold text-primary" : "text-gray-600 hover:bg-gray-50"
+                  parentNodeId === ""
+                    ? "font-semibold text-primary"
+                    : hasOtherRoot
+                      ? "cursor-not-allowed text-gray-300"
+                      : "text-gray-600 hover:bg-gray-50"
                 }`}
               >
                 {t("noParent")}

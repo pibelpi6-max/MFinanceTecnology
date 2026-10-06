@@ -106,6 +106,7 @@
     "name": "Nome",
     "parent": "Item superior",
     "noParent": "Nenhum (raiz)",
+    "onlyOneRootAllowed": "Só é permitido um item raiz por estrutura — escolha um item existente como pai.",
     "expandNode": "Expandir",
     "collapseNode": "Recolher",
     "selectParentHint": "Clique em um item para usá-lo como pai, ou deixe sem seleção para criar no nível raiz.",

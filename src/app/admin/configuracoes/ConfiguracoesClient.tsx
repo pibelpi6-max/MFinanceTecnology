@@ -538,7 +538,6 @@ export function ConfiguracoesClient({
                   {isExpanded && (
                     <div className="settings-structure-accordion-body">
                       <div className="settings-structure-header">
-                        <span className="settings-structure-label">{t("dimensions.structureItems")}</span>
                         <div className="settings-structure-actions">
                           <Link href={`/admin/dimensoes/${d.code}/importar?ano=${year}`} className="settings-structure-import-link">
                             {td("importButton")}
@@ -560,21 +559,26 @@ export function ConfiguracoesClient({
                         // virar pai, sem precisar abrir um ghost-row à parte
                         // embaixo de cada um (isso empilhava um "+ item" por
                         // ancestral toda vez que um ramo fundo terminava,
-                        // dobrando a altura da árvore). Só o "+ item" de
-                        // nível raiz (equivalente ao "+ módulo" da
-                        // desenhe-app) continua como botão tracejado sempre
-                        // visível, por ser a ação principal da tela. A árvore
-                        // em si é JSX recursivo de verdade (renderNodeRow
-                        // chamando a si mesma), não lista plana — ver o
-                        // comentário em renderNodeRow.
+                        // dobrando a altura da árvore). A árvore em si é JSX
+                        // recursivo de verdade (renderNodeRow chamando a si
+                        // mesma), não lista plana — ver o comentário em
+                        // renderNodeRow.
+                        //
+                        // Só é permitido UM item raiz por estrutura — tudo
+                        // mais entra como filho dele (ou de um dos seus
+                        // descendentes), nunca como outro nó paralelo no
+                        // nível 0. Por isso o botão "+ item" de raiz só
+                        // aparece enquanto não existe nenhum; depois disso,
+                        // adicionar vira só o "+" inline de cada linha.
                         return (
                           <div>
                             {rootNodes.map((node) => renderNodeRow({ node, depth: 0, childrenByParent, d, s, addKeyFor }))}
-                            {renderAddItemRow({
-                              rowKey: "add-root",
-                              busy: addingNodeKey === addKeyFor(null),
-                              onClick: () => handleInlineAddNode(d, s, null),
-                            })}
+                            {rootNodes.length === 0 &&
+                              renderAddItemRow({
+                                rowKey: "add-root",
+                                busy: addingNodeKey === addKeyFor(null),
+                                onClick: () => handleInlineAddNode(d, s, null),
+                              })}
                           </div>
                         );
                       })()}

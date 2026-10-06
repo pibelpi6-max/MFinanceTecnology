@@ -106,6 +106,7 @@
     "name": "Name",
     "parent": "Parent item",
     "noParent": "None (root)",
+    "onlyOneRootAllowed": "Only one root item is allowed per structure — pick an existing item as the parent.",
     "expandNode": "Expand",
     "collapseNode": "Collapse",
     "selectParentHint": "Click an item to use it as the parent, or leave unselected to create at the root level.",
