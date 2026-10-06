@@ -370,6 +370,18 @@
 .settings-structure-actions { display: flex; align-items: center; gap: 14px; flex-shrink: 0; margin-left: auto; }
 .settings-structure-import-link { font-size: 12px; font-weight: 600; color: var(--text-muted); background: none; border: none; cursor: pointer; }
 .settings-structure-import-link:hover { color: #3E6FE0; }
+/* "Importar" passou a morar junto dos ícones de renomear/duplicar/excluir
+   (ver settings-item-actions--static), em vez de numa linha própria
+   abaixo do acordeão — pedido da usuária pra juntar as ações da
+   estrutura num só lugar. O respiro/divisor aqui só entra quando o link
+   está dentro desse grupo (gap de 2px dos ícones é apertado demais pra
+   texto, que precisa de mais ar que um ícone de 22px). */
+.settings-item-actions--static .settings-structure-import-link {
+  margin-right: 6px;
+  padding-right: 10px;
+  border-right: 1px solid rgba(0,0,0,.08);
+  white-space: nowrap;
+}
 .settings-structure-empty { font-size: 12.5px; color: var(--text-muted); padding: 6px 0 8px; }
 
 .settings-item-row { position: relative; display: flex; align-items: center; gap: 1px; padding: 7px 8px; border-radius: 7px; }

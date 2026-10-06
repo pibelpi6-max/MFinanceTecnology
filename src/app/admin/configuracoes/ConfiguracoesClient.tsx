@@ -530,6 +530,12 @@ export function ConfiguracoesClient({
                       <span className="settings-structure-switch-track" />
                     </label>
                     <span className="settings-item-actions settings-item-actions--static">
+                      <Link
+                        href={`/admin/dimensoes/${d.code}/importar?ano=${year}`}
+                        className="settings-structure-import-link"
+                      >
+                        {td("importButton")}
+                      </Link>
                       <button
                         type="button"
                         className="settings-item-icon-btn"
@@ -566,14 +572,6 @@ export function ConfiguracoesClient({
 
                   {isExpanded && (
                     <div className="settings-structure-accordion-body">
-                      <div className="settings-structure-header">
-                        <div className="settings-structure-actions">
-                          <Link href={`/admin/dimensoes/${d.code}/importar?ano=${year}`} className="settings-structure-import-link">
-                            {td("importButton")}
-                          </Link>
-                        </div>
-                      </div>
-
                       {nodes.length === 0 && (
                         <p className="settings-structure-empty">{td("emptyMessage", { year })}</p>
                       )}
