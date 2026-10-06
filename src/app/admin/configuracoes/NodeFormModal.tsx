@@ -91,6 +91,7 @@ export function NodeFormModal({
           versionId: editing.versionId,
           currentValidFromYear: editing.validFromYear,
           name: name.trim(),
+          code: code.trim(),
           parentNodeId: parent,
           year,
         })
@@ -135,10 +136,12 @@ export function NodeFormModal({
           <input
             value={code}
             onChange={(e) => setCode(e.target.value)}
-            disabled={!!editing}
             required
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:bg-gray-50 disabled:text-gray-400"
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
           />
+          {editing && (
+            <p className="mt-1 text-xs text-gray-400">{t("codeEditHint")}</p>
+          )}
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-gray-600">{t("name")}</label>

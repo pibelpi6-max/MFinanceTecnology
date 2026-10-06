@@ -19,7 +19,7 @@ import { NodeFormModal } from "./NodeFormModal";
 import { StructureFormModal } from "./StructureFormModal";
 import { deleteDimensionType, updateFiscalYearStartMonth } from "./_actions";
 import { setDimensionStructureActive, deleteDimensionStructure } from "./_structureActions";
-import { cancelDimensionNode } from "../dimensoes/_actions";
+import { cancelDimensionNode, createDimensionNode } from "../dimensoes/_actions";
 
 type Translator = (key: string, values?: Record<string, string | number>) => string;
 
@@ -175,6 +175,13 @@ export function ConfiguracoesClient({
   const [nodeDeleteLoading, setNodeDeleteLoading] = useState(false);
   const [nodeDeleteError, setNodeDeleteError] = useState<string | null>(null);
 
+  // Criação inline na árvore ("+ item" sob cada nó aberto, igual à dinâmica
+  // do "plano de aulas" no desenhe-app — ver handleInlineAddNode/claude/
+  // decisoes-arquitetura.md). addingNodeKey = `${structureId}:${parentId ?? "root"}`
+  // do botão em voo, só pra desabilitar/mostrar carregando o botão certo.
+  const [addingNodeKey, setAddingNodeKey] = useState<string | null>(null);
+  const [addNodeError, setAddNodeError] = useState<string | null>(null);
+
   const [structureModal, setStructureModal] = useState<{
     type: DimensionType;
     mode: "create" | "rename" | "duplicate";
@@ -273,6 +280,41 @@ export function ConfiguracoesClient({
     router.refresh();
   }
 
+  /** Código provisório único (dentro da Estrutura) pro item criado pelo "+
+   * item" inline — a usuária pode ajustar depois pelo lápis (ver
+   * NodeFormModal, código agora editável). Unicidade é (tenant, structure,
+   * code) no banco; aqui só evita a colisão óbvia com o que já existe. */
+  function generateItemCode(existingCodes: Set<string>): string {
+    let n = existingCodes.size + 1;
+    let code = `item-${n}`;
+    while (existingCodes.has(code)) {
+      n += 1;
+      code = `item-${n}`;
+    }
+    return code;
+  }
+
+  async function handleInlineAddNode(d: DimensionType, s: DimensionStructure, parentNodeId: string | null) {
+    const key = `${s.id}:${parentNodeId ?? "root"}`;
+    setAddingNodeKey(key);
+    setAddNodeError(null);
+    const existingCodes = new Set((nodesByStructure[s.id] ?? []).map((n) => n.code));
+    const result = await createDimensionNode({
+      dimensionTypeId: d.id,
+      structureId: s.id,
+      code: generateItemCode(existingCodes),
+      name: td("new"),
+      parentNodeId,
+      year,
+    });
+    setAddingNodeKey(null);
+    if (result.error) {
+      setAddNodeError(result.error);
+      return;
+    }
+    router.refresh();
+  }
+
   const customCount = dimensionTypes.filter((d) => !d.is_system && !isProtectedDimensionCode(d.code)).length;
   const limitReached = customCount >= CUSTOM_DIMENSIONS_LIMIT;
   // Aviso (laranja) a partir de 7/10 — abaixo disso a barra fica no azul normal.
@@ -294,6 +336,29 @@ export function ConfiguracoesClient({
    * (lista de tipos), que já desenha o cartão ao redor; com fundo
    * tracejado próprio no fallback de leitura (usuária não-admin).
    */
+  /** Linha "+ item" da árvore inline — mesma indentação/guias de um filho
+   * (ghost row), pra nascer exatamente onde o novo item vai aparecer. */
+  function renderAddItemRow(opts: {
+    rowKey: string;
+    ancestorContinues: boolean[];
+    depth: number;
+    busy: boolean;
+    onClick: () => void;
+  }) {
+    return (
+      <div key={opts.rowKey} className="settings-item-row settings-item-row--add">
+        <TreeGuides ancestorContinues={opts.ancestorContinues} isLast depth={opts.depth} />
+        <span className="tree-expand-spacer" />
+        <button type="button" className="settings-item-add-btn" disabled={opts.busy} onClick={opts.onClick}>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.6}>
+            <path strokeLinecap="round" d="M12 5v14M5 12h14" />
+          </svg>
+          {td("addItem")}
+        </button>
+      </div>
+    );
+  }
+
   function renderStructureContent(d: DimensionType, embedded: boolean) {
     const list = structuresByType[d.id] ?? [];
     const expandedId = expandedStructureId[d.id] ?? null;
@@ -402,25 +467,43 @@ export function ConfiguracoesClient({
                           <Link href={`/admin/dimensoes/${d.code}/importar?ano=${year}`} className="settings-structure-import-link">
                             {td("importButton")}
                           </Link>
-                          <Button
-                            size="sm"
-                            variant="accent-blue"
-                            className="px-3"
-                            onClick={() => setNodeEditing({ type: d, node: "new", structureId: s.id })}
-                          >
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4}>
-                              <path strokeLinecap="round" d="M12 5v14M5 12h14" />
-                            </svg>
-                            {td("new")}
-                          </Button>
                         </div>
                       </div>
 
-                      {nodes.length === 0 ? (
+                      {nodes.length === 0 && (
                         <p className="settings-structure-empty">{td("emptyMessage", { year })}</p>
-                      ) : (
-                        <div>
-                          {visibleRows.map((row) => (
+                      )}
+
+                      {(() => {
+                        const addKeyFor = (parentId: string | null) => `${s.id}:${parentId ?? "root"}`;
+                        const elements: JSX.Element[] = [];
+                        const stack: typeof visibleRows = [];
+
+                        // Fecha (emite o "+ item" de) todo ancestral empilhado cujo
+                        // bloco de descendentes já terminou — ver renderAddItemRow.
+                        const closeStack = (untilDepth: number) => {
+                          while (stack.length && stack[stack.length - 1].depth >= untilDepth) {
+                            const popped = stack.pop()!;
+                            const nodeId = popped.item.id;
+                            const hasKids = hierarchy!.hasChildren.has(nodeId);
+                            if (hasKids && treeExpand.isCollapsed(nodeId)) continue;
+                            const childDepth = popped.depth + 1;
+                            if (childDepth > 9) continue; // profundidade máxima de 10 níveis
+                            elements.push(
+                              renderAddItemRow({
+                                rowKey: `add-${nodeId}`,
+                                ancestorContinues: [...popped.ancestorContinues, !hierarchy!.isLastChild.has(nodeId)],
+                                depth: childDepth,
+                                busy: addingNodeKey === addKeyFor(nodeId),
+                                onClick: () => handleInlineAddNode(d, s, nodeId),
+                              })
+                            );
+                          }
+                        };
+
+                        visibleRows.forEach((row) => {
+                          closeStack(row.depth);
+                          elements.push(
                             <div key={row.item.id} className="settings-item-row">
                               <TreeGuides
                                 ancestorContinues={row.ancestorContinues}
@@ -460,9 +543,26 @@ export function ConfiguracoesClient({
                                 </button>
                               </span>
                             </div>
-                          ))}
-                        </div>
-                      )}
+                          );
+                          stack.push(row);
+                        });
+                        closeStack(-1); // esvazia o resto da pilha (mais fundo → mais raso)
+
+                        // "+ item" de nível raiz (sem recuo), sempre por último —
+                        // equivalente ao "+ módulo" da desenhe-app.
+                        elements.push(
+                          renderAddItemRow({
+                            rowKey: "add-root",
+                            ancestorContinues: [],
+                            depth: 0,
+                            busy: addingNodeKey === addKeyFor(null),
+                            onClick: () => handleInlineAddNode(d, s, null),
+                          })
+                        );
+
+                        return <div>{elements}</div>;
+                      })()}
+                      {addNodeError && <p className="mt-1 px-2 text-xs text-red-600">{addNodeError}</p>}
                     </div>
                   )}
                 </div>

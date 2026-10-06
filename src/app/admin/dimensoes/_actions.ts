@@ -111,6 +111,7 @@ export async function updateDimensionNode(input: {
   versionId: string;
   currentValidFromYear: number;
   name: string;
+  code?: string;
   parentNodeId: string | null;
   year: number;
 }): Promise<ActionResult> {
@@ -130,6 +131,23 @@ export async function updateDimensionNode(input: {
       level = computeLevel(parentVersion);
     }
     if (level > 10) return { error: "Profundidade máxima de 10 níveis atingida." };
+
+    // Código vive em dimension_nodes (não é versionado por ano, ao contrário
+    // de nome/pai) — atualiza à parte, só quando veio preenchido e mudou.
+    if (input.code !== undefined) {
+      const { error: codeError } = await supabase
+        .from("dimension_nodes")
+        .update({ code: input.code })
+        .eq("id", input.nodeId);
+      if (codeError) {
+        return {
+          error:
+            codeError.code === "23505"
+              ? `Já existe um item com o código "${input.code}".`
+              : codeError.message,
+        };
+      }
+    }
 
     if (input.currentValidFromYear === input.year) {
       const { error } = await supabase

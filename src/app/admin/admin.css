@@ -376,6 +376,22 @@
 .settings-item-icon-btn:hover { background: rgba(0,0,0,.06); color: #374151; }
 .settings-item-icon-btn--danger:hover { background: rgba(220,38,38,.08); color: #dc2626; }
 
+/* Criação inline na árvore de itens (igual à dinâmica de "plano de aulas"
+   do desenhe-app): um botão "+ item" aparece logo depois dos filhos de
+   cada nó aberto (e um geral no nível raiz, no fim da árvore), criando o
+   filho na hora — sem abrir modal. Ver handleInlineAddNode. */
+.settings-item-row--add { padding: 2px 8px; }
+.settings-item-add-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 999px;
+  border: 1px dashed rgba(62,111,224,.35);
+  color: #3E6FE0; background: transparent;
+  font-size: 11.5px; font-weight: 600;
+  cursor: pointer; transition: all 120ms ease;
+}
+.settings-item-add-btn:hover { background: rgba(62,111,224,.08); border-style: solid; }
+.settings-item-add-btn:disabled { opacity: .5; cursor: default; }
+
 /* ── Estruturas (Parâmetros > Dimensões > Estruturas) ───
    Lista vertical em acordeão: clicar numa estrutura expande, dentro da
    própria linha, a árvore de itens dela (uma por vez). Terceira
