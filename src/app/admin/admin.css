@@ -432,9 +432,16 @@
    de 16px — mas o botão de expandir/colapsar (TreeExpand, compartilhado
    com as outras árvores) tem 22px com o ícone centralizado nele, então
    sobra ~5.5px de espaço em branco entre o fim do traço e o chevron.
-   15px fecha esse vão (7px de offset + 15px cobre até ~x=22, onde o
-   ícone começa) sem precisar mexer no TreeExpand em si (ele é usado
-   também no seletor de pai e na árvore da Matriz).
+   15px fechava a caixa do <svg> (confirmado por getBoundingClientRect),
+   mas o glyph do ChevronRight (lucide) não ocupa o <svg> inteiro — o
+   viewBox é 24x24 e o path do "v" só cobre a faixa 9–15, deixando uns
+   3px de respiro dentro do próprio ícone antes do traço desenhado
+   aparecer de verdade. Resultado: mesmo com a caixa do <svg> "fechada",
+   sobrava um vão visível até o traço do chevron em si (medido por
+   getBoundingClientRect do <path>, não do <svg>). 20px cobre esse
+   respiro interno também, com um pouco de sobra proposital (a bolinha
+   final entra uns 2px por baixo do traço do chevron) pra garantir
+   contato visual mesmo com antialiasing.
    O gradiente é ancorado em "to left" (não "to right"): como o período
    de 4px nem sempre cabe um número inteiro de vezes dentro da largura,
    ancorar pela esquerda podia deixar a ÚLTIMA bolinha alguns px antes
@@ -444,7 +451,7 @@
 .settings-item-row .tree-guide-col--own::after {
   border-top: none;
   height: 1.5px;
-  width: 15px;
+  width: 20px;
   background-image: repeating-linear-gradient(
     to left,
     rgba(17,24,39,.4) 0,
