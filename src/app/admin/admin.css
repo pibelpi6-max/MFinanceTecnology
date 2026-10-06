@@ -406,6 +406,28 @@
     transparent 4px
   );
 }
+/* .tree-guide-col só "esticava" (align-self: stretch) até a CAIXA DE
+   CONTEÚDO da linha — o padding vertical de 7px da .settings-item-row
+   (ver regra logo acima) fica de fora. Então mesmo com a coluna
+   "continuando" (altura cheia), o traço parava 7px antes da borda real
+   da linha, em cima e embaixo — e isso se repetia na linha seguinte,
+   somando ~16px de vão sempre que um item com filho devia conectar com
+   o filho logo abaixo (e idem entre guias de ancestral de uma linha pra
+   outra). Esticar o próprio traço 7px pra cima/baixo (compensando esse
+   padding) faz ele encostar na borda real da linha; a única sobra é a
+   margin-top de 2px do wrapper dos filhos (ver mais abaixo), bem menos
+   perceptível. Topo sempre estica (a linha sempre "vem de algum lugar"
+   acima); embaixo só estica quando a coluna está "continuing". */
+.settings-item-row .tree-guide-col.is-continuing:not(.tree-guide-col--own)::before {
+  top: -7px;
+  bottom: -7px;
+}
+.settings-item-row .tree-guide-col--own::before {
+  top: -7px;
+}
+.settings-item-row .tree-guide-col--own.is-continuing::before {
+  bottom: -7px;
+}
 /* O traço horizontal (base, 9px) termina exatamente na borda da coluna
    de 16px — mas o botão de expandir/colapsar (TreeExpand, compartilhado
    com as outras árvores) tem 22px com o ícone centralizado nele, então
