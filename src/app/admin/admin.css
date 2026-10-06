@@ -368,7 +368,7 @@
   padding: 2px 4px; font-size: 13px; color: var(--text-strong); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .settings-item-name:hover { color: #3E6FE0; }
-.settings-item-actions { display: flex; align-items: center; gap: 2px; opacity: .45; transition: opacity .12s ease; flex-shrink: 0; }
+.settings-item-actions { display: flex; align-items: center; gap: 2px; opacity: 0; transition: opacity .12s ease; flex-shrink: 0; }
 .settings-item-icon-btn {
   width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center;
   border-radius: 6px; color: #9ca3af; border: none; background: transparent; cursor: pointer;
@@ -382,14 +382,14 @@
    filho na hora — sem abrir modal. Ver handleInlineAddNode. */
 .settings-item-row--add { padding: 3px 8px 5px; }
 .settings-item-add-btn {
-  display: inline-flex; align-items: center; gap: 5px;
-  padding: 4px 12px; border-radius: 999px;
-  border: 1.5px solid rgba(62,111,224,.4);
-  color: #3E6FE0; background: #fff;
-  font-size: 12px; font-weight: 600;
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 999px;
+  border: 1px dashed rgba(62,111,224,.35);
+  color: #3E6FE0; background: transparent;
+  font-size: 11.5px; font-weight: 600;
   cursor: pointer; transition: all 120ms ease;
 }
-.settings-item-add-btn:hover { background: rgba(62,111,224,.08); border-color: #3E6FE0; }
+.settings-item-add-btn:hover { background: rgba(62,111,224,.08); border-style: solid; }
 .settings-item-add-btn:disabled { opacity: .5; cursor: default; }
 
 /* ── Estruturas (Parâmetros > Dimensões > Estruturas) ───
