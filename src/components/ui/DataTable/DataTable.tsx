@@ -711,7 +711,7 @@ export function DataTable<T extends {
       isDragging      = true;
       dragStartX      = e.clientX;
       dragStartScroll = fake!.scrollLeft;
-      thumb!.style.backgroundColor = "#0284c7";
+      thumb!.style.backgroundColor = "#475569";
       thumb!.style.height = "12px";
       thumb!.style.bottom = "4px";
       (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
@@ -728,7 +728,7 @@ export function DataTable<T extends {
     function onPointerUp() {
       if (!isDragging) return;
       isDragging = false;
-      thumb!.style.backgroundColor = "#38bdf8";
+      thumb!.style.backgroundColor = "#64748b";
       applyHover(hovered);
     }
 
@@ -1964,7 +1964,7 @@ export function DataTable<T extends {
               height: "5px",
               width: "80px",
               borderRadius: "999px",
-              backgroundColor: "#38bdf8",
+              backgroundColor: "#64748b",
               cursor: "pointer",
               zIndex: 46,
               display: "none",
