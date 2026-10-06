@@ -514,6 +514,17 @@ export function ConfiguracoesClient({
                         </Tooltip>
                       </span>
                     </button>
+                    <button
+                      type="button"
+                      className="settings-item-icon-btn"
+                      title={t("dimensions.renameStructure")}
+                      onClick={() => setStructureModal({ type: d, mode: "rename", source: s })}
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.86 4.49a1.75 1.75 0 1 1 2.47 2.47L7.5 18.79l-3.3.82.82-3.3Z" />
+                      </svg>
+                    </button>
+                    <span className="settings-structure-row-spacer" />
                     <span className={`settings-structure-status-badge${s.is_active ? " is-active" : ""}`}>
                       {s.is_active ? t("dimensions.structureActive") : t("dimensions.structureInactive")}
                     </span>
@@ -536,19 +547,9 @@ export function ConfiguracoesClient({
                         title={td("importButton")}
                       >
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v10m0 0-3.5-3.5M12 13l3.5-3.5M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 13V3m0 0-3.5 3.5M12 3l3.5 3.5M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" />
                         </svg>
                       </Link>
-                      <button
-                        type="button"
-                        className="settings-item-icon-btn"
-                        title={t("dimensions.renameStructure")}
-                        onClick={() => setStructureModal({ type: d, mode: "rename", source: s })}
-                      >
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.86 4.49a1.75 1.75 0 1 1 2.47 2.47L7.5 18.79l-3.3.82.82-3.3Z" />
-                        </svg>
-                      </button>
                       <button
                         type="button"
                         className="settings-item-icon-btn"

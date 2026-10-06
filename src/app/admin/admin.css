@@ -619,7 +619,7 @@
 .settings-item-icon-btn {
   width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center;
   border-radius: 6px; color: #9ca3af; border: none; background: transparent; cursor: pointer;
-  text-decoration: none;
+  text-decoration: none; flex-shrink: 0;
 }
 .settings-item-icon-btn:hover { background: rgba(0,0,0,.06); color: #374151; }
 .settings-item-icon-btn--danger:hover { background: rgba(220,38,38,.08); color: #dc2626; }
@@ -660,20 +660,35 @@
 }
 .settings-structure-accordion.is-expanded { border-color: rgba(62,111,224,.3); }
 .settings-structure-accordion-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; }
+/* flex:0 1 auto (não mais flex:1) — o botão agora só ocupa o espaço do
+   próprio conteúdo (seta + nome), pra que o lápis de renomear (irmão
+   logo depois, fora do button — não dá pra aninhar button dentro de
+   button) fique colado no fim do nome, em vez de "puxado" pro fim da
+   linha. Quem absorve o espaço sobrando e empurra badge/switch/ações
+   pra direita é o .settings-structure-row-spacer, logo depois do
+   lápis. min-width:0 continua garantindo que o nome truncado (ver
+   .settings-structure-accordion-name) consiga encolher quando precisa. */
 .settings-structure-accordion-toggle {
-  display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;
+  display: flex; align-items: center; gap: 8px; flex: 0 1 auto; min-width: 0;
   background: none; border: none; cursor: pointer; padding: 0; text-align: left;
 }
 .settings-structure-accordion-toggle svg { flex-shrink: 0; color: #9ca3af; transition: transform 150ms ease; }
 .settings-structure-accordion.is-expanded .settings-structure-accordion-toggle svg { transform: rotate(90deg); }
 .settings-structure-accordion-name { font-size: 13px; font-weight: 600; color: var(--text-strong); }
 .settings-structure-accordion-toggle:hover .settings-structure-accordion-name { color: #3E6FE0; }
+.settings-structure-row-spacer { flex: 1 1 0%; min-width: 0; }
 .settings-structure-accordion-body {
   border-top: 1px solid rgba(0,0,0,.06); padding: 4px 14px 14px 36px; background: #FAFBFC;
   overflow-x: hidden; min-width: 0;
 }
+/* min-width + justify-content:center garante que a pill "Ativa"/"Inativa"
+   tenha sempre a mesma largura (antes cada uma tinha a largura do
+   próprio texto — "Inativa" é mais larga que "Ativa" — e a pill
+   "pulava" de tamanho ao trocar o estado). 58px cobre "Inativa" (a
+   palavra mais larga das duas) com a mesma folga de padding das duas. */
 .settings-structure-status-badge {
-  display: inline-flex; align-items: center; flex-shrink: 0; padding: 2px 8px; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+  min-width: 58px; padding: 2px 8px; border-radius: 999px;
   font-size: 10px; font-weight: 600; white-space: nowrap; background: #f1f2f6; color: #5b5f76;
 }
 .settings-structure-status-badge.is-active { background: rgba(92,184,138,.14); color: #0F6E56; }
