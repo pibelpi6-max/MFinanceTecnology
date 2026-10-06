@@ -12,23 +12,35 @@
  * coluna ("own") é sempre a própria conexão desta linha com seu pai/irmão
  * anterior: meia altura + cotovelo horizontal quando é o último filho,
  * altura cheia quando há mais irmãos depois.
+ *
+ * `hasVisibleChildren` (opcional, default false — não afeta o seletor de
+ * pai nem o painel da Matriz, que não passam essa prop) faz a própria
+ * coluna também continuar até o fim da linha quando ESTE nó tem filhos
+ * renderizados logo abaixo (expandido e com children), mesmo sendo o
+ * último irmão. Sem isso, um nó "último irmão mas com filhos" desenhava
+ * só a meia-altura + cotovelo e a metade de baixo da própria linha ficava
+ * em branco, cortando visualmente a conexão com o filho (que começa um
+ * nível mais à direita, mas logo em seguida verticalmente).
  */
 export function TreeGuides({
   ancestorContinues,
   isLast,
   depth,
+  hasVisibleChildren = false,
 }: {
   ancestorContinues: boolean[];
   isLast: boolean;
   depth: number;
+  hasVisibleChildren?: boolean;
 }) {
   if (depth === 0) return null;
+  const ownContinues = !isLast || hasVisibleChildren;
   return (
     <span className="tree-guides" aria-hidden="true">
       {ancestorContinues.map((continues, i) => (
         <span key={i} className={`tree-guide-col${continues ? " is-continuing" : ""}`} />
       ))}
-      <span className={`tree-guide-col tree-guide-col--own${isLast ? "" : " is-continuing"}`} />
+      <span className={`tree-guide-col tree-guide-col--own${ownContinues ? " is-continuing" : ""}`} />
     </span>
   );
 }
