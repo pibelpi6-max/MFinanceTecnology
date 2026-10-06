@@ -532,9 +532,12 @@ export function ConfiguracoesClient({
                     <span className="settings-item-actions settings-item-actions--static">
                       <Link
                         href={`/admin/dimensoes/${d.code}/importar?ano=${year}`}
-                        className="settings-structure-import-link"
+                        className="settings-item-icon-btn"
+                        title={td("importButton")}
                       >
-                        {td("importButton")}
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v10m0 0-3.5-3.5M12 13l3.5-3.5M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" />
+                        </svg>
                       </Link>
                       <button
                         type="button"
@@ -557,6 +560,7 @@ export function ConfiguracoesClient({
                           <path d="M4 16a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2" />
                         </svg>
                       </button>
+                      <span className="settings-item-actions-divider" />
                       <button
                         type="button"
                         className="settings-item-icon-btn settings-item-icon-btn--danger"

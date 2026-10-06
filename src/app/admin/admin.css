@@ -368,20 +368,6 @@
    ver ConfiguracoesClient) — sem o auto, único filho em space-between
    cairia à esquerda. */
 .settings-structure-actions { display: flex; align-items: center; gap: 14px; flex-shrink: 0; margin-left: auto; }
-.settings-structure-import-link { font-size: 12px; font-weight: 600; color: var(--text-muted); background: none; border: none; cursor: pointer; }
-.settings-structure-import-link:hover { color: #3E6FE0; }
-/* "Importar" passou a morar junto dos ícones de renomear/duplicar/excluir
-   (ver settings-item-actions--static), em vez de numa linha própria
-   abaixo do acordeão — pedido da usuária pra juntar as ações da
-   estrutura num só lugar. O respiro/divisor aqui só entra quando o link
-   está dentro desse grupo (gap de 2px dos ícones é apertado demais pra
-   texto, que precisa de mais ar que um ícone de 22px). */
-.settings-item-actions--static .settings-structure-import-link {
-  margin-right: 6px;
-  padding-right: 10px;
-  border-right: 1px solid rgba(0,0,0,.08);
-  white-space: nowrap;
-}
 .settings-structure-empty { font-size: 12.5px; color: var(--text-muted); padding: 6px 0 8px; }
 
 .settings-item-row { position: relative; display: flex; align-items: center; gap: 1px; padding: 7px 8px; border-radius: 7px; }
@@ -633,9 +619,15 @@
 .settings-item-icon-btn {
   width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center;
   border-radius: 6px; color: #9ca3af; border: none; background: transparent; cursor: pointer;
+  text-decoration: none;
 }
 .settings-item-icon-btn:hover { background: rgba(0,0,0,.06); color: #374151; }
 .settings-item-icon-btn--danger:hover { background: rgba(220,38,38,.08); color: #dc2626; }
+/* Separa a ação destrutiva (excluir) das demais (importar/renomear/
+   duplicar), que são seguras e reversíveis — convenção comum pra
+   reduzir clique acidental em exclusão: ver settings-item-actions-divider
+   logo antes do botão de lixeira, na pill de cada estrutura. */
+.settings-item-actions-divider { width: 1px; height: 14px; background: rgba(0,0,0,.1); margin: 0 3px; flex-shrink: 0; }
 
 /* Criação inline na árvore de itens (igual à dinâmica de "plano de aulas"
    do desenhe-app): um botão "+ item" aparece logo depois dos filhos de
