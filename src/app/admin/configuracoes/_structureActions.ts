@@ -102,19 +102,13 @@ export async function setDimensionStructureActive(input: {
     const tenant = await requireAdmin();
     const supabase = await createClient();
 
-    // Só pode haver 1 estrutura ativa por dimensão (índice único parcial
-    // na migration 0012) — ativar esta desativa automaticamente qualquer
-    // outra que já estivesse ativa na mesma dimensão.
-    if (input.isActive) {
-      const { error: deactivateError } = await supabase
-        .from("dimension_structures")
-        .update({ is_active: false })
-        .eq("tenant_id", tenant.tenantId)
-        .eq("dimension_type_id", input.dimensionTypeId)
-        .neq("id", input.id);
-      if (deactivateError) return { error: deactivateError.message };
-    }
-
+    // Desde a migration 0014, "Ativa" não é mais exclusiva por dimensão
+    // (o índice único parcial da 0012 foi removido) — várias estruturas
+    // da mesma dimensão podem ficar "Ativa" (= disponível pra uso) ao
+    // mesmo tempo. Quem decide qual entra em cada cenário de fato é o
+    // Orçamento, via seu Conjunto de Estruturas — ver
+    // claude/decisoes-arquitetura.md, "Orçamento (entidade nova,
+    // versões/revisões)".
     const { error } = await supabase
       .from("dimension_structures")
       .update({ is_active: input.isActive })
@@ -232,6 +226,20 @@ export async function deleteDimensionStructure(input: { id: string }): Promise<A
     if (countError) return { error: countError.message };
     if ((count ?? 0) > 0) {
       return { error: "Esta estrutura tem itens cadastrados. Exclua os itens antes de remover a estrutura." };
+    }
+
+    // Desde a migration 0014: uma Estrutura referenciada por algum
+    // Conjunto de Estruturas não pode ser excluída (a fk de
+    // conjunto_estrutura_items.structure_id é ON DELETE RESTRICT) — essa
+    // checagem só existe pra devolver uma mensagem amigável em vez do
+    // erro cru do Postgres.
+    const { count: usageCount, error: usageError } = await supabase
+      .from("conjunto_estrutura_items")
+      .select("id", { count: "exact", head: true })
+      .eq("structure_id", input.id);
+    if (usageError) return { error: usageError.message };
+    if ((usageCount ?? 0) > 0) {
+      return { error: "Esta estrutura está em uso por um ou mais Conjuntos de Estrutura. Remova-a dos conjuntos antes de excluir." };
     }
 
     const { error } = await supabase

@@ -693,6 +693,14 @@
 }
 .settings-structure-status-badge.is-active { background: rgba(92,184,138,.14); color: #0F6E56; }
 
+/* Contador "Usada em N conjuntos" — ao lado da pill Ativa/Inativa, só
+   informativo (ver claude/decisoes-arquitetura.md, "Orçamento (entidade
+   nova, versões/revisões)"). Reaproveitado também nas linhas de Conjunto
+   de Estruturas e Orçamentos abaixo. */
+.settings-structure-usage-count {
+  flex-shrink: 0; font-size: 10.5px; color: var(--text-muted); white-space: nowrap;
+}
+
 /* Switch compacto ativa/inativa — reaproveita o azul de marca pro "on". */
 .settings-structure-switch { position: relative; flex-shrink: 0; display: inline-block; width: 30px; height: 17px; }
 .settings-structure-switch input {

@@ -276,7 +276,42 @@
       "deleteStructureConfirmBody": "Delete structure <b>{name}</b> permanently?",
       "duplicateNameSuggestion": "{name} (copy)",
       "duplicateStructureHint": "Copies every item from the source structure (as it stands today) into the new structure.",
-      "typeLabel": "Type"
+      "typeLabel": "Type",
+      "usageCount": "Used in {count} set(s)",
+      "usageCountHint": "How many Structure Sets use this structure"
+    },
+    "conjuntos": {
+      "title": "Structure Sets",
+      "intro": "Group 1 Structure per dimension to use in a Budget.",
+      "new": "New set",
+      "edit": "Edit set",
+      "name": "Set name",
+      "pickStructures": "Pick 1 structure per dimension",
+      "noneSelected": "None",
+      "noStructuresAvailable": "No dimension has structures yet.",
+      "empty": "No sets yet.",
+      "itemCount": "{count} dimension(s)",
+      "deleteConfirmTitle": "Delete set",
+      "deleteConfirmBody": "Delete set <b>{name}</b> permanently?"
+    },
+    "orcamentos": {
+      "title": "Budgets",
+      "intro": "Each Budget is a version/revision, with its own Structure Set.",
+      "new": "New budget",
+      "edit": "Edit budget",
+      "year": "Year",
+      "label": "Revision label",
+      "labelPlaceholder": "E.g.: Conservative, Revision 2",
+      "status": "Status",
+      "status_rascunho": "Draft",
+      "status_ativo": "Active",
+      "status_encerrado": "Closed",
+      "conjunto": "Structure Set",
+      "noneSelected": "None",
+      "noConjuntosHint": "Create a Structure Set before linking one to this Budget.",
+      "empty": "No budgets yet.",
+      "deleteConfirmTitle": "Delete budget",
+      "deleteConfirmBody": "Delete budget <b>{label}</b> permanently?"
     }
   },
   "import": {

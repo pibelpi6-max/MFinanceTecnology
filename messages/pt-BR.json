@@ -276,7 +276,42 @@
       "deleteStructureConfirmBody": "Deseja excluir a estrutura <b>{name}</b> permanentemente?",
       "duplicateNameSuggestion": "{name} (cópia)",
       "duplicateStructureHint": "Copia todos os itens da estrutura de origem (como estão hoje) para a nova estrutura.",
-      "typeLabel": "Tipo"
+      "typeLabel": "Tipo",
+      "usageCount": "Usada em {count} conjunto(s)",
+      "usageCountHint": "Quantos Conjuntos de Estrutura usam esta estrutura"
+    },
+    "conjuntos": {
+      "title": "Conjuntos de Estrutura",
+      "intro": "Agrupe 1 Estrutura de cada dimensão para usar num Orçamento.",
+      "new": "Novo conjunto",
+      "edit": "Editar conjunto",
+      "name": "Nome do conjunto",
+      "pickStructures": "Escolha 1 estrutura por dimensão",
+      "noneSelected": "Nenhuma",
+      "noStructuresAvailable": "Nenhuma dimensão tem estruturas cadastradas ainda.",
+      "empty": "Nenhum conjunto cadastrado.",
+      "itemCount": "{count} dimensão(ões)",
+      "deleteConfirmTitle": "Excluir conjunto",
+      "deleteConfirmBody": "Deseja excluir o conjunto <b>{name}</b> permanentemente?"
+    },
+    "orcamentos": {
+      "title": "Orçamentos",
+      "intro": "Cada Orçamento é uma versão/revisão, com seu próprio Conjunto de Estruturas.",
+      "new": "Novo orçamento",
+      "edit": "Editar orçamento",
+      "year": "Ano",
+      "label": "Rótulo da revisão",
+      "labelPlaceholder": "Ex.: Conservador, Revisão 2",
+      "status": "Status",
+      "status_rascunho": "Rascunho",
+      "status_ativo": "Ativo",
+      "status_encerrado": "Encerrado",
+      "conjunto": "Conjunto de Estruturas",
+      "noneSelected": "Nenhum",
+      "noConjuntosHint": "Crie um Conjunto de Estruturas antes de vincular um a este Orçamento.",
+      "empty": "Nenhum orçamento cadastrado.",
+      "deleteConfirmTitle": "Excluir orçamento",
+      "deleteConfirmBody": "Deseja excluir o orçamento <b>{label}</b> permanentemente?"
     }
   },
   "import": {

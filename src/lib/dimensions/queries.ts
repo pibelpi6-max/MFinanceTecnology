@@ -84,9 +84,21 @@ export async function getDimensionStructuresByType(
 }
 
 /**
- * Id da estrutura ATIVA de uma dimensão (no máximo 1, ver índice único
- * parcial na migration 0012) — ou null se a dimensão não tiver nenhuma
- * estrutura ativa no momento.
+ * Id da estrutura ATIVA de uma dimensão — ou null se a dimensão não
+ * tiver nenhuma estrutura ativa no momento.
+ *
+ * Desde a migration 0014, "Ativa" deixou de ser exclusiva por dimensão
+ * (o índice único parcial da 0012 foi removido — ver
+ * claude/decisoes-arquitetura.md, "Orçamento (entidade nova,
+ * versões/revisões)"): várias estruturas podem estar marcadas "Ativa"
+ * ao mesmo tempo. Esta função é a ponte de compatibilidade enquanto
+ * Matriz/Pacotes/Realizado/Comparativo ainda não foram religados para
+ * resolver a estrutura através do Orçamento — por isso usa `limit(1)`
+ * em vez de `maybeSingle()` (que lançaria erro com mais de 1 linha) e
+ * pega a primeira por `sort_order`, de forma determinística. Isso evita
+ * quebrar essas telas se a usuária ativar mais de uma estrutura antes
+ * da próxima etapa (religar via Orçamento) estar pronta — é só uma
+ * salvaguarda, não a resolução "de verdade" do Conjunto de Estruturas.
  */
 async function getActiveStructureId(
   tenantId: string,
@@ -99,10 +111,11 @@ async function getActiveStructureId(
     .eq("tenant_id", tenantId)
     .eq("dimension_type_id", dimensionTypeId)
     .eq("is_active", true)
-    .maybeSingle();
+    .order("sort_order", { ascending: true })
+    .limit(1);
 
   if (error) throw new Error(error.message);
-  return data?.id ?? null;
+  return data?.[0]?.id ?? null;
 }
 
 /**

@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getCurrentTenant } from "@/lib/tenant/getCurrentTenant";
 import { getDimensionTypes, getDimensionStructuresByType, getDimensionTreeByStructure } from "@/lib/dimensions/queries";
 import { getTenantSettings } from "@/lib/settings/queries";
+import { getConjuntosByTenant, getStructureUsageCounts, getOrcamentosByTenant } from "@/lib/orcamentos/queries";
 import type { DimensionNodeRow } from "@/lib/dimensions/types";
 import { ConfiguracoesClient } from "./ConfiguracoesClient";
 
@@ -11,10 +12,13 @@ export default async function ConfiguracoesPage() {
 
   const year = new Date().getFullYear();
 
-  const [dimensionTypes, settings, structuresByType] = await Promise.all([
+  const [dimensionTypes, settings, structuresByType, conjuntos, structureUsageCounts, orcamentos] = await Promise.all([
     getDimensionTypes(tenant.tenantId),
     getTenantSettings(tenant.tenantId),
     getDimensionStructuresByType(tenant.tenantId),
+    getConjuntosByTenant(tenant.tenantId),
+    getStructureUsageCounts(tenant.tenantId),
+    getOrcamentosByTenant(tenant.tenantId),
   ]);
 
   // A árvore de itens de cada Estrutura é carregada de uma vez só aqui
@@ -44,6 +48,9 @@ export default async function ConfiguracoesPage() {
           year={year}
           fiscalYearStartMonth={settings.fiscalYearStartMonth}
           isAdmin={tenant.role === "admin"}
+          conjuntos={conjuntos}
+          structureUsageCounts={structureUsageCounts}
+          orcamentos={orcamentos}
         />
       </div>
     </>
