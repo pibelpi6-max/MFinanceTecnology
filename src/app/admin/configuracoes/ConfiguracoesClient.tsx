@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
@@ -11,7 +11,6 @@ import { DataTable } from "@/components/ui/DataTable/DataTable";
 import type { ColumnMeta } from "@/components/ui/DataTable/types";
 import { TreeExpand } from "@/components/ui/tree";
 import { useTreeExpand } from "@/hooks/useTreeExpand";
-import { buildDimensionHierarchy, getVisibleRows } from "@/lib/dimensions/hierarchy";
 import type { DimensionType, DimensionNodeRow, DimensionStructure } from "@/lib/dimensions/types";
 import { isProtectedDimensionCode } from "@/lib/dimensions/constants";
 import { DimensionTypeFormModal } from "./DimensionTypeFormModal";
@@ -193,16 +192,6 @@ export function ConfiguracoesClient({
   const [structureToggleId, setStructureToggleId] = useState<string | null>(null);
   const [structureToggleError, setStructureToggleError] = useState<string | null>(null);
 
-  const hierarchies = useMemo(() => {
-    const map = new Map<string, ReturnType<typeof buildDimensionHierarchy>>();
-    for (const list of Object.values(structuresByType)) {
-      for (const s of list) {
-        map.set(s.id, buildDimensionHierarchy(nodesByStructure[s.id] ?? []));
-      }
-    }
-    return map;
-  }, [structuresByType, nodesByStructure]);
-
   function toggleStructureExpanded(typeId: string, structureId: string) {
     setExpandedStructureId((prev) => ({
       ...prev,
@@ -336,37 +325,13 @@ export function ConfiguracoesClient({
    * (lista de tipos), que já desenha o cartão ao redor; com fundo
    * tracejado próprio no fallback de leitura (usuária não-admin).
    */
-  /** Indentação de um nível da árvore — uma linha vertical sólida e
-   * contínua por ancestral (`ml-5 pl-3.5 border-l` do EspecialidadePlano
-   * DeAulasPanel.tsx da desenhe-app: cada nível é só uma div aninhada com
-   * borda à esquerda, sem cotovelo "└" nem corte no último filho). Aqui a
-   * árvore é uma lista plana (não JSX aninhado, ver buildDimensionHierarchy),
-   * então em vez de aninhar divs de verdade, cada linha desenha sozinha as
-   * `depth` colunas de borda que ficariam "por fora" dela nos ancestrais —
-   * como elas não dependem de isLast/ancestorContinues, ficam idênticas e
-   * alinhadas de uma linha pra outra, dando a mesma continuidade visual. */
-  function renderIndent(depth: number) {
-    if (depth === 0) return null;
-    return (
-      <span className="settings-item-indent">
-        {Array.from({ length: depth }).map((_, i) => (
-          <span key={i} className="settings-item-indent-col" />
-        ))}
-      </span>
-    );
-  }
-
-  /** Linha "+ item" da árvore inline — mesma indentação de um filho (ghost
-   * row), pra nascer exatamente onde o novo item vai aparecer. */
-  function renderAddItemRow(opts: {
-    rowKey: string;
-    depth: number;
-    busy: boolean;
-    onClick: () => void;
-  }) {
+  /** Linha "+ item" raiz da árvore — única que sobra como botão fixo
+   * (as outras virar&atilde;o filho de qualquer item via "+" no hover
+   * da própria linha, ver renderNodeRow). Sempre no nível 0, por isso
+   * sem indentação própria. */
+  function renderAddItemRow(opts: { rowKey: string; busy: boolean; onClick: () => void }) {
     return (
       <div key={opts.rowKey} className="settings-item-row settings-item-row--add">
-        {renderIndent(opts.depth)}
         <span className="tree-expand-spacer" />
         <button type="button" className="settings-item-add-btn" disabled={opts.busy} onClick={opts.onClick}>
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.6}>
@@ -374,6 +339,99 @@ export function ConfiguracoesClient({
           </svg>
           {td("addItem")}
         </button>
+      </div>
+    );
+  }
+
+  /** Agrupa os nós de uma estrutura por pai, já ordenados — igual ao que
+   * `buildDimensionHierarchy` fazia internamente, mas aqui fica exposto
+   * pra `renderNodeRow` poder recursar de verdade (ver abaixo). */
+  function buildChildrenByParent(nodes: DimensionNodeRow[]): Map<string | null, DimensionNodeRow[]> {
+    const map = new Map<string | null, DimensionNodeRow[]>();
+    nodes.forEach((n) => {
+      const list = map.get(n.parentNodeId) ?? [];
+      list.push(n);
+      map.set(n.parentNodeId, list);
+    });
+    map.forEach((list) => list.sort((a, b) => a.name.localeCompare(b.name, "pt-BR")));
+    return map;
+  }
+
+  /** Uma linha da árvore e, se expandida, seus filhos — JSX recursivo de
+   * verdade (cada filho literalmente dentro do wrapper bordado do pai),
+   * igual ao `NodeRow` de EspecialidadePlanoDeAulasPanel.tsx na
+   * desenhe-app: lá a árvore também vive dentro do corpo expansível de
+   * uma linha de DataTable, mas o conteúdo desse corpo é `<div>` livre
+   * (não `<tr>`), então nada impede aninhar de verdade. Antes eu tentei
+   * simular a indentação numa lista plana (`renderIndent`) — funcionava,
+   * mas media diferente do `ml-5 pl-3.5 border-l` real. Recursar de
+   * verdade elimina essa diferença por completo: é o mesmo mecanismo. */
+  function renderNodeRow(opts: {
+    node: DimensionNodeRow;
+    depth: number;
+    childrenByParent: Map<string | null, DimensionNodeRow[]>;
+    d: DimensionType;
+    s: DimensionStructure;
+    addKeyFor: (parentId: string | null) => string;
+  }) {
+    const { node, depth, childrenByParent, d, s, addKeyFor } = opts;
+    const children = childrenByParent.get(node.id) ?? [];
+    const hasChildren = children.length > 0;
+    const isOpen = !treeExpand.isCollapsed(node.id);
+
+    return (
+      <div key={node.id}>
+        <div className="settings-item-row">
+          {hasChildren ? (
+            <TreeExpand
+              isOpen={isOpen}
+              onToggle={() => treeExpand.toggle(node.id)}
+              label={isOpen ? td("collapseNode") : td("expandNode")}
+            />
+          ) : (
+            <span className="tree-expand-spacer" />
+          )}
+          <span className="settings-item-name">{node.name}</span>
+          <span className="settings-item-actions">
+            <button
+              type="button"
+              className="settings-item-icon-btn"
+              title={td("addItem")}
+              disabled={addingNodeKey === addKeyFor(node.id) || depth >= 9}
+              onClick={() => handleInlineAddNode(d, s, node.id)}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2}>
+                <path strokeLinecap="round" d="M12 5v14M5 12h14" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              className="settings-item-icon-btn"
+              title={td("edit")}
+              onClick={() => setNodeEditing({ type: d, node, structureId: s.id })}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.86 4.49a1.75 1.75 0 1 1 2.47 2.47L7.5 18.79l-3.3.82.82-3.3Z" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              className="settings-item-icon-btn settings-item-icon-btn--danger"
+              title={tc("delete")}
+              onClick={() => setNodeDeleting({ type: d, node })}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" />
+              </svg>
+            </button>
+          </span>
+        </div>
+
+        {hasChildren && isOpen && (
+          <div className="settings-item-children">
+            {children.map((child) => renderNodeRow({ node: child, depth: depth + 1, childrenByParent, d, s, addKeyFor }))}
+          </div>
+        )}
       </div>
     );
   }
@@ -405,9 +463,8 @@ export function ConfiguracoesClient({
           <div className="settings-structure-accordion-list">
             {list.map((s) => {
               const isExpanded = expandedId === s.id;
-              const hierarchy = hierarchies.get(s.id);
               const nodes = nodesByStructure[s.id] ?? [];
-              const visibleRows = hierarchy ? getVisibleRows(hierarchy.rows, treeExpand.collapsedIds) : [];
+              const childrenByParent = buildChildrenByParent(nodes);
 
               return (
                 <div key={s.id} className={`settings-structure-accordion${isExpanded ? " is-expanded" : ""}`}>
@@ -495,6 +552,7 @@ export function ConfiguracoesClient({
 
                       {(() => {
                         const addKeyFor = (parentId: string | null) => `${s.id}:${parentId ?? "root"}`;
+                        const rootNodes = childrenByParent.get(null) ?? [];
 
                         // Cada linha ganha seu próprio "+" inline (junto com
                         // editar/excluir, só aparece no hover da linha) pra
@@ -505,60 +563,15 @@ export function ConfiguracoesClient({
                         // dobrando a altura da árvore). Só o "+ item" de
                         // nível raiz (equivalente ao "+ módulo" da
                         // desenhe-app) continua como botão tracejado sempre
-                        // visível, por ser a ação principal da tela.
+                        // visível, por ser a ação principal da tela. A árvore
+                        // em si é JSX recursivo de verdade (renderNodeRow
+                        // chamando a si mesma), não lista plana — ver o
+                        // comentário em renderNodeRow.
                         return (
                           <div>
-                            {visibleRows.map((row) => (
-                              <div key={row.item.id} className="settings-item-row">
-                                {renderIndent(row.depth)}
-                                {hierarchy!.hasChildren.has(row.item.id) ? (
-                                  <TreeExpand
-                                    isOpen={!treeExpand.isCollapsed(row.item.id)}
-                                    onToggle={() => treeExpand.toggle(row.item.id)}
-                                    label={treeExpand.isCollapsed(row.item.id) ? td("expandNode") : td("collapseNode")}
-                                  />
-                                ) : (
-                                  <span className="tree-expand-spacer" />
-                                )}
-                                <span className="settings-item-name">{row.item.name}</span>
-                                <span className="settings-item-actions">
-                                  <button
-                                    type="button"
-                                    className="settings-item-icon-btn"
-                                    title={td("addItem")}
-                                    disabled={addingNodeKey === addKeyFor(row.item.id) || row.depth >= 9}
-                                    onClick={() => handleInlineAddNode(d, s, row.item.id)}
-                                  >
-                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2}>
-                                      <path strokeLinecap="round" d="M12 5v14M5 12h14" />
-                                    </svg>
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="settings-item-icon-btn"
-                                    title={td("edit")}
-                                    onClick={() => setNodeEditing({ type: d, node: row.item, structureId: s.id })}
-                                  >
-                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.86 4.49a1.75 1.75 0 1 1 2.47 2.47L7.5 18.79l-3.3.82.82-3.3Z" />
-                                    </svg>
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="settings-item-icon-btn settings-item-icon-btn--danger"
-                                    title={tc("delete")}
-                                    onClick={() => setNodeDeleting({ type: d, node: row.item })}
-                                  >
-                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" />
-                                    </svg>
-                                  </button>
-                                </span>
-                              </div>
-                            ))}
+                            {rootNodes.map((node) => renderNodeRow({ node, depth: 0, childrenByParent, d, s, addKeyFor }))}
                             {renderAddItemRow({
                               rowKey: "add-root",
-                              depth: 0,
                               busy: addingNodeKey === addKeyFor(null),
                               onClick: () => handleInlineAddNode(d, s, null),
                             })}

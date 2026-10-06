@@ -371,14 +371,15 @@
 .settings-item-row:hover { background: rgba(0,0,0,.03); }
 .settings-item-row:hover .settings-item-actions { opacity: 1; }
 
-/* Indentação da árvore — uma linha vertical sólida e contínua por nível
-   ancestral, igual ao `ml-5 pl-3.5 border-l border-gray-200` do
-   EspecialidadePlanoDeAulasPanel.tsx da desenhe-app (fonte real, ver
-   renderIndent em ConfiguracoesClient). Sem cotovelo "└", sem corte no
-   último filho — só colunas de borda que se alinham de uma linha de
-   árvore pra outra, dando a mesma continuidade visual de divs aninhadas. */
-.settings-item-indent { display: inline-flex; align-self: stretch; flex: 0 0 auto; }
-.settings-item-indent-col { width: 20px; flex: 0 0 20px; align-self: stretch; border-left: 1px solid rgba(17,24,39,.12); }
+/* Wrapper dos filhos de um item — mesma geometria do
+   `ml-5 pl-3.5 border-l border-gray-200 mt-0.5` que envolve `children.map`
+   dentro do NodeRow de EspecialidadePlanoDeAulasPanel.tsx na desenhe-app.
+   Ao contrário da tentativa anterior (colunas de borda simuladas numa
+   lista plana, ver histórico do commit), isto envolve de verdade os nós
+   filhos (renderNodeRow chama a si mesma dentro deste div), então a linha
+   contínua é consequência do aninhamento real do DOM, não de um cálculo
+   de profundidade — igual à fonte original, sem diferença de medida. */
+.settings-item-children { margin-left: 20px; padding-left: 14px; border-left: 1px solid rgba(17,24,39,.12); margin-top: 2px; }
 .settings-item-name {
   flex: 1; min-width: 0; text-align: left; background: none; border: none; cursor: pointer;
   padding: 2px 4px; font-size: 13px; color: var(--text-strong); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
