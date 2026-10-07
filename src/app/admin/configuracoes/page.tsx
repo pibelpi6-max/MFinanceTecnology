@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { getCurrentTenant } from "@/lib/tenant/getCurrentTenant";
 import { getDimensionTypes, getDimensionStructuresByType, getDimensionTreeByStructure } from "@/lib/dimensions/queries";
 import { getTenantSettings } from "@/lib/settings/queries";
-import { getConjuntosByTenant, getStructureUsageCounts, getOrcamentosByTenant } from "@/lib/orcamentos/queries";
+import { getConjuntosByTenant, getOrcamentosByTenant } from "@/lib/orcamentos/queries";
 import type { DimensionNodeRow } from "@/lib/dimensions/types";
 import { ConfiguracoesClient } from "./ConfiguracoesClient";
 
@@ -12,12 +12,11 @@ export default async function ConfiguracoesPage() {
 
   const year = new Date().getFullYear();
 
-  const [dimensionTypes, settings, structuresByType, conjuntos, structureUsageCounts, orcamentos] = await Promise.all([
+  const [dimensionTypes, settings, structuresByType, conjuntos, orcamentos] = await Promise.all([
     getDimensionTypes(tenant.tenantId),
     getTenantSettings(tenant.tenantId),
     getDimensionStructuresByType(tenant.tenantId),
     getConjuntosByTenant(tenant.tenantId),
-    getStructureUsageCounts(tenant.tenantId),
     getOrcamentosByTenant(tenant.tenantId),
   ]);
 
@@ -49,7 +48,6 @@ export default async function ConfiguracoesPage() {
           fiscalYearStartMonth={settings.fiscalYearStartMonth}
           isAdmin={tenant.role === "admin"}
           conjuntos={conjuntos}
-          structureUsageCounts={structureUsageCounts}
           orcamentos={orcamentos}
         />
       </div>

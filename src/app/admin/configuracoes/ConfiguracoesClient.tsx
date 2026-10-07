@@ -1,8 +1,7 @@
 "use client";
 
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
@@ -18,10 +17,11 @@ import type { Orcamento } from "@/lib/orcamentos/types";
 import { DimensionTypeFormModal } from "./DimensionTypeFormModal";
 import { NodeFormModal } from "./NodeFormModal";
 import { StructureFormModal } from "./StructureFormModal";
+import { ImportStructureModal } from "./ImportStructureModal";
 import { ConjuntoFormModal } from "./ConjuntoFormModal";
 import { OrcamentoFormModal } from "./OrcamentoFormModal";
 import { deleteDimensionType, updateFiscalYearStartMonth } from "./_actions";
-import { setDimensionStructureActive, deleteDimensionStructure } from "./_structureActions";
+import { setDimensionStructureActive, deleteDimensionStructure, duplicateDimensionStructure } from "./_structureActions";
 import { deleteConjunto } from "./_conjuntoActions";
 import { deleteOrcamento } from "./_orcamentoActions";
 import { cancelDimensionNode, createDimensionNode } from "../dimensoes/_actions";
@@ -135,7 +135,6 @@ interface ConfiguracoesClientProps {
   fiscalYearStartMonth: number;
   isAdmin: boolean;
   conjuntos: ConjuntoEstruturaWithItems[];
-  structureUsageCounts: Record<string, number>;
   orcamentos: Orcamento[];
 }
 
@@ -150,7 +149,6 @@ export function ConfiguracoesClient({
   fiscalYearStartMonth,
   isAdmin,
   conjuntos,
-  structureUsageCounts,
   orcamentos,
 }: ConfiguracoesClientProps) {
   const router = useRouter();
@@ -235,7 +233,7 @@ export function ConfiguracoesClient({
 
   const [structureModal, setStructureModal] = useState<{
     type: DimensionType;
-    mode: "create" | "rename" | "duplicate";
+    mode: "create" | "rename";
     source: DimensionStructure | null;
   } | null>(null);
   const [structureDeleting, setStructureDeleting] = useState<DimensionStructure | null>(null);
@@ -244,11 +242,44 @@ export function ConfiguracoesClient({
   const [structureToggleId, setStructureToggleId] = useState<string | null>(null);
   const [structureToggleError, setStructureToggleError] = useState<string | null>(null);
 
+  // Duplicar é uma caixa de confirmação simples (como excluir), não um
+  // formulário — o nome da cópia é gerado automaticamente (ver
+  // duplicateNameSuggestion), a usuária só confirma. Pedido dela em 06/10.
+  const [structureDuplicating, setStructureDuplicating] = useState<{ type: DimensionType; source: DimensionStructure } | null>(null);
+  const [structureDuplicateLoading, setStructureDuplicateLoading] = useState(false);
+  const [structureDuplicateError, setStructureDuplicateError] = useState<string | null>(null);
+
+  const [importModal, setImportModal] = useState<{ type: DimensionType; source: DimensionStructure } | null>(null);
+
   function toggleStructureExpanded(typeId: string, structureId: string) {
     setExpandedStructureId((prev) => ({
       ...prev,
       [typeId]: prev[typeId] === structureId ? null : structureId,
     }));
+  }
+
+  // Clique único no título (seta + nome) de uma Estrutura expande/colapsa a
+  // árvore dela; duplo clique no mesmo título abre o rename. Como o browser
+  // sempre dispara dois "click" antes do "dblclick", o toggle de expandir é
+  // adiado um pouco — se um segundo clique chegar nesse meio tempo (ou seja,
+  // virou duplo clique), o toggle agendado é cancelado e só o rename abre.
+  // Pedido da usuária em 06/10 (claude/decisoes-arquitetura.md).
+  const structureClickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function handleStructureTitleClick(typeId: string, structureId: string) {
+    if (structureClickTimer.current) clearTimeout(structureClickTimer.current);
+    structureClickTimer.current = setTimeout(() => {
+      structureClickTimer.current = null;
+      toggleStructureExpanded(typeId, structureId);
+    }, 220);
+  }
+
+  function handleStructureTitleDoubleClick(d: DimensionType, s: DimensionStructure) {
+    if (structureClickTimer.current) {
+      clearTimeout(structureClickTimer.current);
+      structureClickTimer.current = null;
+    }
+    setStructureModal({ type: d, mode: "rename", source: s });
   }
 
   async function handleToggleStructureActive(d: DimensionType, s: DimensionStructure) {
@@ -274,6 +305,22 @@ export function ConfiguracoesClient({
       return;
     }
     setStructureDeleting(null);
+    router.refresh();
+  }
+
+  async function handleConfirmDuplicateStructure() {
+    if (!structureDuplicating) return;
+    setStructureDuplicateLoading(true);
+    setStructureDuplicateError(null);
+    const newName = t("dimensions.duplicateNameSuggestion", { name: structureDuplicating.source.name });
+    const result = await duplicateDimensionStructure({ id: structureDuplicating.source.id, newName, year });
+    setStructureDuplicateLoading(false);
+    if (result.error || !result.id) {
+      setStructureDuplicateError(result.error ?? "Erro inesperado");
+      return;
+    }
+    setExpandedStructureId((prev) => ({ ...prev, [structureDuplicating.type.id]: result.id! }));
+    setStructureDuplicating(null);
     router.refresh();
   }
 
@@ -553,7 +600,8 @@ export function ConfiguracoesClient({
                     <button
                       type="button"
                       className="settings-structure-accordion-toggle"
-                      onClick={() => toggleStructureExpanded(d.id, s.id)}
+                      onClick={() => handleStructureTitleClick(d.id, s.id)}
+                      onDoubleClick={() => handleStructureTitleDoubleClick(d, s)}
                     >
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="m9 6 6 6-6 6" />
@@ -567,11 +615,6 @@ export function ConfiguracoesClient({
                       </span>
                     </button>
                     <span className="settings-structure-row-spacer" />
-                    {(structureUsageCounts[s.id] ?? 0) > 0 && (
-                      <span className="settings-structure-usage-count" title={t("dimensions.usageCountHint")}>
-                        {t("dimensions.usageCount", { count: structureUsageCounts[s.id] })}
-                      </span>
-                    )}
                     <span className={`settings-structure-status-badge${s.is_active ? " is-active" : ""}`}>
                       {s.is_active ? t("dimensions.structureActive") : t("dimensions.structureInactive")}
                     </span>
@@ -598,20 +641,21 @@ export function ConfiguracoesClient({
                           <path strokeLinecap="round" strokeLinejoin="round" d="M16.86 4.49a1.75 1.75 0 1 1 2.47 2.47L7.5 18.79l-3.3.82.82-3.3Z" />
                         </svg>
                       </button>
-                      <Link
-                        href={`/admin/dimensoes/${d.code}/importar?ano=${year}`}
+                      <button
+                        type="button"
                         className="settings-item-icon-btn"
                         title={td("importButton")}
+                        onClick={() => setImportModal({ type: d, source: s })}
                       >
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M12 13V3m0 0-3.5 3.5M12 3l3.5 3.5M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" />
                         </svg>
-                      </Link>
+                      </button>
                       <button
                         type="button"
                         className="settings-item-icon-btn"
                         title={t("dimensions.duplicateStructure")}
-                        onClick={() => setStructureModal({ type: d, mode: "duplicate", source: s })}
+                        onClick={() => setStructureDuplicating({ type: d, source: s })}
                       >
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                           <rect x="8" y="8" width="12" height="12" rx="2" />
@@ -1200,6 +1244,59 @@ export function ConfiguracoesClient({
             )}
           </div>
         </Modal>
+      )}
+
+      {isAdmin && (
+        <Modal
+          open={structureDuplicating !== null}
+          onClose={() => {
+            setStructureDuplicating(null);
+            setStructureDuplicateError(null);
+          }}
+          title={t("dimensions.duplicateStructureConfirmTitle")}
+          size="sm"
+          footer={
+            <>
+              <Button variant="ghost" onClick={() => setStructureDuplicating(null)} disabled={structureDuplicateLoading}>
+                {tc("cancel")}
+              </Button>
+              <Button
+                isLoading={structureDuplicateLoading}
+                loadingText={tc("saving")}
+                onClick={handleConfirmDuplicateStructure}
+              >
+                {t("dimensions.duplicateStructure")}
+              </Button>
+            </>
+          }
+        >
+          <div className="space-y-3">
+            <p className="text-sm text-gray-600">
+              {structureDuplicating &&
+                t.rich("dimensions.duplicateStructureConfirmBody", {
+                  name: structureDuplicating.source.name,
+                  b: (chunks) => <strong className="font-semibold text-gray-900">{chunks}</strong>,
+                })}
+            </p>
+            {structureDuplicateError && (
+              <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+                <p className="text-sm text-red-600">{structureDuplicateError}</p>
+              </div>
+            )}
+          </div>
+        </Modal>
+      )}
+
+      {isAdmin && importModal && (
+        <ImportStructureModal
+          open={importModal !== null}
+          onClose={() => setImportModal(null)}
+          dimensionType={importModal.type}
+          structure={importModal.source}
+          year={year}
+          nodes={nodesByStructure[importModal.source.id] ?? []}
+          onImported={() => router.refresh()}
+        />
       )}
 
       <Modal

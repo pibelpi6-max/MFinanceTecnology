@@ -5,26 +5,27 @@ import { useTranslations } from "next-intl";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import type { DimensionStructure } from "@/lib/dimensions/types";
-import { createDimensionStructure, renameDimensionStructure, duplicateDimensionStructure } from "./_structureActions";
+import { createDimensionStructure, renameDimensionStructure } from "./_structureActions";
 
-type StructureModalMode = "create" | "rename" | "duplicate";
+type StructureModalMode = "create" | "rename";
 
 interface StructureFormModalProps {
   open: boolean;
   onClose: () => void;
   dimensionTypeId: string;
   mode: StructureModalMode;
-  /** Estrutura sendo renomeada (mode="rename") ou duplicada (mode="duplicate"). null em mode="create". */
+  /** Estrutura sendo renomeada (mode="rename"). null em mode="create".
+   * Duplicar virou uma caixa de confirmação simples (ver structureDuplicating
+   * em ConfiguracoesClient.tsx) em vez de passar por este formulário. */
   source: DimensionStructure | null;
   year: number;
-  /** Recebe o id da estrutura criada/renomeada/duplicada, pra já selecioná-la no painel. */
+  /** Recebe o id da estrutura criada/renomeada, pra já selecioná-la no painel. */
   onSaved: (structureId: string) => void;
 }
 
 const TITLE_KEY: Record<StructureModalMode, string> = {
   create: "newStructure",
   rename: "renameStructure",
-  duplicate: "duplicateStructure",
 };
 
 export function StructureFormModal({
@@ -33,7 +34,6 @@ export function StructureFormModal({
   dimensionTypeId,
   mode,
   source,
-  year,
   onSaved,
 }: StructureFormModalProps) {
   const t = useTranslations("settings.dimensions");
@@ -45,11 +45,9 @@ export function StructureFormModal({
 
   useEffect(() => {
     if (!open) return;
-    if (mode === "rename") setName(source?.name ?? "");
-    else if (mode === "duplicate") setName(source ? t("duplicateNameSuggestion", { name: source.name }) : "");
-    else setName("");
+    setName(mode === "rename" ? source?.name ?? "" : "");
     setError(null);
-  }, [open, mode, source, t]);
+  }, [open, mode, source]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -60,9 +58,7 @@ export function StructureFormModal({
     const result =
       mode === "rename" && source
         ? await renameDimensionStructure({ id: source.id, name: trimmed })
-        : mode === "duplicate" && source
-          ? await duplicateDimensionStructure({ id: source.id, newName: trimmed, year })
-          : await createDimensionStructure({ dimensionTypeId, name: trimmed });
+        : await createDimensionStructure({ dimensionTypeId, name: trimmed });
 
     setLoading(false);
     if (result.error || !result.id) {
@@ -99,7 +95,6 @@ export function StructureFormModal({
             autoFocus
             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
           />
-          {mode === "duplicate" && <p className="mt-1 text-[11px] text-gray-400">{t("duplicateStructureHint")}</p>}
         </div>
         {error && (
           <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2">

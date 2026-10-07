@@ -276,6 +276,8 @@
       "deleteStructureConfirmBody": "Deseja excluir a estrutura <b>{name}</b> permanentemente?",
       "duplicateNameSuggestion": "{name} (cópia)",
       "duplicateStructureHint": "Copia todos os itens da estrutura de origem (como estão hoje) para a nova estrutura.",
+      "duplicateStructureConfirmTitle": "Duplicar estrutura",
+      "duplicateStructureConfirmBody": "Deseja duplicar a estrutura <b>{name}</b>? Uma cópia com todos os itens será criada.",
       "typeLabel": "Tipo",
       "usageCount": "Usada em {count} conjunto(s)",
       "usageCountHint": "Quantos Conjuntos de Estrutura usam esta estrutura"

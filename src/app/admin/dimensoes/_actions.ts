@@ -185,13 +185,17 @@ export async function updateDimensionNode(input: {
 
 export async function importDimensionNodes(input: {
   dimensionTypeId: string;
+  /** Estrutura de destino. Quando o chamador já sabe qual (modal de
+   * importação por Estrutura em Parâmetros — ver ImportStructureModal),
+   * passa aqui; senão cai pra Estrutura ATIVA do tipo, como antes. */
+  structureId?: string;
   year: number;
   rows: { values: Record<string, string> }[];
 }): Promise<{ successCount: number; errorCount: number; errors: { rowIndex: number; message: string }[] }> {
   const { tenantId } = await requireTenant();
   const supabase = await createClient();
 
-  const structureId = await resolveStructureId(supabase, tenantId, input.dimensionTypeId, null);
+  const structureId = await resolveStructureId(supabase, tenantId, input.dimensionTypeId, input.structureId);
   if (!structureId) {
     return {
       successCount: 0,
