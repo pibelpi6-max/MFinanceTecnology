@@ -19,8 +19,34 @@ function computeLevel(parent: { level: number } | null): number {
   return parent ? parent.level + 1 : 1;
 }
 
+/**
+ * Resolve em qual Estrutura (ver dimension_structures, migration 0012) um
+ * novo item deve entrar. Se o chamador já sabe (telas que navegam por
+ * estrutura, como o painel "Estruturas" em Parâmetros), usa esse id
+ * direto; senão cai pra Estrutura ATIVA do tipo — mantém os chamadores
+ * antigos (assistente de importação em /admin/dimensoes/[tipo]/importar)
+ * funcionando sem precisar saber de "Estruturas".
+ */
+async function resolveStructureId(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  tenantId: string,
+  dimensionTypeId: string,
+  structureId: string | null | undefined
+): Promise<string | null> {
+  if (structureId) return structureId;
+  const { data } = await supabase
+    .from("dimension_structures")
+    .select("id")
+    .eq("tenant_id", tenantId)
+    .eq("dimension_type_id", dimensionTypeId)
+    .eq("is_active", true)
+    .maybeSingle();
+  return data?.id ?? null;
+}
+
 export async function createDimensionNode(input: {
   dimensionTypeId: string;
+  structureId?: string;
   code: string;
   name: string;
   parentNodeId: string | null;
@@ -29,6 +55,11 @@ export async function createDimensionNode(input: {
   try {
     const { tenantId } = await requireTenant();
     const supabase = await createClient();
+
+    const structureId = await resolveStructureId(supabase, tenantId, input.dimensionTypeId, input.structureId);
+    if (!structureId) {
+      return { error: "Esta dimensão não tem uma estrutura ativa. Ative uma estrutura em Parâmetros antes de adicionar itens." };
+    }
 
     let level = 1;
     if (input.parentNodeId) {
@@ -48,6 +79,7 @@ export async function createDimensionNode(input: {
       .insert({
         tenant_id: tenantId,
         dimension_type_id: input.dimensionTypeId,
+        structure_id: structureId,
         code: input.code,
       })
       .select("id")
@@ -79,6 +111,7 @@ export async function updateDimensionNode(input: {
   versionId: string;
   currentValidFromYear: number;
   name: string;
+  code?: string;
   parentNodeId: string | null;
   year: number;
 }): Promise<ActionResult> {
@@ -98,6 +131,23 @@ export async function updateDimensionNode(input: {
       level = computeLevel(parentVersion);
     }
     if (level > 10) return { error: "Profundidade máxima de 10 níveis atingida." };
+
+    // Código vive em dimension_nodes (não é versionado por ano, ao contrário
+    // de nome/pai) — atualiza à parte, só quando veio preenchido e mudou.
+    if (input.code !== undefined) {
+      const { error: codeError } = await supabase
+        .from("dimension_nodes")
+        .update({ code: input.code })
+        .eq("id", input.nodeId);
+      if (codeError) {
+        return {
+          error:
+            codeError.code === "23505"
+              ? `Já existe um item com o código "${input.code}".`
+              : codeError.message,
+        };
+      }
+    }
 
     if (input.currentValidFromYear === input.year) {
       const { error } = await supabase
@@ -135,11 +185,24 @@ export async function updateDimensionNode(input: {
 
 export async function importDimensionNodes(input: {
   dimensionTypeId: string;
+  /** Estrutura de destino. Quando o chamador já sabe qual (modal de
+   * importação por Estrutura em Parâmetros — ver ImportStructureModal),
+   * passa aqui; senão cai pra Estrutura ATIVA do tipo, como antes. */
+  structureId?: string;
   year: number;
   rows: { values: Record<string, string> }[];
 }): Promise<{ successCount: number; errorCount: number; errors: { rowIndex: number; message: string }[] }> {
   const { tenantId } = await requireTenant();
   const supabase = await createClient();
+
+  const structureId = await resolveStructureId(supabase, tenantId, input.dimensionTypeId, input.structureId);
+  if (!structureId) {
+    return {
+      successCount: 0,
+      errorCount: input.rows.length,
+      errors: [{ rowIndex: 0, message: "Esta dimensão não tem uma estrutura ativa. Ative uma estrutura em Parâmetros antes de importar." }],
+    };
+  }
 
   const errors: { rowIndex: number; message: string }[] = [];
   let successCount = 0;
@@ -173,7 +236,7 @@ export async function importDimensionNodes(input: {
 
     const { data: node, error: nodeError } = await supabase
       .from("dimension_nodes")
-      .insert({ tenant_id: tenantId, dimension_type_id: input.dimensionTypeId, code })
+      .insert({ tenant_id: tenantId, dimension_type_id: input.dimensionTypeId, structure_id: structureId, code })
       .select("id")
       .single();
     if (nodeError) {

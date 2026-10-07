@@ -106,6 +106,33 @@
 .admin-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0; min-width: 0; }
 .admin-main > main, .admin-page-content { flex: 1; overflow-y: auto; min-height: 0; display: flex; flex-direction: column; }
 
+/* Scrollbar vertical das áreas de conteúdo — mesmo tom azul-petróleo das tabelas */
+.admin-page-content,
+.admin-content--scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #7dabc9 rgba(125, 171, 201, 0.12);
+}
+.admin-page-content::-webkit-scrollbar,
+.admin-content--scroll::-webkit-scrollbar {
+  width: 10px;
+}
+.admin-page-content::-webkit-scrollbar-track,
+.admin-content--scroll::-webkit-scrollbar-track {
+  background: rgba(125, 171, 201, 0.12);
+  border-radius: 999px;
+}
+.admin-page-content::-webkit-scrollbar-thumb,
+.admin-content--scroll::-webkit-scrollbar-thumb {
+  background: #7dabc9;
+  border-radius: 999px;
+}
+.admin-page-content::-webkit-scrollbar-thumb:hover,
+.admin-content--scroll::-webkit-scrollbar-thumb:hover,
+.admin-page-content::-webkit-scrollbar-thumb:active,
+.admin-content--scroll::-webkit-scrollbar-thumb:active {
+  background: #4f7f9c;
+}
+
 .admin-topbar { background: #fff; border-bottom: 1px solid rgba(0,0,0,.06); padding: 0 24px; height: 56px; display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-shrink: 0; }
 .admin-topbar-logo { font-size: 15px; font-weight: 700; letter-spacing: -.01em; color: #ccc; }
 .admin-topbar-logo span { color: #3E6FE0; }
@@ -181,16 +208,16 @@
 .tree-guide-col { position: relative; width: 16px; flex: 0 0 16px; align-self: stretch; }
 .tree-guide-col.is-continuing:not(.tree-guide-col--own)::before {
   content: ""; position: absolute; top: 0; bottom: 0; left: 7px;
-  border-left: 1.5px dashed rgba(17,24,39,.14);
+  border-left: 1.5px solid rgba(17,24,39,.16);
 }
 .tree-guide-col--own::before {
   content: ""; position: absolute; top: 0; left: 7px; bottom: 50%;
-  border-left: 1.5px dashed rgba(17,24,39,.14);
+  border-left: 1.5px solid rgba(17,24,39,.16);
 }
 .tree-guide-col--own.is-continuing::before { bottom: 0; }
 .tree-guide-col--own::after {
   content: ""; position: absolute; top: 50%; left: 7px; width: 9px;
-  border-top: 1.5px dashed rgba(17,24,39,.14);
+  border-top: 1.5px solid rgba(17,24,39,.16);
 }
 
 .tree-row-enter { animation: treeRowFadeIn 180ms ease; }
@@ -262,14 +289,21 @@
 .comparativo-row-over td { background: rgba(220,38,38,.04); }
 
 /* ── Parâmetros (Configurações) ───────────────────────── */
-.admin-content--scroll { overflow-y: auto; overflow-x: hidden; }
+/* padding-bottom extra: a DataTable (Tipos de dimensão) tem uma
+   "fake scrollbar" horizontal fixa no rodapé do BROWSER (20px, ver
+   DataTable.tsx) que assume quando a real sai da tela — o que acontece
+   sempre que uma Estrutura é expandida (a árvore de itens deixa a linha
+   bem alta). Sem essa folga, o botão "+ item" final acaba renderizando
+   bem na hora em que essa barra fixa aparece, parecendo um bug visual.
+   20px da barra + 20px de respiro. */
+.admin-content--scroll { overflow-y: auto; overflow-x: hidden; padding-bottom: 40px; }
 
 .settings-panel { background: #fff; border-radius: 14px; border: 1px solid rgba(0,0,0,.06); width: 100%; overflow: hidden; }
 .settings-block { padding: 18px 32px; }
 .settings-divider { height: 1px; background: rgba(0,0,0,.06); }
 .settings-block-title { font-size: 14.5px; font-weight: 700; color: var(--text-strong); margin: 0; }
 .settings-block-intro { font-size: 12.5px; color: var(--text-muted); line-height: 1.5; margin: 0; }
-.settings-block-subtitle-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; margin-top: -6px; margin-bottom: 14px; }
+.settings-block-subtitle-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; margin-top: 4px; margin-bottom: 14px; }
 .settings-block-actions { margin-top: 14px; margin-bottom: 12px; }
 .settings-inline-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
 .settings-saved-hint { color: #15803d; font-size: 12px; font-weight: 600; }
@@ -282,7 +316,9 @@
 .settings-progress-block-label { display: flex; justify-content: space-between; align-items: baseline; font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
 .settings-progress-block-value { font-weight: 700; color: var(--text-strong); font-variant-numeric: tabular-nums; }
 .settings-progress-block-bar { height: 6px; border-radius: 4px; background: rgba(62,111,224,.12); overflow: hidden; }
-.settings-progress-block-fill { height: 100%; background: #3E6FE0; border-radius: 4px; transition: width .2s ease; }
+/* Azul (normal) → laranja a partir de 7/10 (atenção) → vermelho em 10/10 (limite atingido) */
+.settings-progress-block-fill { height: 100%; background: #3E6FE0; border-radius: 4px; transition: width .2s ease, background-color .2s ease; }
+.settings-progress-block-fill--warning { background: #e8900c; }
 .settings-progress-block-fill--full { background: #c62828; }
 
 .settings-table { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -326,26 +362,397 @@
 .settings-structure-embedded { padding: 0; }
 .settings-structure-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 0 8px; gap: 12px; }
 .settings-structure-label { font-size: 10.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--text-muted); }
-.settings-structure-actions { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
-.settings-structure-import-link { font-size: 12px; font-weight: 600; color: var(--text-muted); background: none; border: none; cursor: pointer; }
-.settings-structure-import-link:hover { color: #3E6FE0; }
+/* margin-left:auto garante alinhamento à direita tanto quando há um
+   label ao lado (space-between cuida disso) quanto quando este é o único
+   filho da linha (ex.: cabeçalho de "itens da dimensão", sem título,
+   ver ConfiguracoesClient) — sem o auto, único filho em space-between
+   cairia à esquerda. */
+.settings-structure-actions { display: flex; align-items: center; gap: 14px; flex-shrink: 0; margin-left: auto; }
 .settings-structure-empty { font-size: 12.5px; color: var(--text-muted); padding: 6px 0 8px; }
 
-.settings-item-row { display: flex; align-items: center; gap: 1px; padding: 5px 8px; border-radius: 7px; }
+.settings-item-row { position: relative; display: flex; align-items: center; gap: 1px; padding: 7px 8px; border-radius: 7px; }
 .settings-item-row:hover { background: rgba(0,0,0,.03); }
 .settings-item-row:hover .settings-item-actions { opacity: 1; }
+
+/* Variante pontilhada da guia da árvore — só na árvore de itens de
+   Configurações, a pedido da usuária depois de ver uma referência com
+   linha pontilhada (em vez da sólida que o TreeGuides desenha por
+   padrão). Reaproveita o mesmo .tree-guide-col do seletor de pai
+   (NodeFormModal) e da árvore da Matriz, mas sem tocar na regra base —
+   as outras duas árvores continuam com a linha sólida de sempre.
+   Primeira tentativa foi só trocar border-*-style pra "dotted", mas o
+   resultado saiu com espaçamento irregular entre uma linha e outra: o
+   border-style:dotted nativo do navegador tenta encaixar um número
+   inteiro de bolinhas dentro de CADA segmento, e como cada segmento é
+   uma caixinha curta e independente (ver comentário acima, em
+   renderNodeRow, sobre a guia não ser mais uma borda contínua), caixas
+   de altura ligeiramente diferente ficam com bolinhas mais ou menos
+   espaçadas entre si. Trocar o border por um background-image com
+   período fixo (4px) resolve: em vez do navegador decidir quantas
+   bolinhas cabem em cada caixa, o mesmo padrão de 4px é sempre repetido
+   e simplesmente cortado na borda — todo segmento mostra o mesmo ritmo,
+   não importa a altura dele. */
+.settings-item-row .tree-guide-col.is-continuing:not(.tree-guide-col--own)::before,
+.settings-item-row .tree-guide-col--own::before {
+  border-left: none;
+  width: 1.5px;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(17,24,39,.28) 0,
+    rgba(17,24,39,.28) 1.5px,
+    transparent 1.5px,
+    transparent 4px
+  );
+}
+/* .tree-guide-col só "esticava" (align-self: stretch) até a CAIXA DE
+   CONTEÚDO da linha — o padding vertical de 7px da .settings-item-row
+   (ver regra logo acima) fica de fora. Pras colunas de ancestral (retas,
+   sem "degrau" — mesma profundidade entre uma linha e outra) isso já
+   basta: esticar 7px pra cima/baixo encosta na borda real da linha.
+   Mas a coluna "own" é diferente: ela é quem desenha o "degrau" pedido
+   pela usuária — em vez de duas colunas paralelas (traço do pai
+   esticado pra baixo + traço do filho, ligeiramente desencontrados em
+   X), o traço do FILHO sobe direto até a altura do COTOVELO do pai (ou
+   do irmão anterior), criando um zigue-zague único: desce reto, dá um
+   passo pro lado no cotovelo, desce reto de novo dali. A altura de uma
+   linha é fixa (38px = 7px padding + 24px conteúdo), e o cotovelo fica
+   a meia altura do conteúdo (12px) — então o topo da coluna "own"
+   precisa subir 7 (padding da própria linha) + 19 (padding da linha de
+   cima + metade do conteúdo dela) = 26px pra alcançar exatamente o
+   cotovelo de quem está acima, não só a borda da linha de cima.
+   Embaixo, só estica quando a própria coluna está "continuing" (mais
+   IRMÃOS de verdade depois — mesma profundidade, sem degrau, por isso
+   7px de borda real já basta ali). */
+.settings-item-row .tree-guide-col.is-continuing:not(.tree-guide-col--own)::before {
+  top: -7px;
+  bottom: -7px;
+}
+.settings-item-row .tree-guide-col--own::before {
+  top: -26px;
+}
+.settings-item-row .tree-guide-col--own.is-continuing::before {
+  bottom: -7px;
+}
+/* O -26px acima assume que a linha logo ACIMA (na ordem do DOM) é o
+   PAI desta, terminando num cotovelo a meia altura (a "degrau" clássico
+   da escada) — por isso precisa subir mais pra alcançar esse meio da
+   linha de cima. Isso só é verdade quando este nó é o PRIMEIRO filho
+   do pai (primeiro `<div key={node.id}>` dentro do
+   `.settings-item-children` do pai — ver renderNodeRow). Quando é um
+   IRMÃO seguinte (ex.: "Zebra irmao" depois de "Novo item", que por
+   sua vez tem seus próprios filhos), a linha logo acima no DOM não é
+   o pai — é o último descendente da subárvore do irmão anterior,
+   cujo traço de ancestral "is-continuing" já vem descendo reto (sem
+   cotovelo, só 7px de borda) bem na mesma posição X (ver correções de
+   alinhamento acima). Nesse caso o -26px soma 19px A MAIS do que
+   precisa, invadindo pra cima da borda da linha anterior e desenhando
+   por cima do traço que já está ali — duas bolinhas no mesmo lugar,
+   parecendo uma linha "grossa"/dobrada (reportado pela usuária).
+   `.settings-item-children > div:not(:first-child) > .settings-item-row`
+   identifica exatamente esse caso de "irmão seguinte, não o primeiro
+   filho" sem precisar de prop nova — e vale pra qualquer profundidade,
+   por isso uma regra só resolve tanto "Zebra irmao" (1º nível) quanto
+   um irmão de um neto mais fundo. */
+.settings-item-children > div:not(:first-child) > .settings-item-row .tree-guide-col--own::before {
+  top: -7px;
+}
+/* O traço horizontal (base, 9px) termina exatamente na borda da coluna
+   de 16px — mas o botão de expandir/colapsar (TreeExpand, compartilhado
+   com as outras árvores) tem 22px com o ícone centralizado nele, então
+   sobra ~5.5px de espaço em branco entre o fim do traço e o chevron.
+   15px fechava a caixa do <svg> (confirmado por getBoundingClientRect),
+   mas o glyph do ChevronRight (lucide) não ocupa o <svg> inteiro — o
+   viewBox é 24x24 e o path do "v" só cobre a faixa 9–15, deixando uns
+   3px de respiro dentro do próprio ícone antes do traço desenhado
+   aparecer de verdade. Resultado: mesmo com a caixa do <svg> "fechada",
+   sobrava um vão visível até o traço do chevron em si (medido por
+   getBoundingClientRect do <path>, não do <svg>). 20px cobre esse
+   respiro interno também, com um pouco de sobra proposital (a bolinha
+   final entra uns 2px por baixo do traço do chevron) pra garantir
+   contato visual mesmo com antialiasing.
+   O gradiente é ancorado em "to left" (não "to right"): como o período
+   de 4px nem sempre cabe um número inteiro de vezes dentro da largura,
+   ancorar pela esquerda podia deixar a ÚLTIMA bolinha alguns px antes
+   do fim da caixa (a reportada "linha não está colando no chevron") —
+   ancorando pela direita, a bolinha final sempre cai exatamente na
+   borda direita da caixa, não importa a largura. */
+.settings-item-row .tree-guide-col--own::after {
+  border-top: none;
+  height: 1.5px;
+  width: 20px;
+  background-image: repeating-linear-gradient(
+    to left,
+    rgba(17,24,39,.28) 0,
+    rgba(17,24,39,.28) 1.5px,
+    transparent 1.5px,
+    transparent 4px
+  );
+}
+/* A partir do segundo nível de indentação em diante (neto do item
+   raiz, bisneto, ...), o traço vertical da coluna "own" não pode
+   ficar preso no grid fixo de 16px por profundidade (left: 7px,
+   regra base acima) — isso faz ele nascer alguns pixels à ESQUERDA
+   de onde o cotovelo da linha de cima realmente termina, abrindo um
+   "degrau errado" visível (reportado pela usuária: o traço aparece
+   descolado, não embaixo do chevron de cima).
+   Toda coluna "own" tem sempre 16px de largura, e o cotovelo de
+   qualquer linha sempre termina no mesmo deslocamento LOCAL dentro
+   da própria caixa — 7px (início) + 20px (traço) = 27px — que é onde
+   o chevron DAQUELA linha fica, não importa a profundidade (ver
+   comentário acima sobre os 20px). Então o deslocamento que a
+   PRÓXIMA coluna "own" precisa usar pra pousar exatamente nesse
+   ponto também não depende da profundidade: 27 (fim do cotovelo de
+   cima) − 16 (largura de uma coluna) = 11px, sempre. A largura do
+   traço horizontal cai de 20 pra 16 pra manter o fim fixo em 27
+   (11 + 16 = 27) — sem isso o traço passaria do próprio chevron.
+   Essa fórmula (27 − 16 = 11) só vale a partir da profundidade 2,
+   porque ela depende da linha de cima TER um cotovelo pra herdar o
+   fim fixo de 27px. `:nth-child(n+3)` identifica essa posição sem
+   precisar de uma prop nova: dentro de `.tree-guides`, a coluna
+   "own" é sempre o último filho, e só é o 3º filho (ou mais) quando
+   há pelo menos 2 colunas de ancestral antes dela — ou seja,
+   profundidade ≥ 2.
+   Em itens-folha (sem chevron), a regra de `width: 37px` logo abaixo
+   tem mais especificidade (usa :has()) e continua valendo por cima
+   desta — só o `left` desta regra se aplica ali, a largura não. */
+.settings-item-row .tree-guide-col--own:nth-child(n+3)::before {
+  left: 11px;
+}
+.settings-item-row .tree-guide-col--own:nth-child(n+3)::after {
+  left: 11px;
+  width: 16px;
+}
+/* A PRIMEIRA coluna "own" (filha direta da raiz, 2º filho de
+   `.tree-guides`) é um caso à parte: a linha de cima (a raiz) não
+   passa pelo TreeGuides — ele retorna null em depth 0 — então não
+   existe cotovelo nenhum ali pra herdar o "fim fixo em 27px" que a
+   regra acima usa. O alvo, nesse caso, é o chevron da PRÓPRIA raiz
+   (medido direto, via getBoundingClientRect do <path> do ícone):
+   fica 5px à ESQUERDA do início da caixa "own" de 16px (em vez de
+   dentro dela), porque a raiz não tem nenhuma coluna de guia
+   ocupando espaço antes do chevron dela — só esta primeira coluna
+   "own" tem, então ela "avança demais" para a direita em relação ao
+   chevron da raiz se usar o mesmo left:7px das demais.
+   left: -5px (fora da própria caixa, invadindo a coluna vizinha à
+   esquerda — não tem problema, não há nada desenhado ali) e
+   width: 32px no traço horizontal pra manter o fim em 27px (-5 + 32
+   = 27), continuando a tocar o chevron da PRÓPRIA linha (não o da
+   raiz) normalmente. */
+.settings-item-row .tree-guide-col--own:nth-child(2)::before {
+  left: -5px;
+}
+.settings-item-row .tree-guide-col--own:nth-child(2)::after {
+  left: -5px;
+  width: 32px;
+}
+/* As duas regras acima só reposicionam a coluna "own" — o cotovelo
+   da PRÓPRIA linha. Mas o mesmo traço, quando esse nó TEM mais
+   irmãos depois dele (ex.: "Novo item" não é o último filho de
+   "agfdsgs"), continua para baixo como uma coluna de ANCESTRAL
+   "is-continuing" em toda linha descendente (filhos, netos...) —
+   ou seja, a MESMA linha visual, só que desenhada por um elemento
+   diferente (`.tree-guide-col.is-continuing`, não `--own`) nas
+   linhas de baixo. Essa coluna de ancestral continuava usando o
+   left:7px antigo (regra-base, nunca tocada pelas correções acima,
+   que mexeram só em `--own`) — por isso ficava rodando em paralelo,
+   a poucos pixels de distância do cotovelo que a originou, dando a
+   impressão de DUAS linhas sobrepostas em vez de uma só contínua
+   (reportado pela usuária). A posição de cada coluna de ancestral
+   depende de QUAL profundidade ela representa, não da profundidade
+   da linha atual — e por sorte do grid de 16px, o índice do filho
+   dentro de `.tree-guides` é o mesmo nos dois casos: a coluna que
+   representa a profundidade 1 é sempre o 2º filho (`nth-child(2)`),
+   seja como cotovelo "own" (quando a própria linha está nessa
+   profundidade) ou como coluna de ancestral "is-continuing" (nas
+   linhas mais fundas) — por isso os mesmos valores (-5px / 11px)
+   se aplicam aqui, só trocando o seletor de `--own` para
+   `.is-continuing:not(--own)` (a variante "reta", sem cotovelo). */
+.settings-item-row .tree-guide-col.is-continuing:not(.tree-guide-col--own):nth-child(2)::before {
+  left: -5px;
+}
+.settings-item-row .tree-guide-col.is-continuing:not(.tree-guide-col--own):nth-child(n+3)::before {
+  left: 11px;
+}
+/* Nos itens sem filho (folha da árvore) não existe chevron — o
+   TreeExpand vira um spacer vazio de 22px, e o texto do item começa
+   logo depois dele. Sem um ícone pra "mirar", a pedido da usuária o
+   traço estende até a primeira letra do nome em vez de parar na
+   posição onde um chevron ficaria. `:has(+ .tree-expand-spacer)`
+   detecta esse caso (TreeGuides seguido do spacer, não do botão) sem
+   precisar de uma prop/classe nova no componente.
+   width:37px aqui pressupõe left:7px (o valor-base, usado quando
+   nenhuma das regras de profundidade acima se aplica) — fim fixo em
+   44 (7+37), onde a primeira letra do nome começa. Como left muda
+   por profundidade (ver regras acima), as duas regras seguintes
+   corrigem a largura PRA CADA CASO, mantendo esse mesmo fim em 44
+   (44 − left = width), senão o traço some demais (left:-5, 1º nível)
+   ou invade a letra (left:11, 2º nível em diante — foi exatamente
+   esse o bug relatado: o traço cruzando por cima do texto). */
+.settings-item-row .tree-guides:has(+ .tree-expand-spacer) .tree-guide-col--own::after {
+  width: 37px;
+}
+.settings-item-row .tree-guides:has(+ .tree-expand-spacer) .tree-guide-col--own:nth-child(2)::after {
+  width: 49px;
+}
+.settings-item-row .tree-guides:has(+ .tree-expand-spacer) .tree-guide-col--own:nth-child(n+3)::after {
+  width: 33px;
+}
+
+/* Wrapper dos filhos de um item. Não leva mais indentação/borda própria
+   (margin-left/padding-left/border-left) — isso causava uma linha
+   vertical contínua que cobria a altura inteira do conteúdo do bloco,
+   então numa cadeia de filho único (a > b > c > d...) as guias de avô,
+   pai e filho ficavam todas paralelas até o fundo, sem nunca "terminar"
+   (ver comentário em renderNodeRow). A indentação e as guias agora vêm
+   de `TreeGuides` desenhado dentro de cada `.settings-item-row` — este
+   div só existe pra agrupar os filhos no DOM (recursão de verdade).
+   Sem margin-top: com a correção do traço esticando até a borda real da
+   linha (ver `.tree-guide-col--own::before` acima), qualquer margem aqui
+   volta a abrir um vão entre o traço do pai e o do filho logo abaixo. */
+.settings-item-children { margin-top: 0; }
+/* O nome do item e o "+" de adicionar filho ficam juntos, encostados no
+   texto (não mais espalhados pelas pontas da linha) — pedido da usuária
+   em 06/10: o "+" deve aparecer "no fim do texto e no hover", não lá no
+   fim da linha. Por isso .settings-item-name-wrap é que encolhe
+   (flex: 0 1 auto), e não .settings-item-name sozinho como antes —
+   mesmo padrão já usado em .settings-structure-accordion-toggle, logo
+   abaixo. Quem empurra as ações pra direita é o
+   .settings-structure-row-spacer de sempre, reaproveitado aqui. */
+.settings-item-name-wrap { display: flex; align-items: center; gap: 2px; flex: 0 1 auto; min-width: 0; }
 .settings-item-name {
-  flex: 1; min-width: 0; text-align: left; background: none; border: none; cursor: pointer;
+  min-width: 0; text-align: left; background: none; border: none; cursor: pointer;
   padding: 2px 4px; font-size: 13px; color: var(--text-strong); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .settings-item-name:hover { color: #3E6FE0; }
+/* Só aparece no hover da linha — mesma lógica do .settings-item-actions
+   logo abaixo, mas fora dele porque fica colado ao nome, não no grupo de
+   ações à direita. */
+.settings-item-add-inline { opacity: 0; transition: opacity .12s ease; }
+.settings-item-row:hover .settings-item-add-inline { opacity: 1; }
 .settings-item-actions { display: flex; align-items: center; gap: 2px; opacity: 0; transition: opacity .12s ease; flex-shrink: 0; }
 .settings-item-icon-btn {
   width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center;
   border-radius: 6px; color: #9ca3af; border: none; background: transparent; cursor: pointer;
+  text-decoration: none; flex-shrink: 0;
 }
 .settings-item-icon-btn:hover { background: rgba(0,0,0,.06); color: #374151; }
 .settings-item-icon-btn--danger:hover { background: rgba(220,38,38,.08); color: #dc2626; }
+/* Separa a ação destrutiva (excluir) das demais (importar/renomear/
+   duplicar), que são seguras e reversíveis — convenção comum pra
+   reduzir clique acidental em exclusão: ver settings-item-actions-divider
+   logo antes do botão de lixeira, na pill de cada estrutura. */
+.settings-item-actions-divider { width: 1px; height: 14px; background: rgba(0,0,0,.1); margin: 0 3px; flex-shrink: 0; }
+
+/* Edição inline de item (duplo clique no nome, ou lápis): a própria
+   linha vira um mini-formulário [código][nome] + salvar/cancelar, no
+   lugar do NodeFormModal (popup) que existia antes — pedido da usuária
+   em 06/10, ver comentário perto de `editingNodeId` em
+   ConfiguracoesClient.tsx. Código vem primeiro e bem estreito (poucos
+   caracteres de verdade), nome ocupa o resto da linha. */
+.settings-item-row--editing { gap: 6px; }
+.settings-item-edit-input {
+  font-size: 13px; color: var(--text-strong); background: #fff;
+  border: 1px solid rgba(62,111,224,.4); border-radius: 6px; padding: 3px 7px;
+  outline: none;
+}
+.settings-item-edit-input:focus { border-color: #3E6FE0; box-shadow: 0 0 0 2px rgba(62,111,224,.15); }
+.settings-item-edit-input--code { width: 72px; flex-shrink: 0; }
+.settings-item-edit-input--name { flex: 1; min-width: 0; }
+
+/* Criação inline na árvore de itens (igual à dinâmica de "plano de aulas"
+   do desenhe-app): um botão "+ item" aparece logo depois dos filhos de
+   cada nó aberto (e um geral no nível raiz, no fim da árvore), criando o
+   filho na hora — sem abrir modal. Ver handleInlineAddNode. */
+.settings-item-row--add { padding: 3px 8px 5px; }
+.settings-item-add-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: 7px;
+  border: 1px dashed rgba(62,111,224,.4);
+  color: #3E6FE0; background: transparent;
+  font-size: 11px; font-weight: 500;
+  cursor: pointer; transition: all 120ms ease;
+}
+.settings-item-add-btn:hover { background: rgba(62,111,224,.08); border-style: solid; }
+.settings-item-add-btn:disabled { opacity: .5; cursor: default; }
+
+/* ── Estruturas (Parâmetros > Dimensões > Estruturas) ───
+   Lista vertical em acordeão: clicar numa estrutura expande, dentro da
+   própria linha, a árvore de itens dela (uma por vez). Terceira
+   iteração deste layout (05/10) — passou por um desenho empilhado e
+   depois por uma tela dividida (lista + árvore lado a lado, prototipada
+   num canvas de Design), mas a usuária preferiu voltar ao acordeão
+   depois de ver as duas rodando. Nome truncado + tooltip no hover
+   (`.settings-structure-accordion-name`), já que a largura da linha é
+   compartilhada com badge/switch/ações. */
+.settings-structure-accordion-list { display: flex; flex-direction: column; gap: 4px; }
+.settings-structure-accordion {
+  border: 1px solid rgba(0,0,0,.06); border-radius: 10px; background: #fff; overflow: hidden;
+}
+.settings-structure-accordion.is-expanded { border-color: rgba(62,111,224,.3); }
+.settings-structure-accordion-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; }
+/* flex:0 1 auto — o botão só ocupa o espaço do próprio conteúdo (seta +
+   nome), em vez de esticar até o fim da linha. Quem absorve o espaço
+   sobrando e empurra badge/switch/ações pra direita é o
+   .settings-structure-row-spacer, logo depois (ver renderStructureContent
+   em ConfiguracoesClient.tsx — o lápis de renomear voltou a ficar junto
+   dos outros ícones de ação, à direita, a pedido da usuária em 06/10).
+   min-width:0 continua garantindo que o nome truncado (ver
+   .settings-structure-accordion-name) consiga encolher quando precisa. */
+.settings-structure-accordion-toggle {
+  display: flex; align-items: center; gap: 8px; flex: 0 1 auto; min-width: 0;
+  background: none; border: none; cursor: pointer; padding: 0; text-align: left;
+}
+.settings-structure-accordion-toggle svg { flex-shrink: 0; color: #9ca3af; transition: transform 150ms ease; }
+.settings-structure-accordion.is-expanded .settings-structure-accordion-toggle svg { transform: rotate(90deg); }
+.settings-structure-accordion-name { font-size: 13px; font-weight: 600; color: var(--text-strong); }
+.settings-structure-accordion-toggle:hover .settings-structure-accordion-name { color: #3E6FE0; }
+.settings-structure-row-spacer { flex: 1 1 0%; min-width: 0; }
+.settings-structure-accordion-body {
+  border-top: 1px solid rgba(0,0,0,.06); padding: 4px 14px 14px 36px; background: #FAFBFC;
+  overflow-x: hidden; min-width: 0;
+}
+/* min-width + justify-content:center garante que a pill "Ativa"/"Inativa"
+   tenha sempre a mesma largura (antes cada uma tinha a largura do
+   próprio texto — "Inativa" é mais larga que "Ativa" — e a pill
+   "pulava" de tamanho ao trocar o estado). 58px cobre "Inativa" (a
+   palavra mais larga das duas) com a mesma folga de padding das duas. */
+.settings-structure-status-badge {
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+  min-width: 58px; padding: 2px 8px; border-radius: 999px;
+  font-size: 10px; font-weight: 600; white-space: nowrap; background: #f1f2f6; color: #5b5f76;
+}
+.settings-structure-status-badge.is-active { background: rgba(92,184,138,.14); color: #0F6E56; }
+
+/* Contador "Usada em N conjuntos" — ao lado da pill Ativa/Inativa, só
+   informativo (ver claude/decisoes-arquitetura.md, "Orçamento (entidade
+   nova, versões/revisões)"). Reaproveitado também nas linhas de Conjunto
+   de Estruturas e Orçamentos abaixo. */
+.settings-structure-usage-count {
+  flex-shrink: 0; font-size: 10.5px; color: var(--text-muted); white-space: nowrap;
+}
+
+/* Switch compacto ativa/inativa — reaproveita o azul de marca pro "on". */
+.settings-structure-switch { position: relative; flex-shrink: 0; display: inline-block; width: 30px; height: 17px; }
+.settings-structure-switch input {
+  position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; z-index: 1;
+}
+.settings-structure-switch input:disabled { cursor: not-allowed; }
+.settings-structure-switch-track {
+  position: absolute; inset: 0; border-radius: 999px; background: #d1d5db; transition: background-color 150ms ease;
+}
+.settings-structure-switch-track::before {
+  content: ""; position: absolute; top: 2px; left: 2px; width: 13px; height: 13px; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.25); transition: transform 150ms ease;
+}
+.settings-structure-switch input:checked + .settings-structure-switch-track { background: #3E6FE0; }
+.settings-structure-switch input:checked + .settings-structure-switch-track::before { transform: translateX(13px); }
+.settings-structure-switch input:disabled + .settings-structure-switch-track { opacity: .5; }
+
+/* Ações da pill (renomear/duplicar/excluir) ficam sempre visíveis — ao
+   contrário de .settings-item-actions (itens da árvore, só no hover),
+   aqui são poucas linhas e ações pouco frequentes, então não vale
+   esconder: a usuária precisa enxergar que dá pra duplicar. */
+.settings-item-actions--static { opacity: 1; flex-shrink: 0; }
 
 /* ── Importação assistida por IA (Dimensões, Matriz, Realizado, Pacotes) ── */
 .import-wizard { display: flex; flex-direction: column; gap: 20px; max-width: 980px; margin: 0 auto; }
