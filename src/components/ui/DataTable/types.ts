@@ -7,6 +7,14 @@ export interface ColumnMeta<T> {
   align?: "left" | "right";
   width?: number;
   minWidth?: number;
+  /**
+   * OPCIONAL: teto de largura (px) pra medição automática de colunas (ver
+   * DataTable, bloco "Medição automática quando não há widths salvos"). Sem
+   * isso, a coluna cresce pra caber o maior conteúdo sem limite, podendo
+   * forçar scroll horizontal na tabela inteira. Com o teto, o conteúdo mais
+   * longo trunca com "…" e tooltip (automático, ver `noTooltip`).
+   */
+  maxWidth?: number;
   defaultVisible?: boolean;
   render?: (item: T) => ReactNode;
   filterable?: boolean;

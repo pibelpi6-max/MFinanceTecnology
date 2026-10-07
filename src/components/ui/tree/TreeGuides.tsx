@@ -12,6 +12,15 @@
  * coluna ("own") é sempre a própria conexão desta linha com seu pai/irmão
  * anterior: meia altura + cotovelo horizontal quando é o último filho,
  * altura cheia quando há mais irmãos depois.
+ *
+ * A ligação visual entre o cotovelo de um nó e o filho logo abaixo dele
+ * (quando o nó é filho único, sem mais irmãos) não é feita esticando a
+ * PRÓPRIA coluna deste nó — é o traço do FILHO que sobe (ver
+ * `.tree-guide-col--own::before { top: -26px }` em admin.css) até a
+ * altura do cotovelo do pai. Isso cria o efeito "escada" pedido pela
+ * usuária: o traço desce reto, dá um passo pro lado no cotovelo, desce
+ * reto de novo a partir dali — em vez de duas colunas paralelas (uma do
+ * pai esticada pra baixo, outra do filho) ligeiramente desencontradas.
  */
 export function TreeGuides({
   ancestorContinues,

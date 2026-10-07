@@ -21,11 +21,22 @@ import type {
 
 interface ImportWizardProps {
   layout: ImportLayoutConfig;
-  backHref: string;
+  /** Pra onde voltar ao cancelar/concluir quando o assistente é uma página
+   * própria (ver /admin/dimensoes/[tipo]/importar). Ignorado quando `onClose`
+   * é passado — uso em modal (ver ImportStructureModal), que não navega. */
+  backHref?: string;
   onImport: (rows: { values: Record<string, string> }[]) => Promise<ImportRunSummary>;
+  /** Quando fornecido, usado em vez de navegar pra `backHref` ao cancelar ou
+   * concluir — é como o assistente roda dentro de um Modal em vez de rota
+   * própria (pedido da usuária em 06/10, ver claude/decisoes-arquitetura.md). */
+  onClose?: () => void;
+  /** Chamado uma vez, logo após uma importação bem-sucedida (step vira
+   * "done") — pra quem está ouvindo (ex: a tela por trás do modal) puder
+   * revalidar os dados sem esperar a usuária fechar o assistente. */
+  onImported?: () => void;
 }
 
-export function ImportWizard({ layout, backHref, onImport }: ImportWizardProps) {
+export function ImportWizard({ layout, backHref, onImport, onClose, onImported }: ImportWizardProps) {
   const t = useTranslations("import");
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -91,10 +102,16 @@ export function ImportWizard({ layout, backHref, onImport }: ImportWizardProps) 
         const result = await onImport(readyRows.map((r) => ({ values: r.values })));
         setSummary(result);
         setStep("done");
+        if (result.successCount > 0) onImported?.();
       } finally {
         setIsImporting(false);
       }
     });
+  }
+
+  function goBack() {
+    if (onClose) onClose();
+    else if (backHref) router.push(backHref);
   }
 
   return (
@@ -130,7 +147,7 @@ export function ImportWizard({ layout, backHref, onImport }: ImportWizardProps) 
             )}
           </label>
           {uploadError && <p className="import-error-banner">{uploadError}</p>}
-          <button type="button" className="import-link-btn" onClick={() => router.push(backHref)}>
+          <button type="button" className="import-link-btn" onClick={goBack}>
             {t("cancel")}
           </button>
         </div>
@@ -196,7 +213,7 @@ export function ImportWizard({ layout, backHref, onImport }: ImportWizardProps) 
             </ul>
           )}
           <div className="import-step-actions">
-            <Button variant="secondary" onClick={() => router.push(backHref)}>
+            <Button variant="secondary" onClick={goBack}>
               {t("done.backToScreen")}
             </Button>
           </div>

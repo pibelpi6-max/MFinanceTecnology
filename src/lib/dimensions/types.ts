@@ -10,6 +10,15 @@ export interface DimensionType {
   use_in_matriz: boolean;
 }
 
+export interface DimensionStructure {
+  id: string;
+  tenant_id: string;
+  dimension_type_id: string;
+  name: string;
+  is_active: boolean;
+  sort_order: number;
+}
+
 export interface DimensionNodeRow {
   id: string;
   versionId: string;
