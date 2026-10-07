@@ -4,11 +4,11 @@ import { Fragment, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
-import { Modal } from "@/components/ui/Modal";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { DataTable } from "@/components/ui/DataTable/DataTable";
 import type { ColumnMeta } from "@/components/ui/DataTable/types";
-import { TreeExpand, TreeGuides } from "@/components/ui/tree";
+import { TreeItemRow } from "@/components/ui/tree";
 import { useTreeExpand } from "@/hooks/useTreeExpand";
 import type { DimensionType, DimensionNodeRow, DimensionStructure } from "@/lib/dimensions/types";
 import { isProtectedDimensionCode } from "@/lib/dimensions/constants";
@@ -542,120 +542,37 @@ export function ConfiguracoesClient({
 
     return (
       <div key={node.id}>
-        {isEditing ? (
-          <div className="settings-item-row settings-item-row--editing">
-            <TreeGuides ancestorContinues={ancestorContinues} isLast={isLast} depth={depth} />
-            {hasChildren ? (
-              <TreeExpand
-                isOpen={isOpen}
-                onToggle={() => treeExpand.toggle(node.id)}
-                label={isOpen ? td("collapseNode") : td("expandNode")}
-              />
-            ) : (
-              <span className="tree-expand-spacer" />
-            )}
-            <input
-              value={editNodeCode}
-              onChange={(e) => setEditNodeCode(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleSaveInlineEditNode(node);
-                if (e.key === "Escape") cancelInlineEditNode();
-              }}
-              placeholder={td("code")}
-              autoFocus
-              disabled={editNodeLoading}
-              className="settings-item-edit-input settings-item-edit-input--code"
-            />
-            <input
-              value={editNodeName}
-              onChange={(e) => setEditNodeName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleSaveInlineEditNode(node);
-                if (e.key === "Escape") cancelInlineEditNode();
-              }}
-              placeholder={td("name")}
-              disabled={editNodeLoading}
-              className="settings-item-edit-input settings-item-edit-input--name"
-            />
-            <span className="settings-item-actions settings-item-actions--static">
-              <button
-                type="button"
-                className="settings-item-icon-btn"
-                title={tc("save")}
-                disabled={editNodeLoading}
-                onClick={() => handleSaveInlineEditNode(node)}
-              >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M20 6 9 17l-5-5" />
-                </svg>
-              </button>
-              <button
-                type="button"
-                className="settings-item-icon-btn"
-                title={tc("cancel")}
-                disabled={editNodeLoading}
-                onClick={cancelInlineEditNode}
-              >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M18 6 6 18M6 6l12 12" />
-                </svg>
-              </button>
-            </span>
-          </div>
-        ) : (
-          <div className="settings-item-row">
-            <TreeGuides ancestorContinues={ancestorContinues} isLast={isLast} depth={depth} />
-            {hasChildren ? (
-              <TreeExpand
-                isOpen={isOpen}
-                onToggle={() => treeExpand.toggle(node.id)}
-                label={isOpen ? td("collapseNode") : td("expandNode")}
-              />
-            ) : (
-              <span className="tree-expand-spacer" />
-            )}
-            <span className="settings-item-name-wrap">
-              <span className="settings-item-name" onDoubleClick={() => startInlineEditNode(node)}>
-                {node.name}
-              </span>
-              <button
-                type="button"
-                className="settings-item-icon-btn settings-item-add-inline"
-                title={td("addItem")}
-                disabled={addingNodeKey === addKeyFor(node.id) || depth >= 9}
-                onClick={() => handleInlineAddNode(d, s, node.id)}
-              >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2}>
-                  <path strokeLinecap="round" d="M12 5v14M5 12h14" />
-                </svg>
-              </button>
-            </span>
-            <span className="settings-structure-row-spacer" />
-            <span className="settings-item-actions">
-              <button
-                type="button"
-                className="settings-item-icon-btn"
-                title={td("edit")}
-                onClick={() => startInlineEditNode(node)}
-              >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.86 4.49a1.75 1.75 0 1 1 2.47 2.47L7.5 18.79l-3.3.82.82-3.3Z" />
-                </svg>
-              </button>
-              <button
-                type="button"
-                className="settings-item-icon-btn settings-item-icon-btn--danger"
-                title={tc("delete")}
-                onClick={() => setNodeDeleting({ type: d, node })}
-              >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" />
-                </svg>
-              </button>
-            </span>
-          </div>
-        )}
-        {isEditing && editNodeError && <p className="mt-1 px-2 text-xs text-red-600">{editNodeError}</p>}
+        <TreeItemRow
+          ancestorContinues={ancestorContinues}
+          isLast={isLast}
+          depth={depth}
+          hasChildren={hasChildren}
+          isOpen={isOpen}
+          onToggleExpand={() => treeExpand.toggle(node.id)}
+          expandLabel={isOpen ? td("collapseNode") : td("expandNode")}
+          name={node.name}
+          onDoubleClickName={() => startInlineEditNode(node)}
+          onAddChild={() => handleInlineAddNode(d, s, node.id)}
+          addDisabled={addingNodeKey === addKeyFor(node.id) || depth >= 9}
+          addLabel={td("addItem")}
+          onEdit={() => startInlineEditNode(node)}
+          editLabel={td("edit")}
+          onDelete={() => setNodeDeleting({ type: d, node })}
+          deleteLabel={tc("delete")}
+          isEditing={isEditing}
+          editCode={editNodeCode}
+          onEditCodeChange={setEditNodeCode}
+          editName={editNodeName}
+          onEditNameChange={setEditNodeName}
+          onSaveEdit={() => handleSaveInlineEditNode(node)}
+          onCancelEdit={cancelInlineEditNode}
+          editLoading={editNodeLoading}
+          editError={isEditing ? editNodeError : null}
+          codePlaceholder={td("code")}
+          namePlaceholder={td("name")}
+          saveLabel={tc("save")}
+          cancelLabel={tc("cancel")}
+        />
 
         {hasChildren && isOpen && (
           <div className="settings-item-children">
@@ -1138,45 +1055,27 @@ export function ConfiguracoesClient({
       )}
 
       {isAdmin && (
-        <Modal
+        <ConfirmModal
           open={conjuntoDeleting !== null}
           onClose={() => {
             setConjuntoDeleting(null);
             setConjuntoDeleteError(null);
           }}
           title={tConjunto("deleteConfirmTitle")}
-          size="sm"
-          footer={
-            <>
-              <Button variant="ghost" onClick={() => setConjuntoDeleting(null)} disabled={conjuntoDeleteLoading}>
-                {tc("cancel")}
-              </Button>
-              <Button
-                variant="danger"
-                isLoading={conjuntoDeleteLoading}
-                loadingText={tc("saving")}
-                onClick={handleConfirmDeleteConjunto}
-              >
-                {tc("delete")}
-              </Button>
-            </>
+          body={
+            conjuntoDeleting &&
+            tConjunto.rich("deleteConfirmBody", {
+              name: conjuntoDeleting.name,
+              b: (chunks) => <strong className="font-semibold text-gray-900">{chunks}</strong>,
+            })
           }
-        >
-          <div className="space-y-3">
-            <p className="text-sm text-gray-600">
-              {conjuntoDeleting &&
-                tConjunto.rich("deleteConfirmBody", {
-                  name: conjuntoDeleting.name,
-                  b: (chunks) => <strong className="font-semibold text-gray-900">{chunks}</strong>,
-                })}
-            </p>
-            {conjuntoDeleteError && (
-              <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
-                <p className="text-sm text-red-600">{conjuntoDeleteError}</p>
-              </div>
-            )}
-          </div>
-        </Modal>
+          cancelLabel={tc("cancel")}
+          confirmLabel={tc("delete")}
+          loading={conjuntoDeleteLoading}
+          loadingText={tc("saving")}
+          onConfirm={handleConfirmDeleteConjunto}
+          error={conjuntoDeleteError}
+        />
       )}
 
       {isAdmin && (
@@ -1194,45 +1093,27 @@ export function ConfiguracoesClient({
       )}
 
       {isAdmin && (
-        <Modal
+        <ConfirmModal
           open={orcamentoDeleting !== null}
           onClose={() => {
             setOrcamentoDeleting(null);
             setOrcamentoDeleteError(null);
           }}
           title={tOrcamento("deleteConfirmTitle")}
-          size="sm"
-          footer={
-            <>
-              <Button variant="ghost" onClick={() => setOrcamentoDeleting(null)} disabled={orcamentoDeleteLoading}>
-                {tc("cancel")}
-              </Button>
-              <Button
-                variant="danger"
-                isLoading={orcamentoDeleteLoading}
-                loadingText={tc("saving")}
-                onClick={handleConfirmDeleteOrcamento}
-              >
-                {tc("delete")}
-              </Button>
-            </>
+          body={
+            orcamentoDeleting &&
+            tOrcamento.rich("deleteConfirmBody", {
+              label: orcamentoDeleting.label,
+              b: (chunks) => <strong className="font-semibold text-gray-900">{chunks}</strong>,
+            })
           }
-        >
-          <div className="space-y-3">
-            <p className="text-sm text-gray-600">
-              {orcamentoDeleting &&
-                tOrcamento.rich("deleteConfirmBody", {
-                  label: orcamentoDeleting.label,
-                  b: (chunks) => <strong className="font-semibold text-gray-900">{chunks}</strong>,
-                })}
-            </p>
-            {orcamentoDeleteError && (
-              <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
-                <p className="text-sm text-red-600">{orcamentoDeleteError}</p>
-              </div>
-            )}
-          </div>
-        </Modal>
+          cancelLabel={tc("cancel")}
+          confirmLabel={tc("delete")}
+          loading={orcamentoDeleteLoading}
+          loadingText={tc("saving")}
+          onConfirm={handleConfirmDeleteOrcamento}
+          error={orcamentoDeleteError}
+        />
       )}
 
       {isAdmin && (
@@ -1248,40 +1129,27 @@ export function ConfiguracoesClient({
       )}
 
       {isAdmin && (
-        <Modal
+        <ConfirmModal
           open={deleting !== null}
           onClose={() => {
             setDeleting(null);
             setDeleteError(null);
           }}
           title={t("dimensions.deleteConfirmTitle")}
-          size="sm"
-          footer={
-            <>
-              <Button variant="ghost" onClick={() => setDeleting(null)} disabled={deleteLoading}>
-                {tc("cancel")}
-              </Button>
-              <Button variant="danger" isLoading={deleteLoading} loadingText={tc("saving")} onClick={handleConfirmDelete}>
-                {tc("delete")}
-              </Button>
-            </>
+          body={
+            deleting &&
+            t.rich("dimensions.deleteConfirmBody", {
+              name: deleting.name,
+              b: (chunks) => <strong className="font-semibold text-gray-900">{chunks}</strong>,
+            })
           }
-        >
-          <div className="space-y-3">
-            <p className="text-sm text-gray-600">
-              {deleting &&
-                t.rich("dimensions.deleteConfirmBody", {
-                  name: deleting.name,
-                  b: (chunks) => <strong className="font-semibold text-gray-900">{chunks}</strong>,
-                })}
-            </p>
-            {deleteError && (
-              <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
-                <p className="text-sm text-red-600">{deleteError}</p>
-              </div>
-            )}
-          </div>
-        </Modal>
+          cancelLabel={tc("cancel")}
+          confirmLabel={tc("delete")}
+          loading={deleteLoading}
+          loadingText={tc("saving")}
+          onConfirm={handleConfirmDelete}
+          error={deleteError}
+        />
       )}
 
       {isAdmin && (
@@ -1303,86 +1171,52 @@ export function ConfiguracoesClient({
       )}
 
       {isAdmin && (
-        <Modal
+        <ConfirmModal
           open={structureDeleting !== null}
           onClose={() => {
             setStructureDeleting(null);
             setStructureDeleteError(null);
           }}
           title={t("dimensions.deleteStructureConfirmTitle")}
-          size="sm"
-          footer={
-            <>
-              <Button variant="ghost" onClick={() => setStructureDeleting(null)} disabled={structureDeleteLoading}>
-                {tc("cancel")}
-              </Button>
-              <Button
-                variant="danger"
-                isLoading={structureDeleteLoading}
-                loadingText={tc("saving")}
-                onClick={handleConfirmDeleteStructure}
-              >
-                {tc("delete")}
-              </Button>
-            </>
+          body={
+            structureDeleting &&
+            t.rich("dimensions.deleteStructureConfirmBody", {
+              name: structureDeleting.name,
+              b: (chunks) => <strong className="font-semibold text-gray-900">{chunks}</strong>,
+            })
           }
-        >
-          <div className="space-y-3">
-            <p className="text-sm text-gray-600">
-              {structureDeleting &&
-                t.rich("dimensions.deleteStructureConfirmBody", {
-                  name: structureDeleting.name,
-                  b: (chunks) => <strong className="font-semibold text-gray-900">{chunks}</strong>,
-                })}
-            </p>
-            {structureDeleteError && (
-              <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
-                <p className="text-sm text-red-600">{structureDeleteError}</p>
-              </div>
-            )}
-          </div>
-        </Modal>
+          cancelLabel={tc("cancel")}
+          confirmLabel={tc("delete")}
+          loading={structureDeleteLoading}
+          loadingText={tc("saving")}
+          onConfirm={handleConfirmDeleteStructure}
+          error={structureDeleteError}
+        />
       )}
 
       {isAdmin && (
-        <Modal
+        <ConfirmModal
           open={structureDuplicating !== null}
           onClose={() => {
             setStructureDuplicating(null);
             setStructureDuplicateError(null);
           }}
           title={t("dimensions.duplicateStructureConfirmTitle")}
-          size="sm"
-          footer={
-            <>
-              <Button variant="ghost" onClick={() => setStructureDuplicating(null)} disabled={structureDuplicateLoading}>
-                {tc("cancel")}
-              </Button>
-              <Button
-                isLoading={structureDuplicateLoading}
-                loadingText={tc("saving")}
-                onClick={handleConfirmDuplicateStructure}
-              >
-                {t("dimensions.duplicateStructure")}
-              </Button>
-            </>
+          body={
+            structureDuplicating &&
+            t.rich("dimensions.duplicateStructureConfirmBody", {
+              name: structureDuplicating.source.name,
+              b: (chunks) => <strong className="font-semibold text-gray-900">{chunks}</strong>,
+            })
           }
-        >
-          <div className="space-y-3">
-            <p className="text-sm text-gray-600">
-              {structureDuplicating &&
-                t.rich("dimensions.duplicateStructureConfirmBody", {
-                  name: structureDuplicating.source.name,
-                  b: (chunks) => <strong className="font-semibold text-gray-900">{chunks}</strong>,
-                })}
-            </p>
-            {structureDuplicateError && (
-              <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
-                <p className="text-sm text-red-600">{structureDuplicateError}</p>
-              </div>
-            )}
-          </div>
-        </Modal>
+          cancelLabel={tc("cancel")}
+          confirmLabel={t("dimensions.duplicateStructure")}
+          confirmVariant="primary"
+          loading={structureDuplicateLoading}
+          loadingText={tc("saving")}
+          onConfirm={handleConfirmDuplicateStructure}
+          error={structureDuplicateError}
+        />
       )}
 
       {isAdmin && importModal && (
@@ -1397,46 +1231,28 @@ export function ConfiguracoesClient({
         />
       )}
 
-      <Modal
+      <ConfirmModal
         open={nodeDeleting !== null}
         onClose={() => {
           setNodeDeleting(null);
           setNodeDeleteError(null);
         }}
         title={td("deleteConfirmTitle")}
-        size="sm"
-        footer={
-          <>
-            <Button variant="ghost" onClick={() => setNodeDeleting(null)} disabled={nodeDeleteLoading}>
-              {tc("cancel")}
-            </Button>
-            <Button
-              variant="danger"
-              isLoading={nodeDeleteLoading}
-              loadingText={tc("saving")}
-              onClick={handleConfirmDeleteNode}
-            >
-              {tc("delete")}
-            </Button>
-          </>
+        body={
+          nodeDeleting &&
+          td.rich("deleteConfirmBody", {
+            name: nodeDeleting.node.name,
+            year,
+            b: (chunks) => <strong className="font-semibold text-gray-900">{chunks}</strong>,
+          })
         }
-      >
-        <div className="space-y-3">
-          <p className="text-sm text-gray-600">
-            {nodeDeleting &&
-              td.rich("deleteConfirmBody", {
-                name: nodeDeleting.node.name,
-                year,
-                b: (chunks) => <strong className="font-semibold text-gray-900">{chunks}</strong>,
-              })}
-          </p>
-          {nodeDeleteError && (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
-              <p className="text-sm text-red-600">{nodeDeleteError}</p>
-            </div>
-          )}
-        </div>
-      </Modal>
+        cancelLabel={tc("cancel")}
+        confirmLabel={tc("delete")}
+        loading={nodeDeleteLoading}
+        loadingText={tc("saving")}
+        onConfirm={handleConfirmDeleteNode}
+        error={nodeDeleteError}
+      />
     </div>
   );
 }
