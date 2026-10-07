@@ -660,13 +660,13 @@
 }
 .settings-structure-accordion.is-expanded { border-color: rgba(62,111,224,.3); }
 .settings-structure-accordion-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; }
-/* flex:0 1 auto (não mais flex:1) — o botão agora só ocupa o espaço do
-   próprio conteúdo (seta + nome), pra que o lápis de renomear (irmão
-   logo depois, fora do button — não dá pra aninhar button dentro de
-   button) fique colado no fim do nome, em vez de "puxado" pro fim da
-   linha. Quem absorve o espaço sobrando e empurra badge/switch/ações
-   pra direita é o .settings-structure-row-spacer, logo depois do
-   lápis. min-width:0 continua garantindo que o nome truncado (ver
+/* flex:0 1 auto — o botão só ocupa o espaço do próprio conteúdo (seta +
+   nome), em vez de esticar até o fim da linha. Quem absorve o espaço
+   sobrando e empurra badge/switch/ações pra direita é o
+   .settings-structure-row-spacer, logo depois (ver renderStructureContent
+   em ConfiguracoesClient.tsx — o lápis de renomear voltou a ficar junto
+   dos outros ícones de ação, à direita, a pedido da usuária em 06/10).
+   min-width:0 continua garantindo que o nome truncado (ver
    .settings-structure-accordion-name) consiga encolher quando precisa. */
 .settings-structure-accordion-toggle {
   display: flex; align-items: center; gap: 8px; flex: 0 1 auto; min-width: 0;

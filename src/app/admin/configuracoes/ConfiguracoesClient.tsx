@@ -566,16 +566,6 @@ export function ConfiguracoesClient({
                         </Tooltip>
                       </span>
                     </button>
-                    <button
-                      type="button"
-                      className="settings-item-icon-btn"
-                      title={t("dimensions.renameStructure")}
-                      onClick={() => setStructureModal({ type: d, mode: "rename", source: s })}
-                    >
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.86 4.49a1.75 1.75 0 1 1 2.47 2.47L7.5 18.79l-3.3.82.82-3.3Z" />
-                      </svg>
-                    </button>
                     <span className="settings-structure-row-spacer" />
                     {(structureUsageCounts[s.id] ?? 0) > 0 && (
                       <span className="settings-structure-usage-count" title={t("dimensions.usageCountHint")}>
@@ -598,6 +588,16 @@ export function ConfiguracoesClient({
                       <span className="settings-structure-switch-track" />
                     </label>
                     <span className="settings-item-actions settings-item-actions--static">
+                      <button
+                        type="button"
+                        className="settings-item-icon-btn"
+                        title={t("dimensions.renameStructure")}
+                        onClick={() => setStructureModal({ type: d, mode: "rename", source: s })}
+                      >
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.86 4.49a1.75 1.75 0 1 1 2.47 2.47L7.5 18.79l-3.3.82.82-3.3Z" />
+                        </svg>
+                      </button>
                       <Link
                         href={`/admin/dimensoes/${d.code}/importar?ano=${year}`}
                         className="settings-item-icon-btn"
