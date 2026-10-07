@@ -679,7 +679,7 @@ export function ConfiguracoesClient({
                   {isExpanded && (
                     <div className="settings-structure-accordion-body">
                       {nodes.length === 0 && (
-                        <p className="settings-structure-empty">{td("emptyMessage", { year })}</p>
+                        <p className="settings-structure-empty">{td("emptyMessage")}</p>
                       )}
 
                       {(() => {

@@ -114,7 +114,7 @@
     "activeFrom": "Vigente desde {year}",
     "deleteConfirmTitle": "Finalizar vigencia",
     "deleteConfirmBody": "\"{name}\" deja de aplicar a partir de {year}. El historial de años anteriores se conserva.",
-    "emptyMessage": "Ningún ítem registrado para {year}.",
+    "emptyMessage": "Ningún ítem registrado.",
     "searchPlaceholder": "Buscar por nombre o código",
     "maxDepthReached": "Profundidad máxima de 10 niveles alcanzada.",
     "importFields": {
