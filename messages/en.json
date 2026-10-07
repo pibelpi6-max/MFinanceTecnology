@@ -277,7 +277,7 @@
       "duplicateNameSuggestion": "{name} (copy)",
       "duplicateStructureHint": "Copies every item from the source structure (as it stands today) into the new structure.",
       "duplicateStructureConfirmTitle": "Duplicate structure",
-      "duplicateStructureConfirmBody": "Duplicate structure <b>{name}</b>? A copy with all its items will be created.",
+      "duplicateStructureConfirmBody": "Duplicate structure <b>{name}</b>?",
       "typeLabel": "Type",
       "usageCount": "Used in {count} set(s)",
       "usageCountHint": "How many Structure Sets use this structure"
