@@ -15,7 +15,6 @@ import { isProtectedDimensionCode } from "@/lib/dimensions/constants";
 import type { ConjuntoEstruturaWithItems } from "@/lib/orcamentos/queries";
 import type { Orcamento } from "@/lib/orcamentos/types";
 import { DimensionTypeFormModal } from "./DimensionTypeFormModal";
-import { NodeFormModal } from "./NodeFormModal";
 import { StructureFormModal } from "./StructureFormModal";
 import { ImportStructureModal } from "./ImportStructureModal";
 import { ConjuntoFormModal } from "./ConjuntoFormModal";
@@ -24,7 +23,7 @@ import { deleteDimensionType, updateFiscalYearStartMonth } from "./_actions";
 import { setDimensionStructureActive, deleteDimensionStructure, duplicateDimensionStructure } from "./_structureActions";
 import { deleteConjunto } from "./_conjuntoActions";
 import { deleteOrcamento } from "./_orcamentoActions";
-import { cancelDimensionNode, createDimensionNode } from "../dimensoes/_actions";
+import { cancelDimensionNode, createDimensionNode, updateDimensionNode } from "../dimensoes/_actions";
 
 type Translator = (key: string, values?: Record<string, string | number>) => string;
 
@@ -219,7 +218,6 @@ export function ConfiguracoesClient({
   // embutida na própria linha, clicar de novo (ou noutra) recolhe/troca.
   const [expandedStructureId, setExpandedStructureId] = useState<Record<string, string | null>>({});
   const treeExpand = useTreeExpand();
-  const [nodeEditing, setNodeEditing] = useState<{ type: DimensionType; node: DimensionNodeRow | "new"; structureId: string } | null>(null);
   const [nodeDeleting, setNodeDeleting] = useState<{ type: DimensionType; node: DimensionNodeRow } | null>(null);
   const [nodeDeleteLoading, setNodeDeleteLoading] = useState(false);
   const [nodeDeleteError, setNodeDeleteError] = useState<string | null>(null);
@@ -230,6 +228,51 @@ export function ConfiguracoesClient({
   // do botão em voo, só pra desabilitar/mostrar carregando o botão certo.
   const [addingNodeKey, setAddingNodeKey] = useState<string | null>(null);
   const [addNodeError, setAddNodeError] = useState<string | null>(null);
+
+  // Editar item virou inline também (igual à criação), em vez de modal —
+  // pedido da usuária em 06/10: duplo clique (ou o lápis) no nome do item
+  // troca a própria linha por um mini-formulário [código][nome] + salvar/
+  // cancelar. O NodeFormModal (que também tinha o seletor de "item
+  // superior" pra reparentar) foi removido; reparentar um item existente
+  // fica sem UI por enquanto — só dá pra escolher o pai na hora de criar.
+  const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
+  const [editNodeCode, setEditNodeCode] = useState("");
+  const [editNodeName, setEditNodeName] = useState("");
+  const [editNodeLoading, setEditNodeLoading] = useState(false);
+  const [editNodeError, setEditNodeError] = useState<string | null>(null);
+
+  function startInlineEditNode(node: DimensionNodeRow) {
+    setEditingNodeId(node.id);
+    setEditNodeCode(node.code);
+    setEditNodeName(node.name);
+    setEditNodeError(null);
+  }
+
+  function cancelInlineEditNode() {
+    setEditingNodeId(null);
+    setEditNodeError(null);
+  }
+
+  async function handleSaveInlineEditNode(node: DimensionNodeRow) {
+    setEditNodeLoading(true);
+    setEditNodeError(null);
+    const result = await updateDimensionNode({
+      nodeId: node.id,
+      versionId: node.versionId,
+      currentValidFromYear: node.validFromYear,
+      name: editNodeName.trim(),
+      code: editNodeCode.trim(),
+      parentNodeId: node.parentNodeId,
+      year,
+    });
+    setEditNodeLoading(false);
+    if (result.error) {
+      setEditNodeError(result.error);
+      return;
+    }
+    setEditingNodeId(null);
+    router.refresh();
+  }
 
   const [structureModal, setStructureModal] = useState<{
     type: DimensionType;
@@ -369,8 +412,8 @@ export function ConfiguracoesClient({
   }
 
   /** Código provisório único (dentro da Estrutura) pro item criado pelo "+
-   * item" inline — a usuária pode ajustar depois pelo lápis (ver
-   * NodeFormModal, código agora editável). Unicidade é (tenant, structure,
+   * item" inline — a usuária pode ajustar depois com duplo clique (ou o
+   * lápis) no item, que abre a edição inline. Unicidade é (tenant, structure,
    * code) no banco; aqui só evita a colisão óbvia com o que já existe. */
   function generateItemCode(existingCodes: Set<string>): string {
     let n = existingCodes.size + 1;
@@ -495,54 +538,124 @@ export function ConfiguracoesClient({
     const hasChildren = children.length > 0;
     const isOpen = !treeExpand.isCollapsed(node.id);
 
+    const isEditing = editingNodeId === node.id;
+
     return (
       <div key={node.id}>
-        <div className="settings-item-row">
-          <TreeGuides ancestorContinues={ancestorContinues} isLast={isLast} depth={depth} />
-          {hasChildren ? (
-            <TreeExpand
-              isOpen={isOpen}
-              onToggle={() => treeExpand.toggle(node.id)}
-              label={isOpen ? td("collapseNode") : td("expandNode")}
+        {isEditing ? (
+          <div className="settings-item-row settings-item-row--editing">
+            <TreeGuides ancestorContinues={ancestorContinues} isLast={isLast} depth={depth} />
+            {hasChildren ? (
+              <TreeExpand
+                isOpen={isOpen}
+                onToggle={() => treeExpand.toggle(node.id)}
+                label={isOpen ? td("collapseNode") : td("expandNode")}
+              />
+            ) : (
+              <span className="tree-expand-spacer" />
+            )}
+            <input
+              value={editNodeCode}
+              onChange={(e) => setEditNodeCode(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleSaveInlineEditNode(node);
+                if (e.key === "Escape") cancelInlineEditNode();
+              }}
+              placeholder={td("code")}
+              autoFocus
+              disabled={editNodeLoading}
+              className="settings-item-edit-input settings-item-edit-input--code"
             />
-          ) : (
-            <span className="tree-expand-spacer" />
-          )}
-          <span className="settings-item-name">{node.name}</span>
-          <span className="settings-item-actions">
-            <button
-              type="button"
-              className="settings-item-icon-btn"
-              title={td("addItem")}
-              disabled={addingNodeKey === addKeyFor(node.id) || depth >= 9}
-              onClick={() => handleInlineAddNode(d, s, node.id)}
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2}>
-                <path strokeLinecap="round" d="M12 5v14M5 12h14" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              className="settings-item-icon-btn"
-              title={td("edit")}
-              onClick={() => setNodeEditing({ type: d, node, structureId: s.id })}
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16.86 4.49a1.75 1.75 0 1 1 2.47 2.47L7.5 18.79l-3.3.82.82-3.3Z" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              className="settings-item-icon-btn settings-item-icon-btn--danger"
-              title={tc("delete")}
-              onClick={() => setNodeDeleting({ type: d, node })}
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" />
-              </svg>
-            </button>
-          </span>
-        </div>
+            <input
+              value={editNodeName}
+              onChange={(e) => setEditNodeName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleSaveInlineEditNode(node);
+                if (e.key === "Escape") cancelInlineEditNode();
+              }}
+              placeholder={td("name")}
+              disabled={editNodeLoading}
+              className="settings-item-edit-input settings-item-edit-input--name"
+            />
+            <span className="settings-item-actions settings-item-actions--static">
+              <button
+                type="button"
+                className="settings-item-icon-btn"
+                title={tc("save")}
+                disabled={editNodeLoading}
+                onClick={() => handleSaveInlineEditNode(node)}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M20 6 9 17l-5-5" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                className="settings-item-icon-btn"
+                title={tc("cancel")}
+                disabled={editNodeLoading}
+                onClick={cancelInlineEditNode}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M18 6 6 18M6 6l12 12" />
+                </svg>
+              </button>
+            </span>
+          </div>
+        ) : (
+          <div className="settings-item-row">
+            <TreeGuides ancestorContinues={ancestorContinues} isLast={isLast} depth={depth} />
+            {hasChildren ? (
+              <TreeExpand
+                isOpen={isOpen}
+                onToggle={() => treeExpand.toggle(node.id)}
+                label={isOpen ? td("collapseNode") : td("expandNode")}
+              />
+            ) : (
+              <span className="tree-expand-spacer" />
+            )}
+            <span className="settings-item-name-wrap">
+              <span className="settings-item-name" onDoubleClick={() => startInlineEditNode(node)}>
+                {node.name}
+              </span>
+              <button
+                type="button"
+                className="settings-item-icon-btn settings-item-add-inline"
+                title={td("addItem")}
+                disabled={addingNodeKey === addKeyFor(node.id) || depth >= 9}
+                onClick={() => handleInlineAddNode(d, s, node.id)}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2}>
+                  <path strokeLinecap="round" d="M12 5v14M5 12h14" />
+                </svg>
+              </button>
+            </span>
+            <span className="settings-structure-row-spacer" />
+            <span className="settings-item-actions">
+              <button
+                type="button"
+                className="settings-item-icon-btn"
+                title={td("edit")}
+                onClick={() => startInlineEditNode(node)}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.86 4.49a1.75 1.75 0 1 1 2.47 2.47L7.5 18.79l-3.3.82.82-3.3Z" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                className="settings-item-icon-btn settings-item-icon-btn--danger"
+                title={tc("delete")}
+                onClick={() => setNodeDeleting({ type: d, node })}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" />
+                </svg>
+              </button>
+            </span>
+          </div>
+        )}
+        {isEditing && editNodeError && <p className="mt-1 px-2 text-xs text-red-600">{editNodeError}</p>}
 
         {hasChildren && isOpen && (
           <div className="settings-item-children">
@@ -1171,21 +1284,6 @@ export function ConfiguracoesClient({
         </Modal>
       )}
 
-      <NodeFormModal
-        open={nodeEditing !== null}
-        onClose={() => setNodeEditing(null)}
-        editing={nodeEditing && nodeEditing.node !== "new" ? nodeEditing.node : null}
-        dimensionTypeId={nodeEditing?.type.id ?? ""}
-        dimensionTypeName={nodeEditing?.type.name ?? ""}
-        structureId={nodeEditing?.structureId ?? ""}
-        year={year}
-        nodes={nodeEditing ? nodesByStructure[nodeEditing.structureId] ?? [] : []}
-        onSaved={() => {
-          setNodeEditing(null);
-          router.refresh();
-        }}
-      />
-
       {isAdmin && (
         <StructureFormModal
           open={structureModal !== null}
@@ -1325,7 +1423,12 @@ export function ConfiguracoesClient({
       >
         <div className="space-y-3">
           <p className="text-sm text-gray-600">
-            {nodeDeleting && td("deleteConfirmBody", { name: nodeDeleting.node.name, year })}
+            {nodeDeleting &&
+              td.rich("deleteConfirmBody", {
+                name: nodeDeleting.node.name,
+                year,
+                b: (chunks) => <strong className="font-semibold text-gray-900">{chunks}</strong>,
+              })}
           </p>
           {nodeDeleteError && (
             <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">

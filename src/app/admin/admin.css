@@ -610,11 +610,25 @@
    linha (ver `.tree-guide-col--own::before` acima), qualquer margem aqui
    volta a abrir um vão entre o traço do pai e o do filho logo abaixo. */
 .settings-item-children { margin-top: 0; }
+/* O nome do item e o "+" de adicionar filho ficam juntos, encostados no
+   texto (não mais espalhados pelas pontas da linha) — pedido da usuária
+   em 06/10: o "+" deve aparecer "no fim do texto e no hover", não lá no
+   fim da linha. Por isso .settings-item-name-wrap é que encolhe
+   (flex: 0 1 auto), e não .settings-item-name sozinho como antes —
+   mesmo padrão já usado em .settings-structure-accordion-toggle, logo
+   abaixo. Quem empurra as ações pra direita é o
+   .settings-structure-row-spacer de sempre, reaproveitado aqui. */
+.settings-item-name-wrap { display: flex; align-items: center; gap: 2px; flex: 0 1 auto; min-width: 0; }
 .settings-item-name {
-  flex: 1; min-width: 0; text-align: left; background: none; border: none; cursor: pointer;
+  min-width: 0; text-align: left; background: none; border: none; cursor: pointer;
   padding: 2px 4px; font-size: 13px; color: var(--text-strong); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .settings-item-name:hover { color: #3E6FE0; }
+/* Só aparece no hover da linha — mesma lógica do .settings-item-actions
+   logo abaixo, mas fora dele porque fica colado ao nome, não no grupo de
+   ações à direita. */
+.settings-item-add-inline { opacity: 0; transition: opacity .12s ease; }
+.settings-item-row:hover .settings-item-add-inline { opacity: 1; }
 .settings-item-actions { display: flex; align-items: center; gap: 2px; opacity: 0; transition: opacity .12s ease; flex-shrink: 0; }
 .settings-item-icon-btn {
   width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center;
@@ -628,6 +642,22 @@
    reduzir clique acidental em exclusão: ver settings-item-actions-divider
    logo antes do botão de lixeira, na pill de cada estrutura. */
 .settings-item-actions-divider { width: 1px; height: 14px; background: rgba(0,0,0,.1); margin: 0 3px; flex-shrink: 0; }
+
+/* Edição inline de item (duplo clique no nome, ou lápis): a própria
+   linha vira um mini-formulário [código][nome] + salvar/cancelar, no
+   lugar do NodeFormModal (popup) que existia antes — pedido da usuária
+   em 06/10, ver comentário perto de `editingNodeId` em
+   ConfiguracoesClient.tsx. Código vem primeiro e bem estreito (poucos
+   caracteres de verdade), nome ocupa o resto da linha. */
+.settings-item-row--editing { gap: 6px; }
+.settings-item-edit-input {
+  font-size: 13px; color: var(--text-strong); background: #fff;
+  border: 1px solid rgba(62,111,224,.4); border-radius: 6px; padding: 3px 7px;
+  outline: none;
+}
+.settings-item-edit-input:focus { border-color: #3E6FE0; box-shadow: 0 0 0 2px rgba(62,111,224,.15); }
+.settings-item-edit-input--code { width: 72px; flex-shrink: 0; }
+.settings-item-edit-input--name { flex: 1; min-width: 0; }
 
 /* Criação inline na árvore de itens (igual à dinâmica de "plano de aulas"
    do desenhe-app): um botão "+ item" aparece logo depois dos filhos de

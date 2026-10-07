@@ -113,7 +113,7 @@
     "validFrom": "Effective from",
     "activeFrom": "Effective since {year}",
     "deleteConfirmTitle": "End validity",
-    "deleteConfirmBody": "\"{name}\" stops applying starting {year}. History from earlier years is preserved.",
+    "deleteConfirmBody": "End validity of <b>{name}</b> starting {year}?",
     "emptyMessage": "No items registered.",
     "searchPlaceholder": "Search by name or code",
     "maxDepthReached": "Maximum depth of 10 levels reached.",
