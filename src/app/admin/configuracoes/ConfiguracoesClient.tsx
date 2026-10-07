@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
@@ -369,6 +369,61 @@ export function ConfiguracoesClient({
 
   useEffect(() => setMonth(fiscalYearStartMonth), [fiscalYearStartMonth]);
 
+  // A barra "Dimensões personalizadas X/10" fica alinhada (esquerda e
+  // direita) com o campo "Buscar" do DataTable logo abaixo, mesmo esse
+  // campo estando em outra árvore de componentes (dentro do DataTable).
+  //
+  // Importante: .settings-progress-block é o último item de um flex row
+  // com justify-content:space-between, então a borda DIREITA dele fica
+  // sempre colada na borda do container (.settings-block-subtitle-row),
+  // não importa o width - só ajustar o width muda a borda ESQUERDA. Por
+  // isso medimos a posição real do campo Buscar + engrenagem via DOM e
+  // aplicamos width (esquerda do Buscar até a direita da engrenagem) +
+  // margin-right (pra puxar a borda direita do bloco pra onde a
+  // engrenagem realmente termina). Reexecuta no resize e sempre que a
+  // tabela re-renderiza (mudança nos dados/colunas) - assim nunca mais
+  // desalinha se o espaçamento do header do DataTable mudar.
+  const dimensionsSectionRef = useRef<HTMLElement>(null);
+  const progressBlockRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const section = dimensionsSectionRef.current;
+    const block = progressBlockRef.current;
+    if (!section || !block) return;
+
+    function syncWidth() {
+      const input = section!.querySelector<HTMLInputElement>('input[placeholder="Buscar"]');
+      if (!input) return;
+      // A engrenagem é o último elemento do mesmo grupo flex do campo
+      // Buscar (ver DataTable.tsx: <div className="flex items-center
+      // gap-1"> envolvendo [campo Buscar, Tooltip com o botão da
+      // engrenagem]) - pegamos pelo irmão, não por texto/aria-label, já
+      // que o label muda por idioma (pt-BR/en/es).
+      const searchWrapper = input.closest(".relative");
+      const group = searchWrapper?.parentElement;
+      const rightEdgeEl = (group?.lastElementChild as HTMLElement | null) ?? input;
+
+      const inputRect = input.getBoundingClientRect();
+      const rightRect = rightEdgeEl.getBoundingClientRect();
+      if (inputRect.width === 0 || rightRect.width === 0) return;
+
+      // Zera o margin-right antes de medir, senão a medição acumula o
+      // ajuste da rodada anterior.
+      block!.style.marginRight = "0px";
+      block!.style.width = `${Math.round(rightRect.right - inputRect.left)}px`;
+      const blockRect = block!.getBoundingClientRect();
+      const overshoot = blockRect.right - rightRect.right;
+      block!.style.marginRight = `${Math.round(overshoot)}px`;
+    }
+
+    syncWidth();
+    const raf = requestAnimationFrame(syncWidth);
+    window.addEventListener("resize", syncWidth);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", syncWidth);
+    };
+  }, [isAdmin, dimensionTypes]);
+
   async function handleSaveMonth(newMonth: number) {
     setSaving(true);
     setError(null);
@@ -448,8 +503,8 @@ export function ConfiguracoesClient({
 
   const customCount = dimensionTypes.filter((d) => !d.is_system && !isProtectedDimensionCode(d.code)).length;
   const limitReached = customCount >= CUSTOM_DIMENSIONS_LIMIT;
-  // Aviso (laranja) a partir de 7/10 — abaixo disso a barra fica no azul normal.
-  const limitWarning = customCount >= 7 && !limitReached;
+  // Aviso (amarelo) a partir de 7/10 — abaixo disso a barra fica no azul normal.
+  const nearLimit = customCount >= 7 && !limitReached;
   const columnCount = 6;
 
   /**
@@ -806,11 +861,11 @@ export function ConfiguracoesClient({
 
       <div className="settings-divider" />
 
-      <section className="settings-block">
+      <section className="settings-block" ref={dimensionsSectionRef}>
         <h2 className="settings-block-title">{t("dimensions.title")}</h2>
         <div className="settings-block-subtitle-row">
           <p className="settings-block-intro">{t("dimensions.intro")}</p>
-          <div className="settings-progress-block">
+          <div className="settings-progress-block" ref={progressBlockRef}>
             <div className="settings-progress-block-label">
               <span>{t("dimensions.customUsage")}</span>
               <span className="settings-progress-block-value">
@@ -819,7 +874,7 @@ export function ConfiguracoesClient({
             </div>
             <div className="settings-progress-block-bar">
               <div
-                className={`settings-progress-block-fill${limitReached ? " settings-progress-block-fill--full" : limitWarning ? " settings-progress-block-fill--warning" : ""}`}
+                className={`settings-progress-block-fill${limitReached ? " settings-progress-block-fill--full" : nearLimit ? " settings-progress-block-fill--warning" : ""}`}
                 style={{ width: `${(Math.min(customCount, CUSTOM_DIMENSIONS_LIMIT) / CUSTOM_DIMENSIONS_LIMIT) * 100}%` }}
               />
             </div>

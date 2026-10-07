@@ -309,16 +309,18 @@
 .settings-saved-hint { color: #15803d; font-size: 12px; font-weight: 600; }
 .settings-admin-hint { font-size: 11.5px; color: var(--text-muted); margin-top: 6px; }
 
-/* 300px = largura do campo Buscar do DataTable (256px) + gap (8px) +
-   engrenagem de colunas (36px), pra barra cobrir exatamente a mesma faixa
-   horizontal que a busca + engrenagem logo abaixo. */
-.settings-progress-block { width: 300px; flex-shrink: 0; }
+/* 256px = fallback (largura do campo Buscar do DataTable, w-64) usado no
+   primeiro paint antes do JS medir. ConfiguracoesClient mede a posição
+   real do campo Buscar via DOM (ver useLayoutEffect de syncWidth) e
+   ajusta este width por inline style, pra cobrir exatamente a mesma
+   faixa horizontal mesmo que o espaçamento do header do DataTable mude. */
+.settings-progress-block { width: 256px; flex-shrink: 0; }
 .settings-progress-block-label { display: flex; justify-content: space-between; align-items: baseline; font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
 .settings-progress-block-value { font-weight: 700; color: var(--text-strong); font-variant-numeric: tabular-nums; }
 .settings-progress-block-bar { height: 6px; border-radius: 4px; background: rgba(62,111,224,.12); overflow: hidden; }
-/* Azul (normal) → laranja a partir de 7/10 (atenção) → vermelho em 10/10 (limite atingido) */
+/* Azul (normal) → amarelo a partir de 7/10 (atenção) → vermelho em 10/10 (limite atingido) */
 .settings-progress-block-fill { height: 100%; background: #3E6FE0; border-radius: 4px; transition: width .2s ease, background-color .2s ease; }
-.settings-progress-block-fill--warning { background: #e8900c; }
+.settings-progress-block-fill--warning { background: #eab308; }
 .settings-progress-block-fill--full { background: #c62828; }
 
 .settings-table { width: 100%; border-collapse: collapse; font-size: 13px; }
