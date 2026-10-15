@@ -199,8 +199,8 @@ describe("avisos de interpretação (notes)", () => {
       buildAndValidateRows([["20", "A", "Admin"], ["30", "B", "20"]], m, f),
       f
     );
-    expect(rows[0].notes.item_superior).toEqual({ from: "Admin", to: "Administrativo" });
-    expect(rows[1].notes.item_superior).toEqual({ from: "20", to: "A" });
+    expect(rows[0].notes.item_superior).toEqual({ from: "Admin", to: "10 - Administrativo" });
+    expect(rows[1].notes.item_superior).toEqual({ from: "20", to: "20 - A" });
   });
 
   it("não avisa quando o casamento é exato", () => {

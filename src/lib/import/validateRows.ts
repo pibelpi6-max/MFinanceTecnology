@@ -56,7 +56,7 @@ function resolveNodeRef(
     return {
       value: o.value,
       error: null,
-      note: { from: trimmed, to: o.label },
+      note: { from: trimmed, to: o.code ? `${o.code} - ${o.label}` : o.label },
     };
   }
   if (partial.length > 1) return { value: "", error: `"${trimmed}" é ambíguo — use o código exato.` };
@@ -234,7 +234,8 @@ export function applyBatchDependencies(rows: ImportRowResult[], fields: ImportFi
       const typed = (r.rawValues[refField.key] ?? "").trim();
       const provName = (prov?.rawValues[keys[1] ?? keys[0]] ?? "").trim();
       if (prov && provName && normalizeMatch(typed) !== normalizeMatch(provName)) {
-        notes[refField.key] = { from: typed, to: provName };
+        const provCode = (prov.rawValues[keys[0]] ?? "").trim();
+        notes[refField.key] = { from: typed, to: provCode && keys.length > 1 ? `${provCode} - ${provName}` : provName };
       }
     }
     if (!r.skip && isBatch(r) && !errors[refField.key] && !resolvable.has(r.rowIndex)) {
