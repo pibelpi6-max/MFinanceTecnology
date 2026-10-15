@@ -9,7 +9,8 @@ interface ImportTreeGridProps {
   rows: ImportRowResult[];
   fields: ImportFieldConfig[];
   onToggleSkip: (rowIndex: number) => void;
-  onEditCell: (rowIndex: number, key: string, value: string) => void;
+  /** salva de uma vez os campos editados de uma linha */
+  onEditRow: (rowIndex: number, values: Record<string, string>) => void;
   /** newParentRowIndex = null → vira item sem superior (nível 1) */
   onMoveRow: (rowIndex: number, newParentRowIndex: number | null) => void;
 }
@@ -19,27 +20,6 @@ interface FlatRow {
   depth: number;
 }
 
-function CellInput({ value, onCommit, invalid }: { value: string; onCommit: (v: string) => void; invalid: boolean }) {
-  return (
-    <input
-      key={value}
-      className={`import-cell-input${invalid ? " is-invalid" : ""}`}
-      defaultValue={value}
-      onBlur={(e) => {
-        const next = e.target.value.trim();
-        if (next !== value.trim()) onCommit(next);
-      }}
-      onKeyDown={(e) => {
-        if (e.key === "Enter") e.currentTarget.blur();
-        if (e.key === "Escape") {
-          e.currentTarget.value = value;
-          e.currentTarget.blur();
-        }
-      }}
-    />
-  );
-}
-
 /**
  * Revisão em árvore (usada quando o layout tem um node-ref com batchRefKeys,
  * como Dimensões): as linhas aparecem recuadas conforme pai e filho, dá pra
@@ -47,15 +27,15 @@ function CellInput({ value, onCommit, invalid }: { value: string; onCommit: (v: 
  * (pela alça) para dentro de outra muda o item superior dela — os filhos
  * vão junto, porque continuam apontando para o código dela.
  */
-export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditCell, onMoveRow }: ImportTreeGridProps) {
+export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRow }: ImportTreeGridProps) {
   const t = useTranslations("import");
   const [dragging, setDragging] = useState<number | null>(null);
   const [over, setOver] = useState<number | "root" | null>(null);
+  const [editing, setEditing] = useState<number | null>(null);
+  const [draft, setDraft] = useState<Record<string, string>>({});
 
   const refField = fields.find((f) => f.type === "node-ref" && f.batchRefKeys?.length)!;
-  const codeKey = refField.batchRefKeys![0];
-  const nameKey = refField.batchRefKeys![1] ?? codeKey;
-  const editableKeys = fields.map((f) => f.key);
+    const nameKey = refField.batchRefKeys![1] ?? refField.batchRefKeys![0];
 
   const { flat, childrenOf } = useMemo(() => {
     const parentOf = new Map<number, number | null>();
@@ -98,6 +78,21 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditCell, onMoveR
   const blocked = dragging !== null ? descendantsOf(dragging) : new Set<number>();
   const canDrop = (target: number) => dragging !== null && target !== dragging && !blocked.has(target);
 
+  function startEdit(row: ImportRowResult) {
+    setEditing(row.rowIndex);
+    setDraft(Object.fromEntries(fields.map((f) => [f.key, row.rawValues[f.key] ?? ""])));
+  }
+
+  function saveEdit(row: ImportRowResult) {
+    const changed: Record<string, string> = {};
+    for (const f of fields) {
+      const next = (draft[f.key] ?? "").trim();
+      if (next !== (row.rawValues[f.key] ?? "").trim()) changed[f.key] = next;
+    }
+    if (Object.keys(changed).length > 0) onEditRow(row.rowIndex, changed);
+    setEditing(null);
+  }
+
   function endDrag() {
     setDragging(null);
     setOver(null);
@@ -105,7 +100,12 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditCell, onMoveR
 
   return (
     <div className="import-grid-wrap">
-      <p className="import-tree-hint">{t("review.dragHint")}</p>
+      <div className="import-tree-info">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3Z" />
+        </svg>
+        <span>{t("review.treeInfo", { levels: Math.max(1, ...flat.map((f) => f.depth + 1)) })}</span>
+      </div>
       {dragging !== null && (
         <div
           className={`import-tree-rootzone${over === "root" ? " is-over" : ""}`}
@@ -127,11 +127,13 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditCell, onMoveR
         <thead>
           <tr>
             <th></th>
+            <th></th>
             <th>#</th>
             {fields.map((f) => (
               <th key={f.key}>{f.label}</th>
             ))}
             <th>{t("review.status")}</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -159,6 +161,23 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditCell, onMoveR
                   endDrag();
                 }}
               >
+                <td className="import-handle-cell">
+                  <span
+                    className="import-drag-handle"
+                    draggable={editing === null}
+                    title={t("review.dragHandle")}
+                    onDragStart={(e) => {
+                      e.dataTransfer.effectAllowed = "move";
+                      e.dataTransfer.setData("text/plain", String(row.rowIndex));
+                      const tr = e.currentTarget.closest("tr");
+                      if (tr) e.dataTransfer.setDragImage(tr, 0, 0);
+                      setDragging(row.rowIndex);
+                    }}
+                    onDragEnd={endDrag}
+                  >
+                    ⠿
+                  </span>
+                </td>
                 <td>
                   <input
                     type="checkbox"
@@ -169,42 +188,28 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditCell, onMoveR
                 </td>
                 <td>{row.rowIndex + 1}</td>
                 {fields.map((f) => {
-                  const isCode = f.key === codeKey;
+                  const isName = f.key === nameKey;
+                  const isEditing = editing === row.rowIndex;
                   return (
                     <td key={f.key}>
-                      <div
-                        className="import-tree-cell"
-                        style={isCode ? { paddingLeft: depth * 22 } : undefined}
-                      >
-                        {isCode && (
-                          <span
-                            className="import-drag-handle"
-                            draggable
-                            title={t("review.dragHandle")}
-                            onDragStart={(e) => {
-                              e.dataTransfer.effectAllowed = "move";
-                              e.dataTransfer.setData("text/plain", String(row.rowIndex));
-                              const tr = e.currentTarget.closest("tr");
-                              if (tr) e.dataTransfer.setDragImage(tr, 0, 0);
-                              setDragging(row.rowIndex);
+                      <div className="import-tree-cell" style={isName ? { paddingLeft: depth * 22 } : undefined}>
+                        {isName && depth > 0 && <span className="import-tree-elbow" aria-hidden="true" />}
+                        {isEditing ? (
+                          <input
+                            className={`import-cell-input${row.errors[f.key] ? " is-invalid" : ""}`}
+                            value={draft[f.key] ?? ""}
+                            autoFocus={f.key === fields[0].key}
+                            onChange={(e) => setDraft((d) => ({ ...d, [f.key]: e.target.value }))}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") saveEdit(row);
+                              if (e.key === "Escape") setEditing(null);
                             }}
-                            onDragEnd={endDrag}
-                          >
-                            ⠿
-                          </span>
-                        )}
-                        {isCode && depth > 0 && <span className="import-tree-elbow" aria-hidden="true" />}
-                        {editableKeys.includes(f.key) ? (
-                          <CellInput
-                            value={row.rawValues[f.key] ?? ""}
-                            invalid={!!row.errors[f.key]}
-                            onCommit={(v) => onEditCell(row.rowIndex, f.key, v)}
                           />
                         ) : (
-                          row.rawValues[f.key] || "—"
+                          <span>{row.rawValues[f.key] || "—"}</span>
                         )}
                       </div>
-                      {row.notes[f.key] && !row.errors[f.key] && (
+                      {row.notes[f.key] && !row.errors[f.key] && !isEditing && (
                         <div className="import-cell-note">
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-label={t("review.suggestion")}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3Z" />
@@ -223,6 +228,22 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditCell, onMoveR
                     <span className="import-status-tag import-status-error">{t("review.hasErrors")}</span>
                   ) : (
                     <span className="import-status-tag import-status-ok">{t("review.ready")}</span>
+                  )}
+                </td>
+                <td className="import-row-actions">
+                  {editing === row.rowIndex ? (
+                    <>
+                      <button type="button" className="import-icon-btn is-save" title={t("review.save")} onClick={() => saveEdit(row)}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4}><path strokeLinecap="round" strokeLinejoin="round" d="m5 12 5 5L20 7" /></svg>
+                      </button>
+                      <button type="button" className="import-icon-btn" title={t("review.cancelEdit")} onClick={() => setEditing(null)}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4}><path strokeLinecap="round" strokeLinejoin="round" d="M6 6l12 12M18 6 6 18" /></svg>
+                      </button>
+                    </>
+                  ) : (
+                    <button type="button" className="import-icon-btn import-edit-btn" title={t("review.edit")} onClick={() => startEdit(row)}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16.86 4.49a1.75 1.75 0 1 1 2.47 2.47L7.5 18.79l-3.3.82.82-3.3Z" /></svg>
+                    </button>
                   )}
                 </td>
               </tr>

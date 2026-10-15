@@ -116,6 +116,18 @@ export function ImportWizard({ layout, backHref, onImport, onClose, onImported }
     setRows(rebuild(next.sheet.rows, next.mapping, currentSkipped()));
   }
 
+  /** Salva de uma vez os campos editados de uma linha (lápis na revisão). */
+  function editRow(rowIndex: number, values: Record<string, string>) {
+    if (!sheet) return;
+    let next = { sheet, mapping };
+    // código/nome antes do item superior, para a troca de código acompanhar os filhos
+    const order = Object.keys(values).sort((a) => (a === refField?.key ? 1 : -1));
+    for (const key of order) next = setCellValue(next.sheet, next.mapping, layout.fields, rowIndex, key, values[key]);
+    setSheet(next.sheet);
+    setMapping(next.mapping);
+    setRows(rebuild(next.sheet.rows, next.mapping, currentSkipped()));
+  }
+
   /** Arrastar e soltar: coloca a linha dentro de outra (pelo código dela) ou, com null, tira o item superior. */
   function moveRow(rowIndex: number, newParentRowIndex: number | null) {
     if (!refField?.batchRefKeys) return;
@@ -228,7 +240,7 @@ export function ImportWizard({ layout, backHref, onImport, onClose, onImported }
               rows={rows}
               fields={layout.fields}
               onToggleSkip={toggleSkip}
-              onEditCell={editCell}
+              onEditRow={editRow}
               onMoveRow={moveRow}
             />
           ) : (

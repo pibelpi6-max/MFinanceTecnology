@@ -350,10 +350,13 @@
       "errorCount": "{count} con error",
       "skippedCount": "{count} ignorada(s)",
       "importButton": "Importar {count} fila(s)",
-      "dragHint": "Arrastra el asa ⠿ para poner un elemento dentro de otro. El código y el nombre se pueden editar aquí mismo.",
       "dropRoot": "Suelta aquí para quitar el superior (pasa a nivel 1)",
       "dragHandle": "Arrastrar para cambiar el superior",
-      "suggestion": "Sugerencia"
+      "suggestion": "Sugerencia",
+      "treeInfo": "Los elementos con sangría quedan dentro del de arriba ({levels} nivel(es) en total). Pasa el ratón por una fila y haz clic en el lápiz para corregir código, nombre o superior, o arrastra el asa ⠿ para poner un elemento dentro de otro.",
+      "edit": "Editar fila",
+      "save": "Guardar",
+      "cancelEdit": "Cancelar edición"
     },
     "done": {
       "title": "{count} registro(s) importado(s) con éxito",

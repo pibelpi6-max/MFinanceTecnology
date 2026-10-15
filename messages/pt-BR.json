@@ -350,10 +350,13 @@
       "errorCount": "{count} com erro",
       "skippedCount": "{count} ignorada(s)",
       "importButton": "Importar {count} linha(s)",
-      "dragHint": "Arraste a alça ⠿ para colocar um item dentro de outro. Código e nome podem ser editados direto aqui.",
       "dropRoot": "Solte aqui para tirar o item superior (vira nível 1)",
       "dragHandle": "Arrastar para mudar o item superior",
-      "suggestion": "Sugestão"
+      "suggestion": "Sugestão",
+      "treeInfo": "Quem aparece recuado fica dentro do item de cima (são {levels} nível(is) no total). Passe o mouse numa linha e clique no lápis para corrigir código, nome ou item superior, ou arraste a alça ⠿ para colocar o item dentro de outro.",
+      "edit": "Editar linha",
+      "save": "Salvar",
+      "cancelEdit": "Cancelar edição"
     },
     "done": {
       "title": "{count} registro(s) importado(s) com sucesso",

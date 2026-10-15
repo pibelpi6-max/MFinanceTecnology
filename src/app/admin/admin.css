@@ -809,7 +809,7 @@
 .import-row-error td { background: rgba(220,38,38,.04); }
 .import-row-skipped td { opacity: .45; }
 .import-cell-error { color: #dc2626; font-size: 11px; margin-top: 2px; }
-.import-cell-note { display: flex; align-items: flex-start; gap: 5px; color: #b45309; background: rgba(245,158,11,.1); border-radius: 6px; padding: 3px 7px; font-size: 11px; margin-top: 3px; }
+.import-cell-note { display: flex; align-items: flex-start; gap: 5px; color: #2563eb; font-size: 11px; margin-top: 3px; }
 .import-cell-note svg { flex: none; margin-top: 1px; }
 .import-cell-input { width: 100%; min-width: 70px; border: 1px solid transparent; border-radius: 6px; padding: 4px 6px; font-size: 13px; background: transparent; }
 .import-cell-input:hover { border-color: rgba(0,0,0,.12); background: #fff; }
@@ -835,3 +835,13 @@
 .import-done-title { font-size: 16px; font-weight: 700; color: var(--text-strong); }
 .import-done-subtitle { font-size: 13px; color: #b45309; margin-top: 4px; }
 .import-done-errors { max-height: 220px; overflow: auto; font-size: 12.5px; color: #dc2626; background: rgba(220,38,38,.04); border-radius: 8px; padding: 10px 14px; margin: 0; }
+
+.import-tree-info { display: flex; align-items: flex-start; gap: 8px; background: rgba(37,99,235,.07); color: #2563eb; border-radius: 8px; padding: 9px 12px; font-size: 12.5px; margin-bottom: 10px; }
+.import-tree-info svg { flex: none; margin-top: 2px; }
+.import-handle-cell { width: 18px; padding-right: 0 !important; }
+.import-row-actions { width: 62px; white-space: nowrap; text-align: right; }
+.import-icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border: none; border-radius: 6px; background: transparent; color: #6b7280; cursor: pointer; }
+.import-icon-btn:hover { background: rgba(0,0,0,.06); color: var(--text-strong); }
+.import-icon-btn.is-save { color: #15803d; }
+.import-edit-btn { opacity: 0; transition: opacity .12s; }
+.import-grid-table tr:hover .import-edit-btn, .import-edit-btn:focus-visible { opacity: 1; }

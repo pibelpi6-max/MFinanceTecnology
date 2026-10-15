@@ -350,10 +350,13 @@
       "errorCount": "{count} with errors",
       "skippedCount": "{count} skipped",
       "importButton": "Import {count} row(s)",
-      "dragHint": "Drag the ⠿ handle to put an item inside another. Code and name can be edited right here.",
       "dropRoot": "Drop here to remove the parent (becomes level 1)",
       "dragHandle": "Drag to change the parent",
-      "suggestion": "Suggestion"
+      "suggestion": "Suggestion",
+      "treeInfo": "Indented items go inside the item above them ({levels} level(s) in total). Hover a row and click the pencil to fix code, name or parent, or drag the ⠿ handle to put an item inside another.",
+      "edit": "Edit row",
+      "save": "Save",
+      "cancelEdit": "Cancel edit"
     },
     "done": {
       "title": "{count} record(s) imported successfully",
