@@ -153,10 +153,10 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
           <col style={{ width: 30 }} />
           <col style={{ width: 22 }} />
           {fields.map((f, i) => (
-            <col key={f.key} style={i === 0 ? { width: 84 } : i === 1 ? undefined : { width: 270 }} />
+            <col key={f.key} style={i === 0 ? { width: 84 } : i === 1 ? { width: "24%" } : undefined} />
           ))}
           <col style={{ width: 52 }} />
-          <col style={{ width: 270 }} />
+          <col style={{ width: 230 }} />
         </colgroup>
         <thead>
           <tr>
@@ -287,7 +287,7 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
                             {row.notes[f.key] && !row.errors[f.key] ? (
                               <span className="import-suggest">
                                 <span className="import-suggest-label">{t("review.suggestionFrom")}</span>
-                                <span className="import-suggest-from">{fullFrom(row.notes[f.key])}</span>
+                                <span className="import-suggest-from">{row.notes[f.key].from}</span>
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
                                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14m-5-5 5 5-5 5" />
                                 </svg>
@@ -342,11 +342,6 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
       </p>
     </div>
   );
-}
-
-/** "DE:" com descrição: se o texto do arquivo é o código do item achado, mostra "código - nome". */
-function fullFrom(note: { from: string; to: string }): string {
-  return note.to.toLowerCase().startsWith(`${note.from.toLowerCase()} - `) ? note.to : note.from;
 }
 
 function SqIcon({ plus }: { plus: boolean }) {
