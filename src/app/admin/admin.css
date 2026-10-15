@@ -875,3 +875,5 @@
 .import-row-parent .import-tree-cell .import-cell-text { font-weight: 600; }
 .import-suggest-label { flex: none; font-size: 10.5px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: #8a8fa6; }
 .import-tree-footer { margin: 10px 0 0; font-size: 12.5px; color: #6b6f86; }
+.import-tree-table input[type="checkbox"] { width: 15px; height: 15px; margin: 0; vertical-align: middle; }
+.import-tree-table .import-row-actions { padding-left: 2px; padding-right: 2px; }

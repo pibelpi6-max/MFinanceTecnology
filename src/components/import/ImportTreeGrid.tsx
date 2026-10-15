@@ -153,10 +153,10 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
           <col style={{ width: 34 }} />
           <col style={{ width: 26 }} />
           {fields.map((f, i) => (
-            <col key={f.key} style={i === 0 ? { width: 96 } : i === 1 ? undefined : { width: 340 }} />
+            <col key={f.key} style={i === 0 ? { width: 96 } : i === 1 ? undefined : { width: 300 }} />
           ))}
-          <col style={{ width: 70 }} />
-          <col style={{ width: 250 }} />
+          <col style={{ width: 64 }} />
+          <col style={{ width: 190 }} />
         </colgroup>
         <thead>
           <tr>
