@@ -37,6 +37,12 @@ export interface ImportFieldConfig {
    * resolve a ordem de criação (ver BATCH_REF_PREFIX).
    */
   batchRefKeys?: string[];
+  /**
+   * Só para node-ref com batchRefKeys: quantas linhas SEM valor (itens raiz)
+   * ainda podem entrar. Excedentes recebem erro. Usado por Dimensões, onde
+   * cada estrutura admite um único item raiz.
+   */
+  maxEmptyRows?: number;
   /** validação extra além da checagem padrão do tipo; retorna mensagem de erro ou null se ok */
   validateExtra?: (raw: string) => string | null;
 }

@@ -66,10 +66,11 @@ export function ImportStructureModal({
           options: existingNodes.map((n) => ({ value: n.id, label: n.name, code: n.code })),
           helpText: t("parentHelp"),
           batchRefKeys: ["codigo", "nome"],
+          maxEmptyRows: nodes.some((n) => n.parentNodeId === null) ? 0 : 1,
         },
       ],
     }),
-    [structure.name, existingNodes, t]
+    [structure.name, existingNodes, nodes, t]
   );
 
   return (

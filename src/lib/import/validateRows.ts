@@ -89,6 +89,8 @@ export function buildAndValidateRows(
     batchRefsByField.set(field.key, set);
   }
 
+  let emptyRowsUsed = 0;
+
   return rows.map((row, rowIndex) => {
     const values: Record<string, string> = {};
     const rawValues: Record<string, string> = {};
@@ -101,6 +103,16 @@ export function buildAndValidateRows(
 
       if (raw === "") {
         if (field.required) errors[field.key] = `${field.label} é obrigatório.`;
+        else if (field.maxEmptyRows !== undefined) {
+          // Só conta como raiz a linha que realmente tem dados (código/nome).
+          const hasData = row.some((c) => (c ?? "").trim() !== "");
+          if (hasData) {
+            emptyRowsUsed += 1;
+            if (emptyRowsUsed > field.maxEmptyRows) {
+              errors[field.key] = `${field.label} é obrigatório: só é permitido um item de nível 1 por estrutura.`;
+            }
+          }
+        }
         values[field.key] = "";
         continue;
       }

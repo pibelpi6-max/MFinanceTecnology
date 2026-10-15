@@ -123,3 +123,23 @@ describe("buildAndValidateRows — pai na mesma planilha (batchRefKeys)", () => 
     expect(rows[2].errors.item_superior).toBeDefined();
   });
 });
+
+describe("buildAndValidateRows — um único item raiz (maxEmptyRows)", () => {
+  const f: ImportFieldConfig[] = [
+    { key: "codigo", label: "Código", type: "text", required: true },
+    { key: "nome", label: "Nome", type: "text", required: true },
+    { key: "item_superior", label: "Item Superior", type: "node-ref", required: false, options: [], batchRefKeys: ["codigo", "nome"], maxEmptyRows: 1 },
+  ];
+  const m: ColumnMapping[] = [
+    { columnIndex: 0, targetKey: "codigo" },
+    { columnIndex: 1, targetKey: "nome" },
+    { columnIndex: 2, targetKey: "item_superior" },
+  ];
+
+  it("aceita uma raiz e acusa a segunda", () => {
+    const rows = buildAndValidateRows([["1", "Empresa", ""], ["2", "Outra", ""], ["1.1", "RH", "1"]], m, f);
+    expect(rows[0].errors.item_superior).toBeUndefined();
+    expect(rows[1].errors.item_superior).toBeDefined();
+    expect(rows[2].errors.item_superior).toBeUndefined();
+  });
+});

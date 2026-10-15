@@ -121,7 +121,7 @@
       "code": "Code",
       "name": "Name",
       "parent": "Parent item",
-      "parentHelp": "Must already exist in the system; leave blank for a top-level item."
+      "parentHelp": "May be an item in the same file or an existing one (code or name). Each structure has a single level-1 item (leave Parent blank only for it)."
     },
     "importButton": "Import"
   },

@@ -121,7 +121,7 @@
       "code": "Código",
       "name": "Nombre",
       "parent": "Elemento superior",
-      "parentHelp": "Debe existir ya en el sistema; déjalo en blanco para un elemento de nivel 1."
+      "parentHelp": "Puede ser un elemento del mismo archivo o uno existente (código o nombre). Cada estructura tiene un único elemento de nivel 1 (deja el superior en blanco solo en él)."
     },
     "importButton": "Importar"
   },

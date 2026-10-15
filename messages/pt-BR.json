@@ -121,7 +121,7 @@
       "code": "Código",
       "name": "Nome",
       "parent": "Item superior",
-      "parentHelp": "Deve já existir no sistema; deixe em branco para item de nível 1."
+      "parentHelp": "Pode ser um item do próprio arquivo ou já existente (código ou nome). Cada estrutura tem um único item de nível 1 (deixe o Item Superior em branco só nele)."
     },
     "importButton": "Importar"
   },

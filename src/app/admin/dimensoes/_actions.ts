@@ -45,6 +45,31 @@ async function resolveStructureId(
   return data?.id ?? null;
 }
 
+/**
+ * Cada estrutura admite um único item raiz (nível 1) — regra de produto já
+ * aplicada na tela (o botão "+ item" raiz some depois do primeiro). Aqui é
+ * a garantia no servidor, para importação e chamadas diretas.
+ */
+async function countRootNodes(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  structureId: string,
+  year: number
+): Promise<number> {
+  const { data: nodes } = await supabase.from("dimension_nodes").select("id").eq("structure_id", structureId);
+  const ids = (nodes ?? []).map((n) => n.id);
+  if (ids.length === 0) return 0;
+  const { count } = await supabase
+    .from("dimension_node_versions")
+    .select("id", { count: "exact", head: true })
+    .in("dimension_node_id", ids)
+    .is("parent_node_id", null)
+    .lte("valid_from_year", year)
+    .or(`valid_until_year.is.null,valid_until_year.gte.${year}`);
+  return count ?? 0;
+}
+
+const SINGLE_ROOT_ERROR = "Só é permitido um item de nível 1 por estrutura — informe um Item Superior.";
+
 export async function createDimensionNode(input: {
   dimensionTypeId: string;
   structureId?: string;
@@ -60,6 +85,10 @@ export async function createDimensionNode(input: {
     const structureId = await resolveStructureId(supabase, tenantId, input.dimensionTypeId, input.structureId);
     if (!structureId) {
       return { error: "Esta dimensão não tem uma estrutura ativa. Ative uma estrutura em Parâmetros antes de adicionar itens." };
+    }
+
+    if (!input.parentNodeId && (await countRootNodes(supabase, structureId, input.year)) >= 1) {
+      return { error: SINGLE_ROOT_ERROR };
     }
 
     let level = 1;
@@ -224,6 +253,8 @@ export async function importDimensionNodes(input: {
   // quem não depende de ninguém ou cujo pai (existente ou da planilha) já foi
   // criado; repete até não haver progresso. O que sobrar tem pai inexistente,
   // com erro ou ciclo.
+  let rootCount = await countRootNodes(supabase, structureId, input.year);
+
   let pending = input.rows.map((r, rowIndex) => ({ rowIndex, values: r.values }));
 
   while (pending.length > 0) {
@@ -265,6 +296,10 @@ export async function importDimensionNodes(input: {
       }
 
       progressed = true;
+      if (!parentNodeId && rootCount >= 1) {
+        errors.push({ rowIndex, message: SINGLE_ROOT_ERROR });
+        continue;
+      }
       if (level > 10) {
         errors.push({ rowIndex, message: "Profundidade máxima de 10 níveis atingida." });
         continue;
@@ -294,6 +329,7 @@ export async function importDimensionNodes(input: {
         continue;
       }
 
+      if (!parentNodeId) rootCount++;
       createdByCode.set(norm(code), { id: node.id, level });
       if (!createdByName.has(norm(name))) createdByName.set(norm(name), { id: node.id, level });
       successCount++;
