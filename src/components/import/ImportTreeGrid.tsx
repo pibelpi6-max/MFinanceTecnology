@@ -35,11 +35,12 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
   const [over, setOver] = useState<number | "root" | null>(null);
   const [editing, setEditing] = useState<number | null>(null);
   const [draft, setDraft] = useState<Record<string, string>>({});
+  const [collapsed, setCollapsed] = useState<Set<number>>(new Set());
 
   const refField = fields.find((f) => f.type === "node-ref" && f.batchRefKeys?.length)!;
     const nameKey = refField.batchRefKeys![1] ?? refField.batchRefKeys![0];
 
-  const { flat, childrenOf } = useMemo(() => {
+  const { flat, childrenOf, parents } = useMemo(() => {
     const parentOf = new Map<number, number | null>();
     const childrenOf = new Map<number | null, ImportRowResult[]>();
     for (const r of rows) {
@@ -61,8 +62,33 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
     (childrenOf.get(null) ?? []).forEach((r) => walk(r, 0));
     // linhas presas em ciclo não são alcançadas a partir de uma raiz
     rows.forEach((r) => walk(r, 0));
-    return { flat, childrenOf };
+    const parents = Array.from(childrenOf.entries()).filter(([k, v]) => k !== null && v.length > 0).map(([k]) => k as number);
+    return { flat, childrenOf, parents };
   }, [rows, fields]);
+
+  // Linhas escondidas porque algum ancestral está recolhido.
+  const visible = useMemo(() => {
+    const hidden = new Set<number>();
+    const hide = (i: number) =>
+      (childrenOf.get(i) ?? []).forEach((c) => {
+        if (!hidden.has(c.rowIndex)) {
+          hidden.add(c.rowIndex);
+          hide(c.rowIndex);
+        }
+      });
+    collapsed.forEach(hide);
+    return flat.filter((f) => !hidden.has(f.row.rowIndex));
+  }, [flat, childrenOf, collapsed]);
+
+  const allCollapsed = parents.length > 0 && parents.every((p) => collapsed.has(p));
+  const toggleCollapse = (i: number) =>
+    setCollapsed((c) => {
+      const n = new Set(c);
+      if (n.has(i)) n.delete(i);
+      else n.add(i);
+      return n;
+    });
+  const toggleAll = () => setCollapsed(allCollapsed ? new Set() : new Set(parents));
 
   const descendantsOf = (index: number): Set<number> => {
     const out = new Set<number>();
@@ -123,7 +149,6 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
         <colgroup>
           <col style={{ width: 34 }} />
           <col style={{ width: 26 }} />
-          <col style={{ width: 38 }} />
           {fields.map((f, i) => (
             <col key={f.key} style={i === 0 ? { width: 96 } : i === 1 ? undefined : { width: 230 }} />
           ))}
@@ -134,9 +159,19 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
           <tr>
             <th></th>
             <th></th>
-            <th>#</th>
             {fields.map((f) => (
-              <th key={f.key}>{f.label}</th>
+              <th key={f.key}>
+                {f.key === nameKey && parents.length > 0 ? (
+                  <span className="import-status-head">
+                    {f.label}
+                    <button type="button" className="import-collapse-all" onClick={toggleAll}>
+                      {allCollapsed ? t("review.expandAll") : t("review.collapseAll")}
+                    </button>
+                  </span>
+                ) : (
+                  f.label
+                )}
+              </th>
             ))}
             <th></th>
             <th>
@@ -154,7 +189,7 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
           </tr>
         </thead>
         <tbody>
-          {flat.map(({ row, depth }) => {
+          {visible.map(({ row, depth }) => {
             const hasErrors = Object.keys(row.errors).length > 0;
             const dropOk = over === row.rowIndex && canDrop(row.rowIndex);
             return (
@@ -203,13 +238,28 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
                     ⠿
                   </span>
                 </td>
-                <td>{row.rowIndex + 1}</td>
                 {fields.map((f) => {
                   const isName = f.key === nameKey;
                   const isEditing = editing === row.rowIndex;
                   return (
                     <td key={f.key}>
                       <div className="import-tree-cell" style={isName ? { paddingLeft: depth * 22 } : undefined}>
+                        {isName &&
+                          ((childrenOf.get(row.rowIndex)?.length ?? 0) > 0 ? (
+                            <button
+                              type="button"
+                              className={`import-chevron${collapsed.has(row.rowIndex) ? " is-collapsed" : ""}`}
+                              title={collapsed.has(row.rowIndex) ? t("review.expand") : t("review.collapse")}
+                              aria-expanded={!collapsed.has(row.rowIndex)}
+                              onClick={() => toggleCollapse(row.rowIndex)}
+                            >
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.6} aria-hidden="true">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
+                              </svg>
+                            </button>
+                          ) : (
+                            <span className="import-chevron-spacer" />
+                          ))}
                         {isEditing ? (
                           <input
                             className={`import-cell-input${row.errors[f.key] ? " is-invalid" : ""}`}
@@ -244,6 +294,11 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
                             ) : (
                               row.rawValues[f.key] || "—"
                             )}
+                          </span>
+                        )}
+                        {isName && !isEditing && collapsed.has(row.rowIndex) && (
+                          <span className="import-collapsed-count" title={t("review.hiddenChildren")}>
+                            +{descendantsOf(row.rowIndex).size}
                           </span>
                         )}
                       </div>
