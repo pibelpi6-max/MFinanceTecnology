@@ -68,6 +68,12 @@ export interface ColumnMapping {
   confidence?: number;
 }
 
+/** Sugestão do sistema para um campo: o texto digitado (`from`) foi entendido como outro (`to`). */
+export interface ImportCellSuggestion {
+  from: string;
+  to: string;
+}
+
 export interface ImportRowResult {
   rowIndex: number;
   /** valores já resolvidos por campo (para node-ref, o id resolvido) */
@@ -78,8 +84,8 @@ export interface ImportRowResult {
   /** erros da própria linha, sem os derivados de dependência (ver applyBatchDependencies) */
   baseErrors: Record<string, string>;
   /** avisos de como um texto foi interpretado (ex.: "→ Administrativo (código 1)"), por campo */
-  notes: Record<string, string>;
-  baseNotes: Record<string, string>;
+  notes: Record<string, ImportCellSuggestion>;
+  baseNotes: Record<string, ImportCellSuggestion>;
   skip: boolean;
 }
 

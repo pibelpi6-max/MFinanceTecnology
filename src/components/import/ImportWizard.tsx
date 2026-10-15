@@ -225,16 +225,18 @@ export function ImportWizard({ layout, backHref, onImport, onClose, onImported }
 
       {step === "review" && (
         <div className="import-step-body">
-          <div className="import-review-summary">
-            <span>{t("review.total", { count: rows.length })}</span>
-            <span className="import-status-tag import-status-ok">{t("review.readyCount", { count: readyRows.length })}</span>
-            {errorRows.length > 0 && (
-              <span className="import-status-tag import-status-error">{t("review.errorCount", { count: errorRows.length })}</span>
-            )}
-            {skippedRows.length > 0 && (
-              <span className="import-status-tag import-status-skipped">{t("review.skippedCount", { count: skippedRows.length })}</span>
-            )}
-          </div>
+          {!hierarchical && (
+            <div className="import-review-summary">
+              <span>{t("review.total", { count: rows.length })}</span>
+              <span className="import-status-tag import-status-ok">{t("review.readyCount", { count: readyRows.length })}</span>
+              {errorRows.length > 0 && (
+                <span className="import-status-tag import-status-error">{t("review.errorCount", { count: errorRows.length })}</span>
+              )}
+              {skippedRows.length > 0 && (
+                <span className="import-status-tag import-status-skipped">{t("review.skippedCount", { count: skippedRows.length })}</span>
+              )}
+            </div>
+          )}
           {hierarchical ? (
             <ImportTreeGrid
               rows={rows}
@@ -242,6 +244,7 @@ export function ImportWizard({ layout, backHref, onImport, onClose, onImported }
               onToggleSkip={toggleSkip}
               onEditRow={editRow}
               onMoveRow={moveRow}
+              counts={{ ready: readyRows.length, errors: errorRows.length, skipped: skippedRows.length }}
             />
           ) : (
             <ImportGrid rows={rows} fields={layout.fields} onToggleSkip={toggleSkip} />

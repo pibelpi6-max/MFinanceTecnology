@@ -353,13 +353,16 @@
       "dropRoot": "Solte aqui para tirar o item superior (vira nível 1)",
       "dragHandle": "Arrastar para mudar o item superior",
       "suggestion": "Sugestão",
-      "treeInfo": "Passe o mouse na linha e clique no lápis para editar. Arraste ⠿ para mover.",
       "edit": "Editar linha",
       "save": "Salvar",
       "cancelEdit": "Cancelar edição",
       "readyForImport": "Pronto para importação",
       "fullscreen": "Tela cheia",
-      "exitFullscreen": "Sair da tela cheia"
+      "exitFullscreen": "Sair da tela cheia",
+      "suggestionTitle": "Sugestão do sistema: usar \"{to}\" no lugar de \"{from}\"",
+      "countReady": "pronta(s) para importar",
+      "countErrors": "com erro",
+      "countSkipped": "ignorada(s)"
     },
     "done": {
       "title": "{count} registro(s) importado(s) com sucesso",

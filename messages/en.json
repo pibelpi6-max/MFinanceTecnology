@@ -353,13 +353,16 @@
       "dropRoot": "Drop here to remove the parent (becomes level 1)",
       "dragHandle": "Drag to change the parent",
       "suggestion": "Suggestion",
-      "treeInfo": "Hover a row and click the pencil to edit. Drag ⠿ to move.",
       "edit": "Edit row",
       "save": "Save",
       "cancelEdit": "Cancel edit",
       "readyForImport": "Ready to import",
       "fullscreen": "Full screen",
-      "exitFullscreen": "Exit full screen"
+      "exitFullscreen": "Exit full screen",
+      "suggestionTitle": "System suggestion: use \"{to}\" instead of \"{from}\"",
+      "countReady": "ready to import",
+      "countErrors": "with errors",
+      "countSkipped": "skipped"
     },
     "done": {
       "title": "{count} record(s) imported successfully",

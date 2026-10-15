@@ -1,5 +1,5 @@
 import { BATCH_REF_PREFIX } from "./types";
-import type { ColumnMapping, ImportFieldConfig, ImportRowResult } from "./types";
+import type { ColumnMapping, ImportCellSuggestion, ImportFieldConfig, ImportRowResult } from "./types";
 
 /** Converte texto em número aceitando formato BR ("1.234,56") e US ("1234.56"). */
 function parseNumberBR(raw: string): number | null {
@@ -31,7 +31,7 @@ function resolveNodeRef(
   field: ImportFieldConfig,
   batchRefs: Set<string> | null,
   selfRaws: string[]
-): { value: string; error: string | null; note?: string } {
+): { value: string; error: string | null; note?: ImportCellSuggestion } {
   const options = field.options ?? [];
   const trimmed = raw.trim();
   if (trimmed === "") return { value: "", error: null };
@@ -56,7 +56,7 @@ function resolveNodeRef(
     return {
       value: o.value,
       error: null,
-      note: `Sugestão: de "${trimmed}" para "${o.label}"${o.code ? ` (código ${o.code})` : ""}`,
+      note: { from: trimmed, to: o.label },
     };
   }
   if (partial.length > 1) return { value: "", error: `"${trimmed}" é ambíguo — use o código exato.` };
@@ -104,7 +104,7 @@ export function buildAndValidateRows(
     const values: Record<string, string> = {};
     const rawValues: Record<string, string> = {};
     const errors: Record<string, string> = {};
-    const notes: Record<string, string> = {};
+    const notes: Record<string, ImportCellSuggestion> = {};
 
     for (const field of fields) {
       const columnIndex = columnByKey.get(field.key);
@@ -234,7 +234,7 @@ export function applyBatchDependencies(rows: ImportRowResult[], fields: ImportFi
       const typed = (r.rawValues[refField.key] ?? "").trim();
       const provName = (prov?.rawValues[keys[1] ?? keys[0]] ?? "").trim();
       if (prov && provName && normalizeMatch(typed) !== normalizeMatch(provName)) {
-        notes[refField.key] = `Sugestão: de "${typed}" para "${provName}"`;
+        notes[refField.key] = { from: typed, to: provName };
       }
     }
     if (!r.skip && isBatch(r) && !errors[refField.key] && !resolvable.has(r.rowIndex)) {

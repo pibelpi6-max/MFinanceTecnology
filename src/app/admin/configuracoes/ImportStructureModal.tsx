@@ -89,7 +89,7 @@ export function ImportStructureModal({
       open={open}
       onClose={handleClose}
       title={`${tImport("titlePrefix")} ${structure.name}`}
-      size={fullscreen ? "screen" : "xl"}
+      size={fullscreen ? "screen" : "full"}
       fullBleed={fullscreen}
       headerActions={
         <button

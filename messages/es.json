@@ -353,13 +353,16 @@
       "dropRoot": "Suelta aquí para quitar el superior (pasa a nivel 1)",
       "dragHandle": "Arrastrar para cambiar el superior",
       "suggestion": "Sugerencia",
-      "treeInfo": "Pasa el ratón por la fila y haz clic en el lápiz para editar. Arrastra ⠿ para mover.",
       "edit": "Editar fila",
       "save": "Guardar",
       "cancelEdit": "Cancelar edición",
       "readyForImport": "Listo para importar",
       "fullscreen": "Pantalla completa",
-      "exitFullscreen": "Salir de pantalla completa"
+      "exitFullscreen": "Salir de pantalla completa",
+      "suggestionTitle": "Sugerencia del sistema: usar \"{to}\" en lugar de \"{from}\"",
+      "countReady": "listas para importar",
+      "countErrors": "con error",
+      "countSkipped": "ignoradas"
     },
     "done": {
       "title": "{count} registro(s) importado(s) con éxito",

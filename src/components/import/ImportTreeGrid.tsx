@@ -13,6 +13,8 @@ interface ImportTreeGridProps {
   onEditRow: (rowIndex: number, values: Record<string, string>) => void;
   /** newParentRowIndex = null → vira item sem superior (nível 1) */
   onMoveRow: (rowIndex: number, newParentRowIndex: number | null) => void;
+  /** contadores mostrados ao lado do título "Status" */
+  counts: { ready: number; errors: number; skipped: number };
 }
 
 interface FlatRow {
@@ -27,7 +29,7 @@ interface FlatRow {
  * (pela alça) para dentro de outra muda o item superior dela — os filhos
  * vão junto, porque continuam apontando para o código dela.
  */
-export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRow }: ImportTreeGridProps) {
+export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRow, counts }: ImportTreeGridProps) {
   const t = useTranslations("import");
   const [dragging, setDragging] = useState<number | null>(null);
   const [over, setOver] = useState<number | "root" | null>(null);
@@ -100,12 +102,6 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
 
   return (
     <div className="import-tree-wrap">
-      <div className="import-tree-info">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3Z" />
-        </svg>
-        <span>{t("review.treeInfo")}</span>
-      </div>
       {dragging !== null && (
         <div
           className={`import-tree-rootzone${over === "root" ? " is-over" : ""}`}
@@ -125,14 +121,14 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
       )}
       <table className="import-grid-table import-tree-table">
         <colgroup>
-          <col style={{ width: 36 }} />
-          <col style={{ width: 28 }} />
-          <col style={{ width: 44 }} />
+          <col style={{ width: 34 }} />
+          <col style={{ width: 26 }} />
+          <col style={{ width: 38 }} />
           {fields.map((f, i) => (
-            <col key={f.key} style={i === 0 ? { width: "17%" } : i === 1 ? { width: "33%" } : undefined} />
+            <col key={f.key} style={i === 0 ? { width: 96 } : i === 1 ? undefined : { width: 230 }} />
           ))}
-          <col style={{ width: 76 }} />
-          <col style={{ width: 210 }} />
+          <col style={{ width: 70 }} />
+          <col style={{ width: 250 }} />
         </colgroup>
         <thead>
           <tr>
@@ -143,7 +139,18 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
               <th key={f.key}>{f.label}</th>
             ))}
             <th></th>
-            <th>{t("review.status")}</th>
+            <th>
+              <span className="import-status-head">
+                {t("review.status")}
+                <span className="import-count import-count-ok" title={`${counts.ready} ${t("review.countReady")}`}>{counts.ready}</span>
+                {counts.errors > 0 && (
+                  <span className="import-count import-count-error" title={`${counts.errors} ${t("review.countErrors")}`}>{counts.errors}</span>
+                )}
+                {counts.skipped > 0 && (
+                  <span className="import-count import-count-skipped" title={`${counts.skipped} ${t("review.countSkipped")}`}>{counts.skipped}</span>
+                )}
+              </span>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -215,17 +222,31 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
                             }}
                           />
                         ) : (
-                          <span className="import-cell-text">{row.rawValues[f.key] || "—"}</span>
+                          <span
+                            className="import-cell-text"
+                            title={
+                              row.notes[f.key]
+                                ? t("review.suggestionTitle", { from: row.notes[f.key].from, to: row.notes[f.key].to })
+                                : undefined
+                            }
+                          >
+                            {row.notes[f.key] && !row.errors[f.key] ? (
+                              <span className="import-suggest">
+                                <span className="import-suggest-from">{row.notes[f.key].from}</span>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14m-5-5 5 5-5 5" />
+                                </svg>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3Z" />
+                                </svg>
+                                <span className="import-suggest-to">{row.notes[f.key].to}</span>
+                              </span>
+                            ) : (
+                              row.rawValues[f.key] || "—"
+                            )}
+                          </span>
                         )}
                       </div>
-                      {row.notes[f.key] && !row.errors[f.key] && !isEditing && (
-                        <div className="import-cell-note">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-label={t("review.suggestion")}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3Z" />
-                          </svg>
-                          <span>{row.notes[f.key]}</span>
-                        </div>
-                      )}
                       {row.errors[f.key] && <div className="import-cell-error">{row.errors[f.key]}</div>}
                     </td>
                   );
