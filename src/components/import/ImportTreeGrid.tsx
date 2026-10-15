@@ -126,6 +126,8 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
     setOver(null);
   }
 
+  const hiddenCount = flat.length - visible.length;
+
   return (
     <div className="import-tree-wrap">
       {dragging !== null && (
@@ -147,31 +149,34 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
       )}
       <table className="import-grid-table import-tree-table">
         <colgroup>
+          <col style={{ width: 40 }} />
           <col style={{ width: 34 }} />
           <col style={{ width: 26 }} />
           {fields.map((f, i) => (
-            <col key={f.key} style={i === 0 ? { width: 96 } : i === 1 ? undefined : { width: 230 }} />
+            <col key={f.key} style={i === 0 ? { width: 96 } : i === 1 ? undefined : { width: 340 }} />
           ))}
           <col style={{ width: 70 }} />
           <col style={{ width: 250 }} />
         </colgroup>
         <thead>
           <tr>
+            <th>
+              {parents.length > 0 && (
+                <button
+                  type="button"
+                  className="import-sq"
+                  onClick={toggleAll}
+                  title={allCollapsed ? t("review.expandAll") : t("review.collapseAll")}
+                  aria-label={allCollapsed ? t("review.expandAll") : t("review.collapseAll")}
+                >
+                  <SqIcon plus={allCollapsed} />
+                </button>
+              )}
+            </th>
             <th></th>
             <th></th>
             {fields.map((f) => (
-              <th key={f.key}>
-                {f.key === nameKey && parents.length > 0 ? (
-                  <span className="import-status-head">
-                    {f.label}
-                    <button type="button" className="import-collapse-all" onClick={toggleAll}>
-                      {allCollapsed ? t("review.expandAll") : t("review.collapseAll")}
-                    </button>
-                  </span>
-                ) : (
-                  f.label
-                )}
-              </th>
+              <th key={f.key}>{f.label}</th>
             ))}
             <th></th>
             <th>
@@ -197,6 +202,7 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
                 key={row.rowIndex}
                 className={[
                   row.skip ? "import-row-skipped" : hasErrors ? "import-row-error" : "",
+                  (childrenOf.get(row.rowIndex)?.length ?? 0) > 0 ? "import-row-parent" : "",
                   dragging === row.rowIndex ? "import-row-dragging" : "",
                   dropOk ? "import-row-dropover" : "",
                 ].join(" ")}
@@ -213,6 +219,20 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
                   endDrag();
                 }}
               >
+                <td>
+                  {(childrenOf.get(row.rowIndex)?.length ?? 0) > 0 && (
+                    <button
+                      type="button"
+                      className="import-sq"
+                      onClick={() => toggleCollapse(row.rowIndex)}
+                      title={collapsed.has(row.rowIndex) ? t("review.expand") : t("review.collapse")}
+                      aria-label={`${collapsed.has(row.rowIndex) ? t("review.expand") : t("review.collapse")}: ${row.rawValues[nameKey] ?? ""}`}
+                      aria-expanded={!collapsed.has(row.rowIndex)}
+                    >
+                      <SqIcon plus={collapsed.has(row.rowIndex)} />
+                    </button>
+                  )}
+                </td>
                 <td>
                   <input
                     type="checkbox"
@@ -243,23 +263,7 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
                   const isEditing = editing === row.rowIndex;
                   return (
                     <td key={f.key}>
-                      <div className="import-tree-cell" style={isName ? { paddingLeft: depth * 22 } : undefined}>
-                        {isName &&
-                          ((childrenOf.get(row.rowIndex)?.length ?? 0) > 0 ? (
-                            <button
-                              type="button"
-                              className={`import-chevron${collapsed.has(row.rowIndex) ? " is-collapsed" : ""}`}
-                              title={collapsed.has(row.rowIndex) ? t("review.expand") : t("review.collapse")}
-                              aria-expanded={!collapsed.has(row.rowIndex)}
-                              onClick={() => toggleCollapse(row.rowIndex)}
-                            >
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.6} aria-hidden="true">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
-                              </svg>
-                            </button>
-                          ) : (
-                            <span className="import-chevron-spacer" />
-                          ))}
+                      <div className="import-tree-cell" style={isName ? { paddingLeft: depth * 24 } : undefined}>
                         {isEditing ? (
                           <input
                             className={`import-cell-input${row.errors[f.key] ? " is-invalid" : ""}`}
@@ -282,10 +286,12 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
                           >
                             {row.notes[f.key] && !row.errors[f.key] ? (
                               <span className="import-suggest">
+                                <span className="import-suggest-label">{t("review.suggestionFrom")}</span>
                                 <span className="import-suggest-from">{row.notes[f.key].from}</span>
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
                                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14m-5-5 5 5-5 5" />
                                 </svg>
+                                <span className="import-suggest-label">{t("review.suggestionTo")}</span>
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
                                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3Z" />
                                 </svg>
@@ -294,11 +300,6 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
                             ) : (
                               row.rawValues[f.key] || "—"
                             )}
-                          </span>
-                        )}
-                        {isName && !isEditing && collapsed.has(row.rowIndex) && (
-                          <span className="import-collapsed-count" title={t("review.hiddenChildren")}>
-                            +{descendantsOf(row.rowIndex).size}
                           </span>
                         )}
                       </div>
@@ -336,6 +337,17 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
           })}
         </tbody>
       </table>
+      <p className="import-tree-footer">
+        {hiddenCount > 0 ? t("review.hiddenFooter", { count: hiddenCount }) : t("review.allVisibleFooter", { count: flat.length })}
+      </p>
     </div>
+  );
+}
+
+function SqIcon({ plus }: { plus: boolean }) {
+  return (
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3.2} aria-hidden="true">
+      <path strokeLinecap="round" d={plus ? "M12 5v14M5 12h14" : "M5 12h14"} />
+    </svg>
   );
 }
