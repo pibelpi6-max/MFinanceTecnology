@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { getUserPreference, saveUserPreference } from "@/app/_actions/userPreferences";
+import { getUserPreference } from "@/app/_actions/userPreferences";
 import type { ConjuntoEstrutura, ConjuntoEstruturaItem, Orcamento } from "./types";
 
 const ORCAMENTO_ATUAL_COLUMNS = "id, tenant_id, year, label, status, conjunto_estrutura_id, created_at, updated_at";
@@ -18,10 +18,6 @@ function orcamentoAtualKey(tenantId: string) {
 export async function getOrcamentoAtualId(tenantId: string): Promise<string | null> {
   const pref = await getUserPreference<{ orcamentoId: string | null }>(orcamentoAtualKey(tenantId));
   return pref?.orcamentoId ?? null;
-}
-
-export async function setOrcamentoAtual(tenantId: string, orcamentoId: string | null) {
-  return saveUserPreference(orcamentoAtualKey(tenantId), { orcamentoId });
 }
 
 export async function getOrcamentoById(tenantId: string, id: string): Promise<Orcamento | null> {

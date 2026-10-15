@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { setOrcamentoAtual } from "@/lib/orcamentos/queries";
+import { setOrcamentoAtual } from "@/lib/orcamentos/_actions";
 import type { Orcamento } from "@/lib/orcamentos/types";
 
 interface OrcamentoSelectorProps {
