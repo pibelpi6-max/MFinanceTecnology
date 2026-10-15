@@ -860,7 +860,7 @@
 .import-suggest-from { color: var(--text-muted); }
 .import-suggest-to { font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
 .import-status-head { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 4px 6px; }
-.import-count { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 18px; padding: 0 8px; white-space: nowrap; border-radius: 999px; font-size: 10.5px; font-weight: 700; letter-spacing: 0; }
+.import-count { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 18px; padding: 0 8px; white-space: nowrap; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: 0; text-transform: none; }
 .import-count-ok { background: rgba(21,128,61,.12); color: #15803d; }
 .import-count-error { background: rgba(220,38,38,.12); color: #dc2626; }
 .import-count-skipped { background: #f1f2f6; color: #5b5f76; }
@@ -873,7 +873,7 @@
 .import-sq:hover { background: #2f5bd0; border-color: #2f5bd0; color: #fff; }
 .import-row-parent td { background: #fafbfe; }
 .import-row-parent .import-tree-cell .import-cell-text { font-weight: 600; }
-.import-suggest-label { flex: none; font-size: 10.5px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: #8a8fa6; }
+.import-suggest-label { flex: none; font-size: 12px; font-weight: 600; color: #8a8fa6; }
 .import-tree-footer { margin: 10px 0 0; font-size: 12.5px; color: #6b6f86; }
 .import-tree-table input[type="checkbox"] { width: 15px; height: 15px; margin: 0; vertical-align: middle; }
 .import-tree-table .import-row-actions { padding-left: 2px; padding-right: 2px; }
