@@ -65,6 +65,7 @@ export function ImportStructureModal({
           aliases: ["item superior", "pai", "parent", "superior"],
           options: existingNodes.map((n) => ({ value: n.id, label: n.name, code: n.code })),
           helpText: t("parentHelp"),
+          batchRefKeys: ["codigo", "nome"],
         },
       ],
     }),

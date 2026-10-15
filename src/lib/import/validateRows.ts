@@ -1,3 +1,4 @@
+import { BATCH_REF_PREFIX } from "./types";
 import type { ColumnMapping, ImportFieldConfig, ImportRowResult } from "./types";
 
 /** Converte texto em número aceitando formato BR ("1.234,56") e US ("1234.56"). */
@@ -25,7 +26,12 @@ function normalizeMatch(text: string): string {
     .trim();
 }
 
-function resolveNodeRef(raw: string, field: ImportFieldConfig): { value: string; error: string | null } {
+function resolveNodeRef(
+  raw: string,
+  field: ImportFieldConfig,
+  batchRefs: Set<string> | null,
+  selfRaws: string[]
+): { value: string; error: string | null } {
   const options = field.options ?? [];
   const trimmed = raw.trim();
   if (trimmed === "") return { value: "", error: null };
@@ -35,6 +41,14 @@ function resolveNodeRef(raw: string, field: ImportFieldConfig): { value: string;
 
   const byName = options.find((o) => normalizeMatch(o.label) === normalizeMatch(trimmed));
   if (byName) return { value: byName.value, error: null };
+
+  // Pai que está em outra linha da mesma planilha (hierarquia num arquivo só).
+  if (batchRefs?.has(normalizeMatch(trimmed))) {
+    if (selfRaws.some((r) => normalizeMatch(r) === normalizeMatch(trimmed))) {
+      return { value: "", error: `"${trimmed}" não pode ser superior de si mesmo.` };
+    }
+    return { value: `${BATCH_REF_PREFIX}${trimmed}`, error: null };
+  }
 
   const partial = options.filter((o) => normalizeMatch(o.label).includes(normalizeMatch(trimmed)));
   if (partial.length === 1) return { value: partial[0].value, error: null };
@@ -57,6 +71,23 @@ export function buildAndValidateRows(
   mapping.forEach((m) => {
     if (m.targetKey) columnByKey.set(m.targetKey, m.columnIndex);
   });
+
+  // Para node-ref com batchRefKeys: conjunto (normalizado) de códigos/nomes
+  // presentes nas linhas da própria planilha.
+  const batchRefsByField = new Map<string, Set<string>>();
+  for (const field of fields) {
+    if (field.type !== "node-ref" || !field.batchRefKeys?.length) continue;
+    const set = new Set<string>();
+    for (const key of field.batchRefKeys) {
+      const col = columnByKey.get(key);
+      if (col === undefined) continue;
+      for (const r of rows) {
+        const v = (r[col] ?? "").trim();
+        if (v) set.add(normalizeMatch(v));
+      }
+    }
+    batchRefsByField.set(field.key, set);
+  }
 
   return rows.map((row, rowIndex) => {
     const values: Record<string, string> = {};
@@ -83,7 +114,11 @@ export function buildAndValidateRows(
           values[field.key] = String(parsed);
         }
       } else if (field.type === "node-ref") {
-        const { value, error } = resolveNodeRef(raw, field);
+        const selfRaws = (field.batchRefKeys ?? []).map((k) => {
+          const col = columnByKey.get(k);
+          return col !== undefined ? (row[col] ?? "").trim() : "";
+        });
+        const { value, error } = resolveNodeRef(raw, field, batchRefsByField.get(field.key) ?? null, selfRaws);
         values[field.key] = value;
         if (error) errors[field.key] = error;
       } else {

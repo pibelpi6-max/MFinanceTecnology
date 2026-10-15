@@ -72,3 +72,54 @@ describe("buildAndValidateRows", () => {
     expect(Object.keys(rows[2].errors).length).toBe(0);
   });
 });
+
+describe("buildAndValidateRows — pai na mesma planilha (batchRefKeys)", () => {
+  const hierFields: ImportFieldConfig[] = [
+    { key: "codigo", label: "Código", type: "text", required: true },
+    { key: "nome", label: "Nome", type: "text", required: true },
+    {
+      key: "item_superior",
+      label: "Item Superior",
+      type: "node-ref",
+      required: false,
+      options: [{ value: "id-existente", label: "Existente", code: "9" }],
+      batchRefKeys: ["codigo", "nome"],
+    },
+  ];
+  const hierMapping: ColumnMapping[] = [
+    { columnIndex: 0, targetKey: "codigo" },
+    { columnIndex: 1, targetKey: "nome" },
+    { columnIndex: 2, targetKey: "item_superior" },
+  ];
+
+  it("aceita pai (por código ou nome) que está em outra linha do arquivo", () => {
+    const rows = buildAndValidateRows(
+      [
+        ["1", "Administrativo", ""],
+        ["1.1", "RH", "1"],
+        ["1.2", "Financeiro", "administrativo"],
+        ["1.1.1", "Folha", "1.1"],
+      ],
+      hierMapping,
+      hierFields
+    );
+    expect(rows.every((r) => Object.keys(r.errors).length === 0)).toBe(true);
+    expect(rows[1].values.item_superior).toBe("@batch:1");
+    expect(rows[2].values.item_superior).toBe("@batch:administrativo");
+  });
+
+  it("prefere pai já existente e ainda acusa pai inexistente ou autorreferência", () => {
+    const rows = buildAndValidateRows(
+      [
+        ["5", "A", "9"],
+        ["6", "B", "99"],
+        ["7", "C", "7"],
+      ],
+      hierMapping,
+      hierFields
+    );
+    expect(rows[0].values.item_superior).toBe("id-existente");
+    expect(rows[1].errors.item_superior).toBeDefined();
+    expect(rows[2].errors.item_superior).toBeDefined();
+  });
+});

@@ -28,6 +28,15 @@ export interface ImportFieldConfig {
   options?: ImportFieldOption[];
   /** texto de ajuda mostrado na etapa de mapeamento */
   helpText?: string;
+  /**
+   * node-ref que também pode apontar para OUTRA LINHA da própria planilha
+   * (hierarquia pai/filho subida de uma vez só). Lista as chaves de campo
+   * cujo valor identifica uma linha (ex.: ["codigo", "nome"]). Quando o texto
+   * não bate com nenhuma opção já existente mas bate com uma dessas colunas
+   * em outra linha, o valor resolvido vira `@batch:<texto>` e a Server Action
+   * resolve a ordem de criação (ver BATCH_REF_PREFIX).
+   */
+  batchRefKeys?: string[];
   /** validação extra além da checagem padrão do tipo; retorna mensagem de erro ou null se ok */
   validateExtra?: (raw: string) => string | null;
 }
@@ -60,6 +69,9 @@ export interface ImportRowResult {
   errors: Record<string, string>;
   skip: boolean;
 }
+
+/** Prefixo do valor resolvido de um node-ref que aponta para outra linha do mesmo arquivo. */
+export const BATCH_REF_PREFIX = "@batch:";
 
 export type ImportStep = "upload" | "mapping" | "review" | "done";
 
