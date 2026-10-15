@@ -13,6 +13,13 @@ export async function saveMatrixEntries(input: {
   year: number;
   month: number;
   entityNodeId: string;
+  /**
+   * Orçamento selecionado no seletor global — lançar valores exige um
+   * Orçamento (ver migration 0015_religar_orcamento.sql); `null` é
+   * rejeitado abaixo em vez de gravar mais lançamentos no bucket
+   * legado (dado anterior à religação, mantido só para leitura).
+   */
+  orcamentoId: string | null;
   /** { [dimensionTypeId]: dimensionNodeId } dos eixos extras selecionados (ver 0011_matriz_eixos_extras.sql). */
   extraDimensions?: Record<string, string>;
   entries: { accountNodeId: string; costCenterNodeId: string; amount: number }[];
@@ -21,6 +28,9 @@ export async function saveMatrixEntries(input: {
     const tenant = await getCurrentTenant();
     if (!tenant) return { error: "Não autenticado" };
     if (input.entries.length === 0) return { success: true };
+    if (!input.orcamentoId) {
+      return { error: "Selecione um Orçamento (no topo da tela) antes de lançar valores." };
+    }
 
     const supabase = await createClient();
     const extraDimensions = input.extraDimensions ?? {};
@@ -34,12 +44,14 @@ export async function saveMatrixEntries(input: {
       extra_dimensions: extraDimensions,
       amount: e.amount,
       created_by: tenant.userId,
+      orcamento_id: input.orcamentoId,
     }));
 
     const { error } = await supabase
       .from("matrix_budget_entries")
       .upsert(rows, {
-        onConflict: "tenant_id,year,month,cost_center_node_id,account_node_id,entity_node_id,extra_dimensions",
+        onConflict:
+          "tenant_id,year,month,cost_center_node_id,account_node_id,entity_node_id,extra_dimensions,orcamento_id",
       });
     if (error) return { error: error.message };
 
@@ -51,10 +63,19 @@ export async function saveMatrixEntries(input: {
 }
 
 export async function importMatrixEntries(input: {
+  /** Mesma regra de saveMatrixEntries: importar também exige um Orçamento selecionado. */
+  orcamentoId: string | null;
   rows: { values: Record<string, string> }[];
 }): Promise<{ successCount: number; errorCount: number; errors: { rowIndex: number; message: string }[] }> {
   const tenant = await getCurrentTenant();
   if (!tenant) throw new Error("Não autenticado");
+  if (!input.orcamentoId) {
+    return {
+      successCount: 0,
+      errorCount: input.rows.length,
+      errors: [{ rowIndex: 0, message: "Selecione um Orçamento (no topo da tela) antes de importar." }],
+    };
+  }
   const supabase = await createClient();
 
   const errors: { rowIndex: number; message: string }[] = [];
@@ -85,10 +106,11 @@ export async function importMatrixEntries(input: {
         extra_dimensions: {},
         amount,
         created_by: tenant.userId,
+        orcamento_id: input.orcamentoId,
       },
       {
         onConflict:
-          "tenant_id,year,month,cost_center_node_id,account_node_id,entity_node_id,extra_dimensions",
+          "tenant_id,year,month,cost_center_node_id,account_node_id,entity_node_id,extra_dimensions,orcamento_id",
       }
     );
     if (error) {

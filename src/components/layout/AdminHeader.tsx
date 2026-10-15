@@ -4,7 +4,9 @@ import { usePathname } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { setLocale } from "@/app/actions";
 import { useSessionGuard } from "@/hooks/useSessionGuard";
+import { OrcamentoSelector } from "./OrcamentoSelector";
 import type { SupportedLocale } from "@/i18n/request";
+import type { Orcamento } from "@/lib/orcamentos/types";
 
 const FlagBR = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 14" style={{ display: "block", borderRadius: "50%", width: 22, height: 22 }}>
@@ -38,7 +40,13 @@ const FLAGS: Record<SupportedLocale, () => React.ReactElement> = {
   es: FlagES,
 };
 
-export function AdminHeader() {
+interface AdminHeaderProps {
+  tenantId: string;
+  orcamentos: Orcamento[];
+  currentOrcamentoId: string | null;
+}
+
+export function AdminHeader({ tenantId, orcamentos, currentOrcamentoId }: AdminHeaderProps) {
   useSessionGuard();
   const t = useTranslations("nav");
   const pathname = usePathname();
@@ -54,6 +62,8 @@ export function AdminHeader() {
 
   return (
     <header className="admin-topbar">
+      <OrcamentoSelector tenantId={tenantId} orcamentos={orcamentos} currentOrcamentoId={currentOrcamentoId} />
+      <div className="admin-header-sep" />
       <div className="admin-flags">
         {(Object.keys(FLAGS) as SupportedLocale[]).map((loc) => {
           const Flag = FLAGS[loc];

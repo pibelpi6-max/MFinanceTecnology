@@ -18,6 +18,10 @@ interface MatrixGridClientProps {
   accounts: HierarchyRow<DimensionNodeRow>[];
   costCenters: DimensionNodeRow[];
   initialEntries: MatrixEntry[];
+  /** Orçamento selecionado no seletor global (AdminHeader) — null = bucket legado, somente leitura. */
+  orcamentoId: string | null;
+  /** Mensagem de aviso quando orcamentoId é null — grid fica travado pra edição. */
+  readOnlyHint?: string | null;
 }
 
 // [accountId][costCenterId] = texto digitado na célula (raw, não parseado
@@ -57,10 +61,13 @@ export function MatrixGridClient({
   accounts,
   costCenters,
   initialEntries,
+  orcamentoId,
+  readOnlyHint,
 }: MatrixGridClientProps) {
   const router = useRouter();
   const t = useTranslations("budget");
   const tc = useTranslations("common");
+  const readOnly = !orcamentoId;
 
   const [values, setValues] = useState<ValuesMap>(() => buildInitialValues(initialEntries));
   const [dirty, setDirty] = useState<Set<string>>(new Set());
@@ -73,6 +80,7 @@ export function MatrixGridClient({
   }
 
   function handleChange(accountId: string, costCenterId: string, raw: string) {
+    if (readOnly) return;
     if (raw !== "" && !/^-?\d*[.,]?\d*$/.test(raw)) return;
     setValues((prev) => ({
       ...prev,
@@ -117,7 +125,7 @@ export function MatrixGridClient({
     if (entries.length === 0) return;
 
     startTransition(async () => {
-      const result = await saveMatrixEntries({ year, month, entityNodeId, extraDimensions, entries });
+      const result = await saveMatrixEntries({ year, month, entityNodeId, orcamentoId, extraDimensions, entries });
       if (result.error) {
         setError(result.error);
         return;
@@ -138,6 +146,7 @@ export function MatrixGridClient({
     <div className="matrix-wrap">
       <div className="matrix-toolbar">
         <div className="matrix-toolbar-info">
+          {readOnly && readOnlyHint && <span className="matrix-error-hint">{readOnlyHint}</span>}
           {dirty.size > 0 && (
             <span className="matrix-dirty-hint">{t("unsavedChanges", { count: dirty.size })}</span>
           )}
@@ -158,7 +167,7 @@ export function MatrixGridClient({
             onClick={handleSave}
             isLoading={isPending}
             loadingText={t("saving")}
-            disabled={dirty.size === 0}
+            disabled={dirty.size === 0 || readOnly}
           >
             {tc("save")}
           </Button>
@@ -196,6 +205,7 @@ export function MatrixGridClient({
                         value={values[item.id]?.[cc.id] ?? ""}
                         placeholder="0,00"
                         onChange={(e) => handleChange(item.id, cc.id, e.target.value)}
+                        disabled={readOnly}
                       />
                     </td>
                   );

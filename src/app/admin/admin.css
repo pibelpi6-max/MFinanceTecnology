@@ -157,6 +157,8 @@
 }
 .year-select:focus { outline: none; border-color: #3E6FE0; box-shadow: 0 0 0 3px rgba(62,111,224,.15); }
 
+.orcamento-selector { max-width: 200px; }
+
 /* ── Matriz orçamentária ──────────────────────────── */
 .matrix-filters { display: flex; align-items: center; gap: 8px; }
 

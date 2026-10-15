@@ -159,7 +159,8 @@
       "show": "Mostrar árbol",
       "goToPackages": "Ver en Paquetes"
     },
-    "importButton": "Importar"
+    "importButton": "Importar",
+    "noOrcamentoHint": "Selecciona un Presupuesto en la parte superior de la pantalla para ingresar valores — los datos mostrados abajo son datos heredados (sin Presupuesto), de solo lectura."
   },
   "packages": {
     "name": "Nombre",
@@ -192,7 +193,8 @@
     "deleteConfirmBody": "\"{name}\" será eliminado permanentemente. Esta acción no se puede deshacer.",
     "entity": "Entidad",
     "noEntity": "Sin entidad",
-    "importButton": "Importar"
+    "importButton": "Importar",
+    "noOrcamentoHint": "Selecciona un Presupuesto en la parte superior de la pantalla para crear paquetes — los paquetes mostrados abajo son datos heredados (sin Presupuesto)."
   },
   "actuals": {
     "title": "Gastos Reales",
@@ -313,7 +315,9 @@
       "noConjuntosHint": "Cree un Conjunto de Estructuras antes de vincularlo a este Presupuesto.",
       "empty": "Ningún presupuesto registrado.",
       "deleteConfirmTitle": "Eliminar presupuesto",
-      "deleteConfirmBody": "¿Eliminar el presupuesto <b>{label}</b> permanentemente?"
+      "deleteConfirmBody": "¿Eliminar el presupuesto <b>{label}</b> permanentemente?",
+      "selectorTitle": "Presupuesto en uso",
+      "selectorNone": "Sin Presupuesto (datos heredados)"
     }
   },
   "import": {

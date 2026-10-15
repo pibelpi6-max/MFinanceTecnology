@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { getCurrentTenant } from "@/lib/tenant/getCurrentTenant";
 import { getDimensionTypeByCode, getDimensionTree } from "@/lib/dimensions/queries";
 import { DIMENSION_CODES } from "@/lib/dimensions/constants";
+import { getOrcamentoContext } from "@/lib/orcamentos/queries";
 import { ImportRealizadoClient } from "./ImportRealizadoClient";
 
 interface PageProps {
@@ -14,6 +15,7 @@ export default async function ImportarRealizadoPage({ searchParams }: PageProps)
   if (!tenant) notFound();
 
   const year = Number(searchParams.ano) || new Date().getFullYear();
+  const { conjuntoEstruturaId } = await getOrcamentoContext(tenant.tenantId);
 
   const [contaType, centroCustoType, entidadeType] = await Promise.all([
     getDimensionTypeByCode(tenant.tenantId, DIMENSION_CODES.CONTA),
@@ -22,9 +24,11 @@ export default async function ImportarRealizadoPage({ searchParams }: PageProps)
   ]);
 
   const [accountNodes, costCenterNodes, entityNodes] = await Promise.all([
-    contaType ? getDimensionTree(tenant.tenantId, contaType.id, year) : Promise.resolve([]),
-    centroCustoType ? getDimensionTree(tenant.tenantId, centroCustoType.id, year) : Promise.resolve([]),
-    entidadeType ? getDimensionTree(tenant.tenantId, entidadeType.id, year) : Promise.resolve([]),
+    contaType ? getDimensionTree(tenant.tenantId, contaType.id, year, conjuntoEstruturaId) : Promise.resolve([]),
+    centroCustoType
+      ? getDimensionTree(tenant.tenantId, centroCustoType.id, year, conjuntoEstruturaId)
+      : Promise.resolve([]),
+    entidadeType ? getDimensionTree(tenant.tenantId, entidadeType.id, year, conjuntoEstruturaId) : Promise.resolve([]),
   ]);
 
   const t = await getTranslations("import");

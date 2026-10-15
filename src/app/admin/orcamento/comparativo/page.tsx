@@ -13,6 +13,7 @@ import {
   getDeviationExplanations,
 } from "@/lib/actuals/queries";
 import type { ComparisonCell } from "@/lib/actuals/types";
+import { getOrcamentoContext } from "@/lib/orcamentos/queries";
 import { RealizadoFilters } from "../realizado/RealizadoFilters";
 import { ComparativoClient } from "./ComparativoClient";
 
@@ -25,6 +26,7 @@ export default async function ComparativoPage({ searchParams }: PageProps) {
   if (!tenant) notFound();
 
   const t = await getTranslations("actuals");
+  const { orcamentoId, conjuntoEstruturaId } = await getOrcamentoContext(tenant.tenantId);
 
   const [contaType, centroCustoType, entidadeType] = await Promise.all([
     getDimensionTypeByCode(tenant.tenantId, DIMENSION_CODES.CONTA),
@@ -36,9 +38,11 @@ export default async function ComparativoPage({ searchParams }: PageProps) {
   const month = Number(searchParams.mes) || new Date().getMonth() + 1;
 
   const [accountNodes, costCenterNodes, entityNodes] = await Promise.all([
-    contaType ? getDimensionTree(tenant.tenantId, contaType.id, year) : Promise.resolve([]),
-    centroCustoType ? getDimensionTree(tenant.tenantId, centroCustoType.id, year) : Promise.resolve([]),
-    entidadeType ? getDimensionTree(tenant.tenantId, entidadeType.id, year) : Promise.resolve([]),
+    contaType ? getDimensionTree(tenant.tenantId, contaType.id, year, conjuntoEstruturaId) : Promise.resolve([]),
+    centroCustoType
+      ? getDimensionTree(tenant.tenantId, centroCustoType.id, year, conjuntoEstruturaId)
+      : Promise.resolve([]),
+    entidadeType ? getDimensionTree(tenant.tenantId, entidadeType.id, year, conjuntoEstruturaId) : Promise.resolve([]),
   ]);
 
   const { rows: accountRows } = buildDimensionHierarchy(accountNodes);
@@ -56,7 +60,7 @@ export default async function ComparativoPage({ searchParams }: PageProps) {
 
   if (!missingSetup && entityNodeId) {
     const [budgetEntries, expenseEntries, tolerances, explanations] = await Promise.all([
-      getMatrixEntries(tenant.tenantId, year, month, entityNodeId),
+      getMatrixEntries(tenant.tenantId, year, month, entityNodeId, orcamentoId),
       getExpenseEntries(tenant.tenantId, year, month, entityNodeId),
       getTolerances(tenant.tenantId, year),
       getDeviationExplanations(tenant.tenantId, year, month),
