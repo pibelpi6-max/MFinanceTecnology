@@ -228,6 +228,15 @@ export function applyBatchDependencies(rows: ImportRowResult[], fields: ImportFi
 
   return rows.map((r) => {
     const errors = { ...(baseErrors.get(r.rowIndex) ?? {}) };
+    const notes = { ...r.baseNotes };
+    if (isBatch(r) && !errors[refField.key]) {
+      const prov = findBatchProvider(rows, fields, r);
+      const typed = (r.rawValues[refField.key] ?? "").trim();
+      const provName = (prov?.rawValues[keys[1] ?? keys[0]] ?? "").trim();
+      if (prov && provName && normalizeMatch(typed) !== normalizeMatch(provName)) {
+        notes[refField.key] = `Sugestão: de "${typed}" para "${provName}"`;
+      }
+    }
     if (!r.skip && isBatch(r) && !errors[refField.key] && !resolvable.has(r.rowIndex)) {
       const ref = (r.values[refField.key] ?? "").slice(BATCH_REF_PREFIX.length);
       const provider = findBatchProvider(rows, fields, r);
@@ -242,6 +251,6 @@ export function applyBatchDependencies(rows: ImportRowResult[], fields: ImportFi
         errors[refField.key] = `O item superior "${ref}" não foi encontrado.`;
       }
     }
-    return { ...r, errors };
+    return { ...r, errors, notes };
   });
 }

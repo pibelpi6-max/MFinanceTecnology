@@ -356,7 +356,10 @@
       "treeInfo": "Pasa el ratón por la fila y haz clic en el lápiz para editar. Arrastra ⠿ para mover.",
       "edit": "Editar fila",
       "save": "Guardar",
-      "cancelEdit": "Cancelar edición"
+      "cancelEdit": "Cancelar edición",
+      "readyForImport": "Listo para importar",
+      "fullscreen": "Pantalla completa",
+      "exitFullscreen": "Salir de pantalla completa"
     },
     "done": {
       "title": "{count} registro(s) importado(s) con éxito",

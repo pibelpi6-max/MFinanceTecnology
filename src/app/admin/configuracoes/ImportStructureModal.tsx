@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Modal } from "@/components/ui/Modal";
 import { ImportWizard } from "@/components/import/ImportWizard";
@@ -50,6 +50,12 @@ export function ImportStructureModal({
     [nodes]
   );
 
+  const [fullscreen, setFullscreen] = useState(false);
+  function handleClose() {
+    setFullscreen(false);
+    onClose();
+  }
+
   const existingRoot = useMemo(() => nodes.find((n) => n.parentNodeId === null) ?? null, [nodes]);
 
   const layout: ImportLayoutConfig = useMemo(
@@ -79,7 +85,28 @@ export function ImportStructureModal({
   );
 
   return (
-    <Modal open={open} onClose={onClose} title={`${tImport("titlePrefix")} ${structure.name}`} size="xl">
+    <Modal
+      open={open}
+      onClose={handleClose}
+      title={`${tImport("titlePrefix")} ${structure.name}`}
+      size={fullscreen ? "screen" : "xl"}
+      fullBleed={fullscreen}
+      headerActions={
+        <button
+          type="button"
+          onClick={() => setFullscreen((v) => !v)}
+          title={fullscreen ? tImport("review.exitFullscreen") : tImport("review.fullscreen")}
+          aria-label={fullscreen ? tImport("review.exitFullscreen") : tImport("review.fullscreen")}
+          className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+        >
+          {fullscreen ? (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" /></svg>
+          ) : (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" /></svg>
+          )}
+        </button>
+      }
+    >
       <ImportWizard
         layout={layout}
         onImport={(rows) =>
@@ -90,7 +117,7 @@ export function ImportStructureModal({
             rows,
           })
         }
-        onClose={onClose}
+        onClose={handleClose}
         onImported={onImported}
       />
     </Modal>

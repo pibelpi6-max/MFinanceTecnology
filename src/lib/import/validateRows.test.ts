@@ -194,7 +194,7 @@ describe("avisos de interpretação (notes)", () => {
     { columnIndex: 2, targetKey: "item_superior" },
   ];
 
-  it("sugere (nota) só quando o pai foi casado por aproximação", () => {
+  it("sugere de/para quando o texto digitado difere do item encontrado", () => {
     const rows = applyBatchDependencies(
       buildAndValidateRows([["20", "A", "Admin"], ["30", "B", "20"]], m, f),
       f
@@ -202,7 +202,7 @@ describe("avisos de interpretação (notes)", () => {
     expect(rows[0].notes.item_superior).toBe(
       'Sugestão: de "Admin" para "Administrativo" (código 10)'
     );
-    expect(rows[1].notes.item_superior).toBeUndefined();
+    expect(rows[1].notes.item_superior).toBe('Sugestão: de "20" para "A"');
   });
 
   it("não avisa quando o casamento é exato", () => {

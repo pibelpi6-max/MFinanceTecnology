@@ -99,7 +99,7 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
   }
 
   return (
-    <div className="import-grid-wrap">
+    <div className="import-tree-wrap">
       <div className="import-tree-info">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3Z" />
@@ -123,7 +123,17 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
           {t("review.dropRoot")}
         </div>
       )}
-      <table className="import-grid-table">
+      <table className="import-grid-table import-tree-table">
+        <colgroup>
+          <col style={{ width: 36 }} />
+          <col style={{ width: 28 }} />
+          <col style={{ width: 44 }} />
+          {fields.map((f, i) => (
+            <col key={f.key} style={i === 0 ? { width: "17%" } : i === 1 ? { width: "33%" } : undefined} />
+          ))}
+          <col style={{ width: 76 }} />
+          <col style={{ width: 210 }} />
+        </colgroup>
         <thead>
           <tr>
             <th></th>
@@ -193,7 +203,6 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
                   return (
                     <td key={f.key}>
                       <div className="import-tree-cell" style={isName ? { paddingLeft: depth * 22 } : undefined}>
-                        {isName && depth > 0 && <span className="import-tree-elbow" aria-hidden="true" />}
                         {isEditing ? (
                           <input
                             className={`import-cell-input${row.errors[f.key] ? " is-invalid" : ""}`}
@@ -243,7 +252,7 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
                   ) : hasErrors ? (
                     <span className="import-status-tag import-status-error">{t("review.hasErrors")}</span>
                   ) : (
-                    <span className="import-status-tag import-status-ok">{t("review.ready")}</span>
+                    <span className="import-status-tag import-status-ok">{t("review.readyForImport")}</span>
                   )}
                 </td>
               </tr>

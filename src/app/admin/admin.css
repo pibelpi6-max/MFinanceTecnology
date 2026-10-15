@@ -847,3 +847,7 @@
 .import-icon-btn.is-cancel:hover { background: rgba(220,38,38,.08); color: #dc2626; }
 .import-edit-btn { opacity: 0; transition: opacity .12s; }
 .import-grid-table tr:hover .import-edit-btn, .import-edit-btn:focus-visible { opacity: 1; }
+.import-tree-wrap { border-radius: 12px; }
+.import-tree-table { table-layout: fixed; }
+.import-tree-table td { overflow: hidden; }
+.import-tree-table .import-cell-input { min-width: 0; }

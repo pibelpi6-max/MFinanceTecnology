@@ -356,7 +356,10 @@
       "treeInfo": "Hover a row and click the pencil to edit. Drag ⠿ to move.",
       "edit": "Edit row",
       "save": "Save",
-      "cancelEdit": "Cancel edit"
+      "cancelEdit": "Cancel edit",
+      "readyForImport": "Ready to import",
+      "fullscreen": "Full screen",
+      "exitFullscreen": "Exit full screen"
     },
     "done": {
       "title": "{count} record(s) imported successfully",
