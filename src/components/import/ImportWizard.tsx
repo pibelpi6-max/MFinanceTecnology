@@ -36,11 +36,11 @@ interface ImportWizardProps {
    * "done") — pra quem está ouvindo (ex: a tela por trás do modal) puder
    * revalidar os dados sem esperar a usuária fechar o assistente. */
   onImported?: () => void;
-  /** Ação à esquerda, na altura dos passos (ex.: botão "Tela cheia"). */
-  toolbarLeft?: React.ReactNode;
+  /** Ação à direita, na altura dos passos (ex.: botão "Tela cheia"). */
+  toolbarRight?: React.ReactNode;
 }
 
-export function ImportWizard({ layout, backHref, onImport, onClose, onImported, toolbarLeft }: ImportWizardProps) {
+export function ImportWizard({ layout, backHref, onImport, onClose, onImported, toolbarRight }: ImportWizardProps) {
   const t = useTranslations("import");
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -168,11 +168,11 @@ export function ImportWizard({ layout, backHref, onImport, onClose, onImported, 
 
   return (
     <div className="import-wizard">
-      {toolbarLeft ? (
+      {toolbarRight ? (
         <div className="import-toolbar">
-          <div className="import-toolbar-left">{toolbarLeft}</div>
-          <ImportStepIndicator current={step} />
           <div />
+          <ImportStepIndicator current={step} />
+          <div className="import-toolbar-right">{toolbarRight}</div>
         </div>
       ) : (
         <ImportStepIndicator current={step} />

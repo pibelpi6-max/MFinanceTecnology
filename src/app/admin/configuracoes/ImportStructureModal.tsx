@@ -124,7 +124,7 @@ export function ImportStructureModal({
             rows,
           })
         }
-        toolbarLeft={
+        toolbarRight={
           <Button size="sm" variant="accent-blue" className="px-3" onClick={toggleFullscreen}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2}>
               {fullscreen ? (
