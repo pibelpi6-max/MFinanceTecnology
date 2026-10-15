@@ -7,6 +7,7 @@ import { buildDimensionHierarchy } from "@/lib/dimensions/hierarchy";
 import { getMatrixEntries } from "@/lib/budget/queries";
 import { getPackages } from "@/lib/packages/queries";
 import { getTenantLabels } from "@/lib/labels/getTenantLabels";
+import { getOrcamentoContext } from "@/lib/orcamentos/queries";
 import { ImportLinkButton } from "@/components/import/ImportLinkButton";
 import { MatrixFilters } from "./MatrixFilters";
 import { MatrixGridClient } from "./MatrixGridClient";
@@ -25,7 +26,11 @@ export default async function MatrizPage({ searchParams }: PageProps) {
 
   const t = await getTranslations("budget");
   const locale = await getLocale();
-  const labels = await getTenantLabels(tenant.tenantId, locale);
+  const [labels, orcamentoCtx] = await Promise.all([
+    getTenantLabels(tenant.tenantId, locale),
+    getOrcamentoContext(tenant.tenantId),
+  ]);
+  const { orcamentoId, conjuntoEstruturaId } = orcamentoCtx;
 
   const [contaType, centroCustoType, entidadeType, extraDimensionTypes] = await Promise.all([
     getDimensionTypeByCode(tenant.tenantId, DIMENSION_CODES.CONTA),
@@ -38,10 +43,12 @@ export default async function MatrizPage({ searchParams }: PageProps) {
   const month = Number(searchParams.mes) || new Date().getMonth() + 1;
 
   const [accountNodes, costCenterNodes, entityNodes, extraDimensionTrees] = await Promise.all([
-    contaType ? getDimensionTree(tenant.tenantId, contaType.id, year) : Promise.resolve([]),
-    centroCustoType ? getDimensionTree(tenant.tenantId, centroCustoType.id, year) : Promise.resolve([]),
-    entidadeType ? getDimensionTree(tenant.tenantId, entidadeType.id, year) : Promise.resolve([]),
-    Promise.all(extraDimensionTypes.map((dt) => getDimensionTree(tenant.tenantId, dt.id, year))),
+    contaType ? getDimensionTree(tenant.tenantId, contaType.id, year, conjuntoEstruturaId) : Promise.resolve([]),
+    centroCustoType
+      ? getDimensionTree(tenant.tenantId, centroCustoType.id, year, conjuntoEstruturaId)
+      : Promise.resolve([]),
+    entidadeType ? getDimensionTree(tenant.tenantId, entidadeType.id, year, conjuntoEstruturaId) : Promise.resolve([]),
+    Promise.all(extraDimensionTypes.map((dt) => getDimensionTree(tenant.tenantId, dt.id, year, conjuntoEstruturaId))),
   ]);
 
   const { rows: accountRows } = buildDimensionHierarchy(accountNodes);
@@ -82,9 +89,9 @@ export default async function MatrizPage({ searchParams }: PageProps) {
 
   const [entries, packages] = await Promise.all([
     !missingSetup && entityNodeId
-      ? getMatrixEntries(tenant.tenantId, year, month, entityNodeId, extraDimensionsFilter)
+      ? getMatrixEntries(tenant.tenantId, year, month, entityNodeId, orcamentoId, extraDimensionsFilter)
       : Promise.resolve([]),
-    getPackages(tenant.tenantId, year),
+    getPackages(tenant.tenantId, year, orcamentoId),
   ]);
 
   return (
@@ -134,6 +141,8 @@ export default async function MatrizPage({ searchParams }: PageProps) {
                 accounts={accountRows}
                 costCenters={costCenterRows.map((r) => r.item)}
                 initialEntries={entries}
+                orcamentoId={orcamentoId}
+                readOnlyHint={orcamentoId ? null : t("noOrcamentoHint")}
               />
             )}
           </div>

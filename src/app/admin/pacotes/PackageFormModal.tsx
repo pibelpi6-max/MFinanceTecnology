@@ -12,12 +12,23 @@ interface PackageFormModalProps {
   onClose: () => void;
   editing: BudgetPackageRow | null;
   year: number;
+  /** Orçamento selecionado no seletor global — exigido pra criar um pacote novo (ver _actions.ts#createPackage). */
+  orcamentoId: string | null;
   costCenterNodes: { id: string; name: string }[];
   entityNodes: { id: string; name: string }[];
   onSaved: () => void;
 }
 
-export function PackageFormModal({ open, onClose, editing, year, costCenterNodes, entityNodes, onSaved }: PackageFormModalProps) {
+export function PackageFormModal({
+  open,
+  onClose,
+  editing,
+  year,
+  orcamentoId,
+  costCenterNodes,
+  entityNodes,
+  onSaved,
+}: PackageFormModalProps) {
   const t = useTranslations("packages");
   const tc = useTranslations("common");
 
@@ -50,6 +61,7 @@ export function PackageFormModal({ open, onClose, editing, year, costCenterNodes
         })
       : await createPackage({
           year,
+          orcamentoId,
           name: name.trim(),
           costCenterNodeId: costCenterNodeId || null,
           entityNodeId: entityNodeId || null,

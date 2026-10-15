@@ -34,12 +34,17 @@ async function requireWriteAccess() {
 
 export async function createPackage(input: {
   year: number;
+  /** Orçamento selecionado no seletor global — criar um pacote exige um Orçamento (ver migration 0015_religar_orcamento.sql). */
+  orcamentoId: string | null;
   name: string;
   costCenterNodeId: string | null;
   entityNodeId: string | null;
 }): Promise<ActionResult> {
   try {
     const tenant = await requireWriteAccess();
+    if (!input.orcamentoId) {
+      return { error: "Selecione um Orçamento (no topo da tela) antes de criar um pacote." };
+    }
     const supabase = await createClient();
 
     const { data: pkg, error } = await supabase
@@ -52,6 +57,7 @@ export async function createPackage(input: {
         entity_node_id: input.entityNodeId,
         owner_user_id: tenant.userId,
         status: "rascunho",
+        orcamento_id: input.orcamentoId,
       })
       .select("id")
       .single();
@@ -174,9 +180,18 @@ export async function fetchPackageHistory(packageId: string): Promise<{ data?: P
 
 export async function importPackages(input: {
   year: number;
+  /** Mesma regra de createPackage: importar também exige um Orçamento selecionado. */
+  orcamentoId: string | null;
   rows: { values: Record<string, string> }[];
 }): Promise<{ successCount: number; errorCount: number; errors: { rowIndex: number; message: string }[] }> {
   const tenant = await requireWriteAccess();
+  if (!input.orcamentoId) {
+    return {
+      successCount: 0,
+      errorCount: input.rows.length,
+      errors: [{ rowIndex: 0, message: "Selecione um Orçamento (no topo da tela) antes de importar." }],
+    };
+  }
   const supabase = await createClient();
 
   const errors: { rowIndex: number; message: string }[] = [];
@@ -200,6 +215,7 @@ export async function importPackages(input: {
         entity_node_id: v.entidade || null,
         owner_user_id: tenant.userId,
         status: "rascunho",
+        orcamento_id: input.orcamentoId,
       })
       .select("id")
       .single();

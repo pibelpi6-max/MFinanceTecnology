@@ -15,12 +15,19 @@ interface NodeOption {
 
 interface ImportMatrizClientProps {
   referenceYear: number;
+  orcamentoId: string | null;
   accountNodes: NodeOption[];
   costCenterNodes: NodeOption[];
   entityNodes: NodeOption[];
 }
 
-export function ImportMatrizClient({ referenceYear, accountNodes, costCenterNodes, entityNodes }: ImportMatrizClientProps) {
+export function ImportMatrizClient({
+  referenceYear,
+  orcamentoId,
+  accountNodes,
+  costCenterNodes,
+  entityNodes,
+}: ImportMatrizClientProps) {
   const t = useTranslations("import.matrizFields");
 
   const layout: ImportLayoutConfig = useMemo(
@@ -85,7 +92,7 @@ export function ImportMatrizClient({ referenceYear, accountNodes, costCenterNode
     <ImportWizard
       layout={layout}
       backHref={`/admin/orcamento/matriz?ano=${referenceYear}`}
-      onImport={(rows) => importMatrixEntries({ rows })}
+      onImport={(rows) => importMatrixEntries({ orcamentoId, rows })}
     />
   );
 }

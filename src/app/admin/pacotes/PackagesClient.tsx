@@ -14,6 +14,8 @@ import { deletePackage, transitionPackageStatus } from "./_actions";
 
 interface PackagesClientProps {
   year: number;
+  /** Orçamento selecionado no seletor global — null = bucket legado, somente leitura (ver _actions.ts#createPackage). */
+  orcamentoId: string | null;
   packages: BudgetPackageRow[];
   costCenterNodes: { id: string; name: string }[];
   entityNodes: { id: string; name: string }[];
@@ -35,6 +37,7 @@ const NEXT_ACTIONS: Record<PackageStatus, { to: PackageStatus; variant: "primary
 
 export function PackagesClient({
   year,
+  orcamentoId,
   packages,
   costCenterNodes,
   entityNodes,
@@ -173,6 +176,12 @@ export function PackagesClient({
         </select>
       </div>
 
+      {!orcamentoId && (
+        <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2">
+          <p className="text-sm text-amber-700">{t("noOrcamentoHint")}</p>
+        </div>
+      )}
+
       {actionError && (
         <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-4 py-2">
           <p className="text-sm text-red-600">{actionError}</p>
@@ -185,7 +194,13 @@ export function PackagesClient({
         prefsKey="pacotes_cols"
         onEdit={(p) => setEditing(p)}
         onDelete={(p) => setDeleting(p)}
-        onNew={() => setEditing("new")}
+        onNew={() => {
+          if (!orcamentoId) {
+            setActionError(t("noOrcamentoHint"));
+            return;
+          }
+          setEditing("new");
+        }}
         newLabel={t("new", { label: packageLabel })}
         emptyMessage={t("emptyMessage", { year })}
       />
@@ -195,6 +210,7 @@ export function PackagesClient({
         onClose={() => setEditing(null)}
         editing={editing === "new" ? null : editing}
         year={year}
+        orcamentoId={orcamentoId}
         costCenterNodes={costCenterNodes}
         entityNodes={entityNodes}
         onSaved={() => {

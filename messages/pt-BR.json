@@ -159,7 +159,8 @@
       "show": "Mostrar árvore",
       "goToPackages": "Ver em Pacotes"
     },
-    "importButton": "Importar"
+    "importButton": "Importar",
+    "noOrcamentoHint": "Selecione um Orçamento no topo da tela para lançar valores — os dados mostrados abaixo são lançamentos legados (sem Orçamento), somente leitura."
   },
   "packages": {
     "name": "Nome",
@@ -192,7 +193,8 @@
     "deleteConfirmBody": "\"{name}\" será excluído permanentemente. Essa ação não pode ser desfeita.",
     "entity": "Entidade",
     "noEntity": "Sem entidade",
-    "importButton": "Importar"
+    "importButton": "Importar",
+    "noOrcamentoHint": "Selecione um Orçamento no topo da tela para criar pacotes — os pacotes mostrados abaixo são lançamentos legados (sem Orçamento)."
   },
   "actuals": {
     "title": "Despesas Realizadas",
@@ -313,7 +315,9 @@
       "noConjuntosHint": "Crie um Conjunto de Estruturas antes de vincular um a este Orçamento.",
       "empty": "Nenhum orçamento cadastrado.",
       "deleteConfirmTitle": "Excluir orçamento",
-      "deleteConfirmBody": "Deseja excluir o orçamento <b>{label}</b> permanentemente?"
+      "deleteConfirmBody": "Deseja excluir o orçamento <b>{label}</b> permanentemente?",
+      "selectorTitle": "Orçamento em uso",
+      "selectorNone": "Sem Orçamento (dados legados)"
     }
   },
   "import": {

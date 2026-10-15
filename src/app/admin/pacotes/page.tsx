@@ -5,6 +5,7 @@ import { getDimensionTypeByCode, getDimensionTree } from "@/lib/dimensions/queri
 import { DIMENSION_CODES } from "@/lib/dimensions/constants";
 import { getPackages } from "@/lib/packages/queries";
 import { getTenantLabels } from "@/lib/labels/getTenantLabels";
+import { getOrcamentoContext } from "@/lib/orcamentos/queries";
 import { ImportLinkButton } from "@/components/import/ImportLinkButton";
 import { PackagesClient } from "./PackagesClient";
 
@@ -17,7 +18,11 @@ export default async function PacotesPage({ searchParams }: PageProps) {
   if (!tenant) notFound();
 
   const locale = await getLocale();
-  const labels = await getTenantLabels(tenant.tenantId, locale);
+  const [labels, orcamentoCtx] = await Promise.all([
+    getTenantLabels(tenant.tenantId, locale),
+    getOrcamentoContext(tenant.tenantId),
+  ]);
+  const { orcamentoId, conjuntoEstruturaId } = orcamentoCtx;
 
   const year = Number(searchParams.ano) || new Date().getFullYear();
 
@@ -26,11 +31,13 @@ export default async function PacotesPage({ searchParams }: PageProps) {
     getDimensionTypeByCode(tenant.tenantId, DIMENSION_CODES.ENTIDADE),
   ]);
   const [costCenterNodes, entityNodes] = await Promise.all([
-    centroCustoType ? getDimensionTree(tenant.tenantId, centroCustoType.id, year) : Promise.resolve([]),
-    entidadeType ? getDimensionTree(tenant.tenantId, entidadeType.id, year) : Promise.resolve([]),
+    centroCustoType
+      ? getDimensionTree(tenant.tenantId, centroCustoType.id, year, conjuntoEstruturaId)
+      : Promise.resolve([]),
+    entidadeType ? getDimensionTree(tenant.tenantId, entidadeType.id, year, conjuntoEstruturaId) : Promise.resolve([]),
   ]);
 
-  const packages = await getPackages(tenant.tenantId, year);
+  const packages = await getPackages(tenant.tenantId, year, orcamentoId);
   const t = await getTranslations("packages");
 
   return (
@@ -47,6 +54,7 @@ export default async function PacotesPage({ searchParams }: PageProps) {
         <div className="admin-table-card">
           <PackagesClient
             year={year}
+            orcamentoId={orcamentoId}
             packages={packages}
             costCenterNodes={costCenterNodes.map((n) => ({ id: n.id, name: n.name }))}
             entityNodes={entityNodes.map((n) => ({ id: n.id, name: n.name }))}

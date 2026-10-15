@@ -1,5 +1,67 @@
 import { createClient } from "@/lib/supabase/server";
+import { getUserPreference, saveUserPreference } from "@/app/_actions/userPreferences";
 import type { ConjuntoEstrutura, ConjuntoEstruturaItem, Orcamento } from "./types";
+
+const ORCAMENTO_ATUAL_COLUMNS = "id, tenant_id, year, label, status, conjunto_estrutura_id, created_at, updated_at";
+
+function orcamentoAtualKey(tenantId: string) {
+  return `orcamento_atual:${tenantId}`;
+}
+
+/**
+ * Lê qual Orçamento está selecionado no seletor global (AdminHeader) —
+ * guardado por usuário em user_preferences, mesmo mecanismo já usado
+ * por sidebar_collapsed/locale. `null` = "Sem Orçamento (dados legados)",
+ * a opção explícita do seletor para o bucket implícito de lançamentos
+ * sem orcamento_id (ver migration 0015_religar_orcamento.sql).
+ */
+export async function getOrcamentoAtualId(tenantId: string): Promise<string | null> {
+  const pref = await getUserPreference<{ orcamentoId: string | null }>(orcamentoAtualKey(tenantId));
+  return pref?.orcamentoId ?? null;
+}
+
+export async function setOrcamentoAtual(tenantId: string, orcamentoId: string | null) {
+  return saveUserPreference(orcamentoAtualKey(tenantId), { orcamentoId });
+}
+
+export async function getOrcamentoById(tenantId: string, id: string): Promise<Orcamento | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("orcamentos")
+    .select(ORCAMENTO_ATUAL_COLUMNS)
+    .eq("tenant_id", tenantId)
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+export interface OrcamentoContext {
+  /** Orçamento selecionado no seletor global — null = bucket legado (sem Orçamento). */
+  orcamentoId: string | null;
+  /** Conjunto de Estruturas do Orçamento selecionado, se houver (ver getDimensionTree). */
+  conjuntoEstruturaId: string | null;
+  orcamento: Orcamento | null;
+}
+
+/**
+ * Resolve de uma vez só o que Matriz/Pacotes/Realizado/Comparativo
+ * precisam saber sobre o Orçamento em uso: qual é (se houver), e qual
+ * Conjunto de Estruturas ele define (pra resolver as árvores de
+ * dimensão — ver getDimensionTree em src/lib/dimensions/queries.ts).
+ * Se a preferência apontar pra um Orçamento que não existe mais (foi
+ * excluído em outra aba, por exemplo), cai no bucket legado em vez de
+ * quebrar a tela.
+ */
+export async function getOrcamentoContext(tenantId: string): Promise<OrcamentoContext> {
+  const orcamentoId = await getOrcamentoAtualId(tenantId);
+  if (!orcamentoId) return { orcamentoId: null, conjuntoEstruturaId: null, orcamento: null };
+
+  const orcamento = await getOrcamentoById(tenantId, orcamentoId);
+  if (!orcamento) return { orcamentoId: null, conjuntoEstruturaId: null, orcamento: null };
+
+  return { orcamentoId: orcamento.id, conjuntoEstruturaId: orcamento.conjunto_estrutura_id, orcamento };
+}
 
 export interface ConjuntoEstruturaWithItems extends ConjuntoEstrutura {
   items: ConjuntoEstruturaItem[];
