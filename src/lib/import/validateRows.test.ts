@@ -200,7 +200,8 @@ describe("avisos de interpretação (notes)", () => {
       f
     );
     expect(rows[0].notes.item_superior).toEqual({ from: "Admin", to: "10 - Administrativo" });
-    expect(rows[1].notes.item_superior).toEqual({ from: "20", to: "20 - A" });
+    // "20" é o código exato do item achado: não é sugestão, só confirmação.
+    expect(rows[1].notes.item_superior).toBeUndefined();
   });
 
   it("não avisa quando o casamento é exato", () => {

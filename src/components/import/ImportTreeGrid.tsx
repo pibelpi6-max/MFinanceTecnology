@@ -128,6 +128,20 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
 
   const hiddenCount = flat.length - visible.length;
 
+  /** Item Superior sem sugestão: mostra "código - nome" do pai (da planilha ou já cadastrado). */
+  function displayValue(row: ImportRowResult, f: ImportFieldConfig): string {
+    const raw = row.rawValues[f.key] ?? "";
+    if (f.type !== "node-ref" || !raw) return raw || "—";
+    const provider = findBatchProvider(rows, fields, row);
+    if (provider) {
+      const code = (provider.rawValues[refField.batchRefKeys![0]] ?? "").trim();
+      const name = (provider.rawValues[nameKey] ?? "").trim();
+      return code && name ? `${code} - ${name}` : raw;
+    }
+    const opt = f.options?.find((o) => o.value === row.values[f.key]);
+    return opt ? (opt.code ? `${opt.code} - ${opt.label}` : opt.label) : raw;
+  }
+
   return (
     <div className="import-tree-wrap">
       {dragging !== null && (
@@ -298,7 +312,7 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
                                 <span className="import-suggest-to">{row.notes[f.key].to}</span>
                               </span>
                             ) : (
-                              row.rawValues[f.key] || "—"
+                              displayValue(row, f)
                             )}
                           </span>
                         )}

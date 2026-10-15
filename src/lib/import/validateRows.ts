@@ -233,8 +233,9 @@ export function applyBatchDependencies(rows: ImportRowResult[], fields: ImportFi
       const prov = findBatchProvider(rows, fields, r);
       const typed = (r.rawValues[refField.key] ?? "").trim();
       const provName = (prov?.rawValues[keys[1] ?? keys[0]] ?? "").trim();
-      if (prov && provName && normalizeMatch(typed) !== normalizeMatch(provName)) {
-        const provCode = (prov.rawValues[keys[0]] ?? "").trim();
+      const provCode = (prov?.rawValues[keys[0]] ?? "").trim();
+      // Só é "sugestão" se o texto do arquivo não é o código nem o nome do item achado.
+      if (prov && provName && normalizeMatch(typed) !== normalizeMatch(provName) && normalizeMatch(typed) !== normalizeMatch(provCode)) {
         notes[refField.key] = { from: typed, to: provCode && keys.length > 1 ? `${provCode} - ${provName}` : provName };
       }
     }
