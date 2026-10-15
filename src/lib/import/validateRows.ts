@@ -53,7 +53,7 @@ function resolveNodeRef(
   const partial = options.filter((o) => normalizeMatch(o.label).includes(normalizeMatch(trimmed)));
   if (partial.length === 1) {
     const o = partial[0];
-    return { value: o.value, error: null, note: `→ ${o.label}${o.code ? ` (código ${o.code})` : ""}` };
+    return { value: o.value, error: null, note: `Ficará dentro de: ${o.label}${o.code ? ` (código ${o.code})` : ""} — entendido a partir de "${trimmed}"` };
   }
   if (partial.length > 1) return { value: "", error: `"${trimmed}" é ambíguo — use o código exato.` };
 
@@ -193,8 +193,9 @@ export function applyBatchDependencies(rows: ImportRowResult[], fields: ImportFi
     if (isBatch(r) && !errors[refField.key]) {
       const prov = rows.find((p) => p.rowIndex !== r.rowIndex && identifies(p, refOf(r)));
       if (prov) {
-        const label = keys.map((k) => prov.rawValues[k]).filter(Boolean).join(" — ");
-        notes[refField.key] = `→ linha ${prov.rowIndex + 1}: ${label}`;
+        const code = prov.rawValues[keys[0]] ?? "";
+        const name = prov.rawValues[keys[1] ?? keys[0]] ?? "";
+        notes[refField.key] = `Ficará dentro de: ${name || code} (código ${code}, linha ${prov.rowIndex + 1} da planilha)`;
       }
     }
     if (!r.skip && isBatch(r) && !errors[refField.key] && !resolvable.has(r.rowIndex)) {

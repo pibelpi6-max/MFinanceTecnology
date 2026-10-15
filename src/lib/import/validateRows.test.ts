@@ -198,8 +198,8 @@ describe("avisos de interpretação (notes)", () => {
       buildAndValidateRows([["20", "A", "Admin"], ["30", "B", "20"]], m, f),
       f
     );
-    expect(rows[0].notes.item_superior).toBe("→ Administrativo (código 10)");
-    expect(rows[1].notes.item_superior).toBe("→ linha 1: 20 — A");
+    expect(rows[0].notes.item_superior).toBe('Ficará dentro de: Administrativo (código 10) — entendido a partir de "Admin"');
+    expect(rows[1].notes.item_superior).toBe("Ficará dentro de: A (código 20, linha 1 da planilha)");
   });
 
   it("não avisa quando o casamento é exato", () => {
