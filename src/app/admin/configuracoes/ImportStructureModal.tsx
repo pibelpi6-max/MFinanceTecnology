@@ -50,6 +50,8 @@ export function ImportStructureModal({
     [nodes]
   );
 
+  const existingRoot = useMemo(() => nodes.find((n) => n.parentNodeId === null) ?? null, [nodes]);
+
   const layout: ImportLayoutConfig = useMemo(
     () => ({
       entityKey: "dimensoes",
@@ -66,11 +68,14 @@ export function ImportStructureModal({
           options: existingNodes.map((n) => ({ value: n.id, label: n.name, code: n.code })),
           helpText: t("parentHelp"),
           batchRefKeys: ["codigo", "nome"],
-          maxEmptyRows: nodes.some((n) => n.parentNodeId === null) ? 0 : 1,
+          maxEmptyRows: existingRoot ? 0 : 1,
+          emptyRowsLimitMessage: existingRoot
+            ? `Esta estrutura já tem o item de nível 1 "${existingRoot.name}". Preencha o Item Superior com "${existingRoot.name}" (ou o código ${existingRoot.code}) para colocar este item dentro dele.`
+            : "Só um item pode ficar sem Item Superior (o nível 1 da estrutura). Preencha o Item Superior desta linha.",
         },
       ],
     }),
-    [structure.name, existingNodes, nodes, t]
+    [structure.name, existingNodes, existingRoot, t]
   );
 
   return (

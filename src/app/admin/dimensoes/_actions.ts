@@ -68,7 +68,8 @@ async function countRootNodes(
   return count ?? 0;
 }
 
-const SINGLE_ROOT_ERROR = "Só é permitido um item de nível 1 por estrutura — informe um Item Superior.";
+const SINGLE_ROOT_ERROR =
+  "Esta estrutura já tem um item de nível 1. Informe um Item Superior para colocar este item dentro dele.";
 
 export async function createDimensionNode(input: {
   dimensionTypeId: string;
@@ -340,7 +341,7 @@ export async function importDimensionNodes(input: {
         const ref = (values.item_superior ?? "").slice(BATCH_REF_PREFIX.length);
         errors.push({
           rowIndex,
-          message: `Não foi possível criar o item superior "${ref}" (erro na linha dele ou referência circular).`,
+          message: `Não foi criado porque o item superior "${ref}" não foi importado (veja o motivo na linha dele ou ajuste o Item Superior).`,
         });
       }
       break;

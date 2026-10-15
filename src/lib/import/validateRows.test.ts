@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildAndValidateRows } from "./validateRows";
+import { applyBatchDependencies, buildAndValidateRows } from "./validateRows";
 import type { ColumnMapping, ImportFieldConfig } from "./types";
 
 const fields: ImportFieldConfig[] = [
@@ -141,5 +141,41 @@ describe("buildAndValidateRows — um único item raiz (maxEmptyRows)", () => {
     expect(rows[0].errors.item_superior).toBeUndefined();
     expect(rows[1].errors.item_superior).toBeDefined();
     expect(rows[2].errors.item_superior).toBeUndefined();
+  });
+});
+
+describe("applyBatchDependencies — filho cujo pai não será importado", () => {
+  const f: ImportFieldConfig[] = [
+    { key: "codigo", label: "Código", type: "text", required: true },
+    { key: "nome", label: "Nome", type: "text", required: true },
+    { key: "item_superior", label: "Item Superior", type: "node-ref", required: false, options: [], batchRefKeys: ["codigo", "nome"], maxEmptyRows: 1 },
+  ];
+  const m: ColumnMapping[] = [
+    { columnIndex: 0, targetKey: "codigo" },
+    { columnIndex: 1, targetKey: "nome" },
+    { columnIndex: 2, targetKey: "item_superior" },
+  ];
+  const build = () =>
+    buildAndValidateRows([["1", "Empresa", ""], ["1.1", "Adm", "1"], ["1.1.1", "RH", "1.1"]], m, f);
+
+  it("tudo ok quando a cadeia inteira está marcada", () => {
+    const rows = applyBatchDependencies(build(), f);
+    expect(rows.every((r) => Object.keys(r.errors).length === 0)).toBe(true);
+  });
+
+  it("desmarcar a raiz derruba os descendentes com mensagem clara, e remarcar volta", () => {
+    const rows = build();
+    rows[0].skip = true;
+    const off = applyBatchDependencies(rows, f);
+    expect(off[1].errors.item_superior).toMatch(/desmarcado/);
+    expect(off[2].errors.item_superior).toMatch(/linha 2/);
+    rows[0].skip = false;
+    const on = applyBatchDependencies(rows, f);
+    expect(on.every((r) => Object.keys(r.errors).length === 0)).toBe(true);
+  });
+
+  it("detecta referência circular", () => {
+    const rows = applyBatchDependencies(buildAndValidateRows([["A", "a", "B"], ["B", "b", "A"]], m, f), f);
+    expect(rows[0].errors.item_superior).toMatch(/circular/);
   });
 });

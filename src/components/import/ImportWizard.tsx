@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { parseSpreadsheetFile } from "@/lib/import/parseFile";
 import { suggestColumnMapping } from "@/lib/import/aiMapping";
-import { buildAndValidateRows } from "@/lib/import/validateRows";
+import { applyBatchDependencies, buildAndValidateRows } from "@/lib/import/validateRows";
 import { ImportStepIndicator } from "./ImportStepIndicator";
 import { ColumnMappingFields } from "./ColumnMappingFields";
 import { ImportGrid } from "./ImportGrid";
@@ -83,12 +83,17 @@ export function ImportWizard({ layout, backHref, onImport, onClose, onImported }
   function goToReview() {
     if (!sheet) return;
     const built = buildAndValidateRows(sheet.rows, mapping, layout.fields);
-    setRows(built);
+    setRows(applyBatchDependencies(built, layout.fields));
     setStep("review");
   }
 
   function toggleSkip(rowIndex: number) {
-    setRows((prev) => prev.map((r) => (r.rowIndex === rowIndex ? { ...r, skip: !r.skip } : r)));
+    setRows((prev) =>
+      applyBatchDependencies(
+        prev.map((r) => (r.rowIndex === rowIndex ? { ...r, skip: !r.skip } : r)),
+        layout.fields
+      )
+    );
   }
 
   const readyRows = rows.filter((r) => !r.skip && Object.keys(r.errors).length === 0);
@@ -100,7 +105,12 @@ export function ImportWizard({ layout, backHref, onImport, onClose, onImported }
     startTransition(async () => {
       try {
         const result = await onImport(readyRows.map((r) => ({ values: r.values })));
-        setSummary(result);
+        // A Server Action devolve o índice dentro das linhas enviadas; mostra
+        // o número da linha da planilha (o mesmo "#" da tela de revisão).
+        setSummary({
+          ...result,
+          errors: result.errors.map((e) => ({ ...e, rowIndex: readyRows[e.rowIndex]?.rowIndex ?? e.rowIndex })),
+        });
         setStep("done");
         if (result.successCount > 0) onImported?.();
       } finally {

@@ -43,6 +43,8 @@ export interface ImportFieldConfig {
    * cada estrutura admite um único item raiz.
    */
   maxEmptyRows?: number;
+  /** mensagem mostrada na linha que excede maxEmptyRows (diga o que fazer). */
+  emptyRowsLimitMessage?: string;
   /** validação extra além da checagem padrão do tipo; retorna mensagem de erro ou null se ok */
   validateExtra?: (raw: string) => string | null;
 }
@@ -73,6 +75,8 @@ export interface ImportRowResult {
   /** texto original de cada campo, para o usuário conferir/editar */
   rawValues: Record<string, string>;
   errors: Record<string, string>;
+  /** erros da própria linha, sem os derivados de dependência (ver applyBatchDependencies) */
+  baseErrors: Record<string, string>;
   skip: boolean;
 }
 

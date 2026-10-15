@@ -109,7 +109,8 @@ export function buildAndValidateRows(
           if (hasData) {
             emptyRowsUsed += 1;
             if (emptyRowsUsed > field.maxEmptyRows) {
-              errors[field.key] = `${field.label} é obrigatório: só é permitido um item de nível 1 por estrutura.`;
+              errors[field.key] =
+                field.emptyRowsLimitMessage ?? `${field.label} é obrigatório: só é permitido um item de nível 1 por estrutura.`;
             }
           }
         }
@@ -143,6 +144,60 @@ export function buildAndValidateRows(
       }
     }
 
-    return { rowIndex, values, rawValues, errors, skip: false };
+    return { rowIndex, values, rawValues, errors, baseErrors: { ...errors }, skip: false };
+  });
+}
+
+/**
+ * Dependências entre linhas da mesma planilha (pai que está em outra linha,
+ * ver batchRefKeys): uma linha só é importável se o pai dela também for —
+ * não ignorado, sem erro e, por sua vez, resolvível até uma raiz/item já
+ * existente. Reavaliada a cada marcar/desmarcar de linha, para que a tela
+ * de revisão mostre ANTES de importar o que vai falhar e por quê (em vez de
+ * um erro genérico depois).
+ */
+export function applyBatchDependencies(rows: ImportRowResult[], fields: ImportFieldConfig[]): ImportRowResult[] {
+  const refField = fields.find((f) => f.type === "node-ref" && f.batchRefKeys?.length);
+  if (!refField) return rows;
+  const keys = refField.batchRefKeys ?? [];
+  const isBatch = (r: ImportRowResult) => (r.values[refField.key] ?? "").startsWith(BATCH_REF_PREFIX);
+  const refOf = (r: ImportRowResult) => normalizeMatch((r.values[refField.key] ?? "").slice(BATCH_REF_PREFIX.length));
+  const identifies = (p: ImportRowResult, ref: string) => keys.some((k) => normalizeMatch(p.rawValues[k] ?? "") === ref);
+  const ready = (r: ImportRowResult) => !r.skip && Object.keys(r.baseErrors).length === 0;
+
+  const resolvable = new Set<number>();
+  rows.forEach((r) => {
+    if (ready(r) && !isBatch(r)) resolvable.add(r.rowIndex);
+  });
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const r of rows) {
+      if (resolvable.has(r.rowIndex) || !ready(r) || !isBatch(r)) continue;
+      const ref = refOf(r);
+      if (rows.some((p) => p.rowIndex !== r.rowIndex && resolvable.has(p.rowIndex) && identifies(p, ref))) {
+        resolvable.add(r.rowIndex);
+        changed = true;
+      }
+    }
+  }
+
+  return rows.map((r) => {
+    const errors = { ...r.baseErrors };
+    if (!r.skip && isBatch(r) && !errors[refField.key] && !resolvable.has(r.rowIndex)) {
+      const ref = (r.values[refField.key] ?? "").slice(BATCH_REF_PREFIX.length);
+      const provider = rows.find((p) => p.rowIndex !== r.rowIndex && identifies(p, refOf(r)));
+      const n = provider ? provider.rowIndex + 1 : null;
+      if (provider?.skip) {
+        errors[refField.key] = `O item superior "${ref}" (linha ${n}) está desmarcado e não será importado. Marque a linha ${n} ou troque o Item Superior.`;
+      } else if (provider && Object.keys(provider.baseErrors).length > 0) {
+        errors[refField.key] = `O item superior "${ref}" (linha ${n}) tem erro e não será importado. Corrija a linha ${n} primeiro.`;
+      } else if (provider) {
+        errors[refField.key] = `Referência circular: "${ref}" (linha ${n}) depende, direta ou indiretamente, deste item. Ajuste o Item Superior.`;
+      } else {
+        errors[refField.key] = `O item superior "${ref}" não foi encontrado.`;
+      }
+    }
+    return { ...r, errors };
   });
 }
