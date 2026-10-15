@@ -362,7 +362,8 @@
       "suggestionTitle": "System suggestion: use \"{to}\" instead of \"{from}\"",
       "countReady": "ready to import",
       "countErrors": "with errors",
-      "countSkipped": "skipped"
+      "countSkipped": "skipped",
+      "importAction": "Import"
     },
     "done": {
       "title": "{count} record(s) imported successfully",

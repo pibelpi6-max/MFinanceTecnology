@@ -36,9 +36,11 @@ interface ImportWizardProps {
    * "done") — pra quem está ouvindo (ex: a tela por trás do modal) puder
    * revalidar os dados sem esperar a usuária fechar o assistente. */
   onImported?: () => void;
+  /** Ação à esquerda, na altura dos passos (ex.: botão "Tela cheia"). */
+  toolbarLeft?: React.ReactNode;
 }
 
-export function ImportWizard({ layout, backHref, onImport, onClose, onImported }: ImportWizardProps) {
+export function ImportWizard({ layout, backHref, onImport, onClose, onImported, toolbarLeft }: ImportWizardProps) {
   const t = useTranslations("import");
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -166,7 +168,15 @@ export function ImportWizard({ layout, backHref, onImport, onClose, onImported }
 
   return (
     <div className="import-wizard">
-      <ImportStepIndicator current={step} />
+      {toolbarLeft ? (
+        <div className="import-toolbar">
+          <div className="import-toolbar-left">{toolbarLeft}</div>
+          <ImportStepIndicator current={step} />
+          <div />
+        </div>
+      ) : (
+        <ImportStepIndicator current={step} />
+      )}
 
       {step === "upload" && (
         <div className="import-upload-zone">
@@ -249,12 +259,21 @@ export function ImportWizard({ layout, backHref, onImport, onClose, onImported }
           ) : (
             <ImportGrid rows={rows} fields={layout.fields} onToggleSkip={toggleSkip} />
           )}
-          <div className="import-step-actions">
+          <div className={`import-step-actions${hierarchical ? " import-step-actions--divided" : ""}`}>
             <button type="button" className="import-link-btn" onClick={() => setStep("mapping")}>
               {t("back")}
             </button>
             <Button onClick={runImport} isLoading={isImporting || isPending} disabled={readyRows.length === 0}>
-              {t("review.importButton", { count: readyRows.length })}
+              {hierarchical ? (
+                <>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 15V4m0 0L8.5 7.5M12 4l3.5 3.5M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" />
+                  </svg>
+                  {t("review.importAction")}
+                </>
+              ) : (
+                t("review.importButton", { count: readyRows.length })
+              )}
             </Button>
           </div>
         </div>

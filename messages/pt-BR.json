@@ -362,7 +362,8 @@
       "suggestionTitle": "Sugestão do sistema: usar \"{to}\" no lugar de \"{from}\"",
       "countReady": "pronta(s) para importar",
       "countErrors": "com erro",
-      "countSkipped": "ignorada(s)"
+      "countSkipped": "ignorada(s)",
+      "importAction": "Importar"
     },
     "done": {
       "title": "{count} registro(s) importado(s) com sucesso",
