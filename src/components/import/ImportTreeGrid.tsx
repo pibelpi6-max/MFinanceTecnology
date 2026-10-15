@@ -104,7 +104,7 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3Z" />
         </svg>
-        <span>{t("review.treeInfo", { levels: Math.max(1, ...flat.map((f) => f.depth + 1)) })}</span>
+        <span>{t("review.treeInfo")}</span>
       </div>
       {dragging !== null && (
         <div
@@ -132,8 +132,8 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
             {fields.map((f) => (
               <th key={f.key}>{f.label}</th>
             ))}
-            <th>{t("review.status")}</th>
             <th></th>
+            <th>{t("review.status")}</th>
           </tr>
         </thead>
         <tbody>
@@ -161,6 +161,14 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
                   endDrag();
                 }}
               >
+                <td>
+                  <input
+                    type="checkbox"
+                    checked={!row.skip}
+                    onChange={() => onToggleSkip(row.rowIndex)}
+                    title={t("review.includeRow")}
+                  />
+                </td>
                 <td className="import-handle-cell">
                   <span
                     className="import-drag-handle"
@@ -177,14 +185,6 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
                   >
                     ⠿
                   </span>
-                </td>
-                <td>
-                  <input
-                    type="checkbox"
-                    checked={!row.skip}
-                    onChange={() => onToggleSkip(row.rowIndex)}
-                    title={t("review.includeRow")}
-                  />
                 </td>
                 <td>{row.rowIndex + 1}</td>
                 {fields.map((f) => {
@@ -206,7 +206,7 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
                             }}
                           />
                         ) : (
-                          <span>{row.rawValues[f.key] || "—"}</span>
+                          <span className="import-cell-text">{row.rawValues[f.key] || "—"}</span>
                         )}
                       </div>
                       {row.notes[f.key] && !row.errors[f.key] && !isEditing && (
@@ -221,22 +221,13 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
                     </td>
                   );
                 })}
-                <td>
-                  {row.skip ? (
-                    <span className="import-status-tag import-status-skipped">{t("review.skipped")}</span>
-                  ) : hasErrors ? (
-                    <span className="import-status-tag import-status-error">{t("review.hasErrors")}</span>
-                  ) : (
-                    <span className="import-status-tag import-status-ok">{t("review.ready")}</span>
-                  )}
-                </td>
                 <td className="import-row-actions">
                   {editing === row.rowIndex ? (
                     <>
                       <button type="button" className="import-icon-btn is-save" title={t("review.save")} onClick={() => saveEdit(row)}>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4}><path strokeLinecap="round" strokeLinejoin="round" d="m5 12 5 5L20 7" /></svg>
                       </button>
-                      <button type="button" className="import-icon-btn" title={t("review.cancelEdit")} onClick={() => setEditing(null)}>
+                      <button type="button" className="import-icon-btn is-cancel" title={t("review.cancelEdit")} onClick={() => setEditing(null)}>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4}><path strokeLinecap="round" strokeLinejoin="round" d="M6 6l12 12M18 6 6 18" /></svg>
                       </button>
                     </>
@@ -244,6 +235,15 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
                     <button type="button" className="import-icon-btn import-edit-btn" title={t("review.edit")} onClick={() => startEdit(row)}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16.86 4.49a1.75 1.75 0 1 1 2.47 2.47L7.5 18.79l-3.3.82.82-3.3Z" /></svg>
                     </button>
+                  )}
+                </td>
+                <td>
+                  {row.skip ? (
+                    <span className="import-status-tag import-status-skipped">{t("review.skipped")}</span>
+                  ) : hasErrors ? (
+                    <span className="import-status-tag import-status-error">{t("review.hasErrors")}</span>
+                  ) : (
+                    <span className="import-status-tag import-status-ok">{t("review.ready")}</span>
                   )}
                 </td>
               </tr>

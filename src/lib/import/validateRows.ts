@@ -56,7 +56,7 @@ function resolveNodeRef(
     return {
       value: o.value,
       error: null,
-      note: `Entendi "${trimmed}" como "${o.label}"${o.code ? ` (código ${o.code})` : ""}. Se não for esse, corrija o campo.`,
+      note: `Sugestão: de "${trimmed}" para "${o.label}"${o.code ? ` (código ${o.code})` : ""}`,
     };
   }
   if (partial.length > 1) return { value: "", error: `"${trimmed}" é ambíguo — use o código exato.` };

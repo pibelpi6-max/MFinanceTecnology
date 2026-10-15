@@ -200,7 +200,7 @@ describe("avisos de interpretação (notes)", () => {
       f
     );
     expect(rows[0].notes.item_superior).toBe(
-      'Entendi "Admin" como "Administrativo" (código 10). Se não for esse, corrija o campo.'
+      'Sugestão: de "Admin" para "Administrativo" (código 10)'
     );
     expect(rows[1].notes.item_superior).toBeUndefined();
   });

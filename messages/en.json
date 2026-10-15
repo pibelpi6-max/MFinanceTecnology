@@ -353,7 +353,7 @@
       "dropRoot": "Drop here to remove the parent (becomes level 1)",
       "dragHandle": "Drag to change the parent",
       "suggestion": "Suggestion",
-      "treeInfo": "Indented items go inside the item above them ({levels} level(s) in total). Hover a row and click the pencil to fix code, name or parent, or drag the ⠿ handle to put an item inside another.",
+      "treeInfo": "Hover a row and click the pencil to edit. Drag ⠿ to move.",
       "edit": "Edit row",
       "save": "Save",
       "cancelEdit": "Cancel edit"

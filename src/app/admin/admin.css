@@ -811,10 +811,10 @@
 .import-cell-error { color: #dc2626; font-size: 11px; margin-top: 2px; }
 .import-cell-note { display: flex; align-items: flex-start; gap: 5px; color: #2563eb; font-size: 11px; margin-top: 3px; }
 .import-cell-note svg { flex: none; margin-top: 1px; }
-.import-cell-input { width: 100%; min-width: 70px; border: 1px solid transparent; border-radius: 6px; padding: 4px 6px; font-size: 13px; background: transparent; }
-.import-cell-input:hover { border-color: rgba(0,0,0,.12); background: #fff; }
-.import-cell-input:focus { outline: none; border-color: #3e6fe0; background: #fff; box-shadow: 0 0 0 2px rgba(62,111,224,.15); }
-.import-cell-input.is-invalid { border-color: rgba(220,38,38,.5); }
+.import-cell-input, .import-cell-text { box-sizing: border-box; width: 100%; min-height: 28px; border: 1px solid transparent; border-radius: 6px; padding: 4px 7px; font: inherit; font-size: 13px; line-height: 18px; }
+.import-cell-text { display: block; overflow-wrap: anywhere; }
+.import-cell-input { min-width: 70px; border-color: #3e6fe0; background: #fff; }
+.import-cell-input:focus { outline: none; box-shadow: 0 0 0 2px rgba(62,111,224,.2); }
 .import-tree-cell { display: flex; align-items: center; gap: 4px; }
 .import-tree-hint { font-size: 12px; color: var(--text-muted); margin: 0 0 8px; }
 .import-drag-handle { cursor: grab; color: #9aa0b4; user-select: none; padding: 0 2px; font-size: 15px; line-height: 1; }
@@ -843,5 +843,7 @@
 .import-icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border: none; border-radius: 6px; background: transparent; color: #6b7280; cursor: pointer; }
 .import-icon-btn:hover { background: rgba(0,0,0,.06); color: var(--text-strong); }
 .import-icon-btn.is-save { color: #15803d; }
+.import-icon-btn.is-cancel { color: #dc2626; }
+.import-icon-btn.is-cancel:hover { background: rgba(220,38,38,.08); color: #dc2626; }
 .import-edit-btn { opacity: 0; transition: opacity .12s; }
 .import-grid-table tr:hover .import-edit-btn, .import-edit-btn:focus-visible { opacity: 1; }
