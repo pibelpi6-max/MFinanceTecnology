@@ -349,7 +349,11 @@
       "readyCount": "{count} pronta(s)",
       "errorCount": "{count} com erro",
       "skippedCount": "{count} ignorada(s)",
-      "importButton": "Importar {count} linha(s)"
+      "importButton": "Importar {count} linha(s)",
+      "dragHint": "Arraste a alça ⠿ para colocar um item dentro de outro. Código e nome podem ser editados direto aqui.",
+      "dropRoot": "Solte aqui para tirar o item superior (vira nível 1)",
+      "dragHandle": "Arrastar para mudar o item superior",
+      "suggestion": "Sugestão"
     },
     "done": {
       "title": "{count} registro(s) importado(s) com sucesso",

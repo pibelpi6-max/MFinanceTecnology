@@ -349,7 +349,11 @@
       "readyCount": "{count} lista(s)",
       "errorCount": "{count} con error",
       "skippedCount": "{count} ignorada(s)",
-      "importButton": "Importar {count} fila(s)"
+      "importButton": "Importar {count} fila(s)",
+      "dragHint": "Arrastra el asa ⠿ para poner un elemento dentro de otro. El código y el nombre se pueden editar aquí mismo.",
+      "dropRoot": "Suelta aquí para quitar el superior (pasa a nivel 1)",
+      "dragHandle": "Arrastrar para cambiar el superior",
+      "suggestion": "Sugerencia"
     },
     "done": {
       "title": "{count} registro(s) importado(s) con éxito",

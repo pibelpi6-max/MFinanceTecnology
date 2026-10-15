@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { applyBatchDependencies, buildAndValidateRows } from "./validateRows";
+import { setCellValue } from "./editRows";
 import type { ColumnMapping, ImportFieldConfig } from "./types";
 
 const fields: ImportFieldConfig[] = [
@@ -193,17 +194,57 @@ describe("avisos de interpretação (notes)", () => {
     { columnIndex: 2, targetKey: "item_superior" },
   ];
 
-  it("avisa quando o pai foi casado por aproximação e quando aponta para outra linha", () => {
+  it("sugere (nota) só quando o pai foi casado por aproximação", () => {
     const rows = applyBatchDependencies(
       buildAndValidateRows([["20", "A", "Admin"], ["30", "B", "20"]], m, f),
       f
     );
-    expect(rows[0].notes.item_superior).toBe('Ficará dentro de: Administrativo (código 10) — entendido a partir de "Admin"');
-    expect(rows[1].notes.item_superior).toBe("Ficará dentro de: A (código 20, linha 1 da planilha)");
+    expect(rows[0].notes.item_superior).toBe(
+      'Entendi "Admin" como "Administrativo" (código 10). Se não for esse, corrija o campo.'
+    );
+    expect(rows[1].notes.item_superior).toBeUndefined();
   });
 
   it("não avisa quando o casamento é exato", () => {
     const rows = buildAndValidateRows([["20", "A", "10"]], m, f);
     expect(rows[0].notes.item_superior).toBeUndefined();
+  });
+});
+
+describe("código repetido, linha desmarcada e edição de célula", () => {
+  const f: ImportFieldConfig[] = [
+    { key: "codigo", label: "Código", type: "text", required: true },
+    { key: "nome", label: "Nome", type: "text", required: true },
+    { key: "item_superior", label: "Item Superior", type: "node-ref", required: false, options: [], batchRefKeys: ["codigo", "nome"], maxEmptyRows: 1 },
+  ];
+  const m: ColumnMapping[] = [
+    { columnIndex: 0, targetKey: "codigo" },
+    { columnIndex: 1, targetKey: "nome" },
+    { columnIndex: 2, targetKey: "item_superior" },
+  ];
+
+  it("acusa código repetido na segunda ocorrência", () => {
+    const rows = applyBatchDependencies(buildAndValidateRows([["1", "A", ""], ["1.1", "B", "1"], ["1.1", "C", "1"]], m, f), f);
+    expect(rows[1].errors.codigo).toBeUndefined();
+    expect(rows[2].errors.codigo).toMatch(/repetido/);
+  });
+
+  it("desmarcar uma das duas raízes libera a outra", () => {
+    const data = [["1", "A", ""], ["2", "B", ""]];
+    expect(buildAndValidateRows(data, m, f)[1].errors.item_superior).toBeDefined();
+    const rows = buildAndValidateRows(data, m, f, new Set([0]));
+    expect(rows[0].skip).toBe(true);
+    expect(rows[1].errors.item_superior).toBeUndefined();
+  });
+
+  it("setCellValue acompanha a troca de código nos filhos e cria coluna que faltava", () => {
+    const sheet = { headers: ["Código", "Nome"], rows: [["1", "Empresa"], ["1.1", "Adm"]], fileName: "x" };
+    const base: ColumnMapping[] = [{ columnIndex: 0, targetKey: "codigo" }, { columnIndex: 1, targetKey: "nome" }];
+    const withParent = setCellValue(sheet, base, f, 1, "item_superior", "1");
+    expect(withParent.sheet.headers).toEqual(["Código", "Nome", "Item Superior"]);
+    const renamed = setCellValue(withParent.sheet, withParent.mapping, f, 0, "codigo", "EMP");
+    expect(renamed.sheet.rows[1][2]).toBe("EMP");
+    const rows = applyBatchDependencies(buildAndValidateRows(renamed.sheet.rows, renamed.mapping, f), f);
+    expect(rows.every((r) => Object.keys(r.errors).length === 0)).toBe(true);
   });
 });

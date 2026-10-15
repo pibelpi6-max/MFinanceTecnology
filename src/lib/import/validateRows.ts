@@ -18,7 +18,7 @@ function parseNumberBR(raw: string): number | null {
   return Number.isFinite(value) ? value : null;
 }
 
-function normalizeMatch(text: string): string {
+export function normalizeMatch(text: string): string {
   return text
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "")
@@ -53,7 +53,11 @@ function resolveNodeRef(
   const partial = options.filter((o) => normalizeMatch(o.label).includes(normalizeMatch(trimmed)));
   if (partial.length === 1) {
     const o = partial[0];
-    return { value: o.value, error: null, note: `Ficará dentro de: ${o.label}${o.code ? ` (código ${o.code})` : ""} — entendido a partir de "${trimmed}"` };
+    return {
+      value: o.value,
+      error: null,
+      note: `Entendi "${trimmed}" como "${o.label}"${o.code ? ` (código ${o.code})` : ""}. Se não for esse, corrija o campo.`,
+    };
   }
   if (partial.length > 1) return { value: "", error: `"${trimmed}" é ambíguo — use o código exato.` };
 
@@ -68,7 +72,9 @@ function resolveNodeRef(
 export function buildAndValidateRows(
   rows: string[][],
   mapping: ColumnMapping[],
-  fields: ImportFieldConfig[]
+  fields: ImportFieldConfig[],
+  /** linhas (por índice) desmarcadas na revisão — não contam como "raiz" nem entram na importação */
+  skipped: ReadonlySet<number> = new Set()
 ): ImportRowResult[] {
   const columnByKey = new Map<string, number>();
   mapping.forEach((m) => {
@@ -109,7 +115,7 @@ export function buildAndValidateRows(
         if (field.required) errors[field.key] = `${field.label} é obrigatório.`;
         else if (field.maxEmptyRows !== undefined) {
           // Só conta como raiz a linha que realmente tem dados (código/nome).
-          const hasData = row.some((c) => (c ?? "").trim() !== "");
+          const hasData = !skipped.has(rowIndex) && row.some((c) => (c ?? "").trim() !== "");
           if (hasData) {
             emptyRowsUsed += 1;
             if (emptyRowsUsed > field.maxEmptyRows) {
@@ -149,26 +155,59 @@ export function buildAndValidateRows(
       }
     }
 
-    return { rowIndex, values, rawValues, errors, baseErrors: { ...errors }, notes: { ...notes }, baseNotes: { ...notes }, skip: false };
+    return { rowIndex, values, rawValues, errors, baseErrors: { ...errors }, notes: { ...notes }, baseNotes: { ...notes }, skip: skipped.has(rowIndex) };
   });
 }
 
+/** Linha da planilha que o `Item Superior` de `row` aponta (pai dentro do mesmo arquivo), se houver. */
+export function findBatchProvider(
+  rows: ImportRowResult[],
+  fields: ImportFieldConfig[],
+  row: ImportRowResult
+): ImportRowResult | null {
+  const refField = fields.find((f) => f.type === "node-ref" && f.batchRefKeys?.length);
+  if (!refField) return null;
+  const value = row.values[refField.key] ?? "";
+  if (!value.startsWith(BATCH_REF_PREFIX)) return null;
+  const ref = normalizeMatch(value.slice(BATCH_REF_PREFIX.length));
+  const keys = refField.batchRefKeys ?? [];
+  return (
+    rows.find((p) => p.rowIndex !== row.rowIndex && keys.some((k) => normalizeMatch(p.rawValues[k] ?? "") === ref)) ??
+    null
+  );
+}
+
 /**
- * Dependências entre linhas da mesma planilha (pai que está em outra linha,
- * ver batchRefKeys): uma linha só é importável se o pai dela também for —
- * não ignorado, sem erro e, por sua vez, resolvível até uma raiz/item já
- * existente. Reavaliada a cada marcar/desmarcar de linha, para que a tela
- * de revisão mostre ANTES de importar o que vai falhar e por quê (em vez de
- * um erro genérico depois).
+ * Regras que dependem de várias linhas da mesma planilha (hierarquia pai/
+ * filho via batchRefKeys): código repetido; e uma linha só é importável se o
+ * pai dela também for — não ignorado, sem erro e, por sua vez, resolvível até
+ * uma raiz/item já existente. Reavaliada a cada edição ou marcar/desmarcar,
+ * para que a revisão mostre ANTES de importar o que vai falhar e por quê.
  */
 export function applyBatchDependencies(rows: ImportRowResult[], fields: ImportFieldConfig[]): ImportRowResult[] {
   const refField = fields.find((f) => f.type === "node-ref" && f.batchRefKeys?.length);
   if (!refField) return rows;
   const keys = refField.batchRefKeys ?? [];
+  const codeKey = keys[0];
+
+  // Código repetido entre linhas ativas (a 1ª ocorrência vale, as demais erram).
+  const baseErrors = new Map<number, Record<string, string>>();
+  const firstByCode = new Map<string, number>();
+  for (const r of rows) {
+    const eb = { ...r.baseErrors };
+    const code = normalizeMatch(r.rawValues[codeKey] ?? "");
+    if (!r.skip && code) {
+      const first = firstByCode.get(code);
+      if (first === undefined) firstByCode.set(code, r.rowIndex);
+      else if (!eb[codeKey]) eb[codeKey] = `Código repetido: já usado na linha ${first + 1}. Troque o código.`;
+    }
+    baseErrors.set(r.rowIndex, eb);
+  }
+
   const isBatch = (r: ImportRowResult) => (r.values[refField.key] ?? "").startsWith(BATCH_REF_PREFIX);
-  const refOf = (r: ImportRowResult) => normalizeMatch((r.values[refField.key] ?? "").slice(BATCH_REF_PREFIX.length));
+  const ready = (r: ImportRowResult) => !r.skip && Object.keys(baseErrors.get(r.rowIndex) ?? {}).length === 0;
   const identifies = (p: ImportRowResult, ref: string) => keys.some((k) => normalizeMatch(p.rawValues[k] ?? "") === ref);
-  const ready = (r: ImportRowResult) => !r.skip && Object.keys(r.baseErrors).length === 0;
+  const refOf = (r: ImportRowResult) => normalizeMatch((r.values[refField.key] ?? "").slice(BATCH_REF_PREFIX.length));
 
   const resolvable = new Set<number>();
   rows.forEach((r) => {
@@ -188,23 +227,14 @@ export function applyBatchDependencies(rows: ImportRowResult[], fields: ImportFi
   }
 
   return rows.map((r) => {
-    const errors = { ...r.baseErrors };
-    const notes = { ...r.baseNotes };
-    if (isBatch(r) && !errors[refField.key]) {
-      const prov = rows.find((p) => p.rowIndex !== r.rowIndex && identifies(p, refOf(r)));
-      if (prov) {
-        const code = prov.rawValues[keys[0]] ?? "";
-        const name = prov.rawValues[keys[1] ?? keys[0]] ?? "";
-        notes[refField.key] = `Ficará dentro de: ${name || code} (código ${code}, linha ${prov.rowIndex + 1} da planilha)`;
-      }
-    }
+    const errors = { ...(baseErrors.get(r.rowIndex) ?? {}) };
     if (!r.skip && isBatch(r) && !errors[refField.key] && !resolvable.has(r.rowIndex)) {
       const ref = (r.values[refField.key] ?? "").slice(BATCH_REF_PREFIX.length);
-      const provider = rows.find((p) => p.rowIndex !== r.rowIndex && identifies(p, refOf(r)));
+      const provider = findBatchProvider(rows, fields, r);
       const n = provider ? provider.rowIndex + 1 : null;
       if (provider?.skip) {
         errors[refField.key] = `O item superior "${ref}" (linha ${n}) está desmarcado e não será importado. Marque a linha ${n} ou troque o Item Superior.`;
-      } else if (provider && Object.keys(provider.baseErrors).length > 0) {
+      } else if (provider && Object.keys(baseErrors.get(provider.rowIndex) ?? {}).length > 0) {
         errors[refField.key] = `O item superior "${ref}" (linha ${n}) tem erro e não será importado. Corrija a linha ${n} primeiro.`;
       } else if (provider) {
         errors[refField.key] = `Referência circular: "${ref}" (linha ${n}) depende, direta ou indiretamente, deste item. Ajuste o Item Superior.`;
@@ -212,6 +242,6 @@ export function applyBatchDependencies(rows: ImportRowResult[], fields: ImportFi
         errors[refField.key] = `O item superior "${ref}" não foi encontrado.`;
       }
     }
-    return { ...r, errors, notes };
+    return { ...r, errors };
   });
 }

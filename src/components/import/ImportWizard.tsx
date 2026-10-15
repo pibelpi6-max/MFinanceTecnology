@@ -10,6 +10,8 @@ import { applyBatchDependencies, buildAndValidateRows } from "@/lib/import/valid
 import { ImportStepIndicator } from "./ImportStepIndicator";
 import { ColumnMappingFields } from "./ColumnMappingFields";
 import { ImportGrid } from "./ImportGrid";
+import { ImportTreeGrid } from "./ImportTreeGrid";
+import { setCellValue } from "@/lib/import/editRows";
 import type {
   ColumnMapping,
   ImportLayoutConfig,
@@ -80,20 +82,46 @@ export function ImportWizard({ layout, backHref, onImport, onClose, onImported }
     });
   }
 
+  const hierarchical = layout.fields.some((f) => f.type === "node-ref" && f.batchRefKeys?.length);
+  const refField = layout.fields.find((f) => f.type === "node-ref" && f.batchRefKeys?.length);
+
+  function rebuild(sheetRows: string[][], mappingNow: ColumnMapping[], skipped: Set<number>) {
+    return applyBatchDependencies(buildAndValidateRows(sheetRows, mappingNow, layout.fields, skipped), layout.fields);
+  }
+
   function goToReview() {
     if (!sheet) return;
-    const built = buildAndValidateRows(sheet.rows, mapping, layout.fields);
-    setRows(applyBatchDependencies(built, layout.fields));
+    setRows(rebuild(sheet.rows, mapping, new Set()));
     setStep("review");
   }
 
+  function currentSkipped(): Set<number> {
+    return new Set(rows.filter((r) => r.skip).map((r) => r.rowIndex));
+  }
+
   function toggleSkip(rowIndex: number) {
-    setRows((prev) =>
-      applyBatchDependencies(
-        prev.map((r) => (r.rowIndex === rowIndex ? { ...r, skip: !r.skip } : r)),
-        layout.fields
-      )
-    );
+    if (!sheet) return;
+    const skipped = currentSkipped();
+    if (skipped.has(rowIndex)) skipped.delete(rowIndex);
+    else skipped.add(rowIndex);
+    setRows(rebuild(sheet.rows, mapping, skipped));
+  }
+
+  /** Edita uma célula na revisão (código, nome ou item superior) e revalida tudo. */
+  function editCell(rowIndex: number, key: string, value: string) {
+    if (!sheet) return;
+    const next = setCellValue(sheet, mapping, layout.fields, rowIndex, key, value);
+    setSheet(next.sheet);
+    setMapping(next.mapping);
+    setRows(rebuild(next.sheet.rows, next.mapping, currentSkipped()));
+  }
+
+  /** Arrastar e soltar: coloca a linha dentro de outra (pelo código dela) ou, com null, tira o item superior. */
+  function moveRow(rowIndex: number, newParentRowIndex: number | null) {
+    if (!refField?.batchRefKeys) return;
+    const parentCode = newParentRowIndex === null ? "" : (rows[newParentRowIndex]?.rawValues[refField.batchRefKeys[0]] ?? "");
+    if (newParentRowIndex !== null && !parentCode) return;
+    editCell(rowIndex, refField.key, parentCode);
   }
 
   const readyRows = rows.filter((r) => !r.skip && Object.keys(r.errors).length === 0);
@@ -195,7 +223,17 @@ export function ImportWizard({ layout, backHref, onImport, onClose, onImported }
               <span className="import-status-tag import-status-skipped">{t("review.skippedCount", { count: skippedRows.length })}</span>
             )}
           </div>
-          <ImportGrid rows={rows} fields={layout.fields} onToggleSkip={toggleSkip} />
+          {hierarchical ? (
+            <ImportTreeGrid
+              rows={rows}
+              fields={layout.fields}
+              onToggleSkip={toggleSkip}
+              onEditCell={editCell}
+              onMoveRow={moveRow}
+            />
+          ) : (
+            <ImportGrid rows={rows} fields={layout.fields} onToggleSkip={toggleSkip} />
+          )}
           <div className="import-step-actions">
             <button type="button" className="import-link-btn" onClick={() => setStep("mapping")}>
               {t("back")}

@@ -349,7 +349,11 @@
       "readyCount": "{count} ready",
       "errorCount": "{count} with errors",
       "skippedCount": "{count} skipped",
-      "importButton": "Import {count} row(s)"
+      "importButton": "Import {count} row(s)",
+      "dragHint": "Drag the ⠿ handle to put an item inside another. Code and name can be edited right here.",
+      "dropRoot": "Drop here to remove the parent (becomes level 1)",
+      "dragHandle": "Drag to change the parent",
+      "suggestion": "Suggestion"
     },
     "done": {
       "title": "{count} record(s) imported successfully",
