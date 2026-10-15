@@ -211,6 +211,7 @@ export function ImportWizard({ layout, backHref, onImport, onClose, onImported }
         <div className="import-step-body">
           <div className="import-done-banner">
             <p className="import-done-title">{t("done.title", { count: summary.successCount })}</p>
+            {summary.detail && <p className="import-done-subtitle">{summary.detail}</p>}
             {summary.errorCount > 0 && <p className="import-done-subtitle">{t("done.someFailed", { count: summary.errorCount })}</p>}
           </div>
           {summary.errors.length > 0 && (

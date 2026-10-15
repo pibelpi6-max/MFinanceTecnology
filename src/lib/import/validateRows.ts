@@ -31,7 +31,7 @@ function resolveNodeRef(
   field: ImportFieldConfig,
   batchRefs: Set<string> | null,
   selfRaws: string[]
-): { value: string; error: string | null } {
+): { value: string; error: string | null; note?: string } {
   const options = field.options ?? [];
   const trimmed = raw.trim();
   if (trimmed === "") return { value: "", error: null };
@@ -51,7 +51,10 @@ function resolveNodeRef(
   }
 
   const partial = options.filter((o) => normalizeMatch(o.label).includes(normalizeMatch(trimmed)));
-  if (partial.length === 1) return { value: partial[0].value, error: null };
+  if (partial.length === 1) {
+    const o = partial[0];
+    return { value: o.value, error: null, note: `→ ${o.label}${o.code ? ` (código ${o.code})` : ""}` };
+  }
   if (partial.length > 1) return { value: "", error: `"${trimmed}" é ambíguo — use o código exato.` };
 
   return { value: "", error: `"${trimmed}" não encontrado em ${field.label}.` };
@@ -95,6 +98,7 @@ export function buildAndValidateRows(
     const values: Record<string, string> = {};
     const rawValues: Record<string, string> = {};
     const errors: Record<string, string> = {};
+    const notes: Record<string, string> = {};
 
     for (const field of fields) {
       const columnIndex = columnByKey.get(field.key);
@@ -131,7 +135,8 @@ export function buildAndValidateRows(
           const col = columnByKey.get(k);
           return col !== undefined ? (row[col] ?? "").trim() : "";
         });
-        const { value, error } = resolveNodeRef(raw, field, batchRefsByField.get(field.key) ?? null, selfRaws);
+        const { value, error, note } = resolveNodeRef(raw, field, batchRefsByField.get(field.key) ?? null, selfRaws);
+        if (note) notes[field.key] = note;
         values[field.key] = value;
         if (error) errors[field.key] = error;
       } else {
@@ -144,7 +149,7 @@ export function buildAndValidateRows(
       }
     }
 
-    return { rowIndex, values, rawValues, errors, baseErrors: { ...errors }, skip: false };
+    return { rowIndex, values, rawValues, errors, baseErrors: { ...errors }, notes: { ...notes }, baseNotes: { ...notes }, skip: false };
   });
 }
 
@@ -184,6 +189,14 @@ export function applyBatchDependencies(rows: ImportRowResult[], fields: ImportFi
 
   return rows.map((r) => {
     const errors = { ...r.baseErrors };
+    const notes = { ...r.baseNotes };
+    if (isBatch(r) && !errors[refField.key]) {
+      const prov = rows.find((p) => p.rowIndex !== r.rowIndex && identifies(p, refOf(r)));
+      if (prov) {
+        const label = keys.map((k) => prov.rawValues[k]).filter(Boolean).join(" — ");
+        notes[refField.key] = `→ linha ${prov.rowIndex + 1}: ${label}`;
+      }
+    }
     if (!r.skip && isBatch(r) && !errors[refField.key] && !resolvable.has(r.rowIndex)) {
       const ref = (r.values[refField.key] ?? "").slice(BATCH_REF_PREFIX.length);
       const provider = rows.find((p) => p.rowIndex !== r.rowIndex && identifies(p, refOf(r)));
@@ -198,6 +211,6 @@ export function applyBatchDependencies(rows: ImportRowResult[], fields: ImportFi
         errors[refField.key] = `O item superior "${ref}" não foi encontrado.`;
       }
     }
-    return { ...r, errors };
+    return { ...r, errors, notes };
   });
 }

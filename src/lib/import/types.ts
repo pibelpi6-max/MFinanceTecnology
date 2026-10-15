@@ -77,6 +77,9 @@ export interface ImportRowResult {
   errors: Record<string, string>;
   /** erros da própria linha, sem os derivados de dependência (ver applyBatchDependencies) */
   baseErrors: Record<string, string>;
+  /** avisos de como um texto foi interpretado (ex.: "→ Administrativo (código 1)"), por campo */
+  notes: Record<string, string>;
+  baseNotes: Record<string, string>;
   skip: boolean;
 }
 
@@ -89,4 +92,6 @@ export interface ImportRunSummary {
   successCount: number;
   errorCount: number;
   errors: { rowIndex: number; message: string }[];
+  /** resumo opcional do que foi criado, mostrado na tela final */
+  detail?: string;
 }

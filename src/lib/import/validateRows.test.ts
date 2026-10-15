@@ -179,3 +179,31 @@ describe("applyBatchDependencies — filho cujo pai não será importado", () =>
     expect(rows[0].errors.item_superior).toMatch(/circular/);
   });
 });
+
+describe("avisos de interpretação (notes)", () => {
+  const f: ImportFieldConfig[] = [
+    { key: "codigo", label: "Código", type: "text", required: true },
+    { key: "nome", label: "Nome", type: "text", required: true },
+    { key: "item_superior", label: "Item Superior", type: "node-ref", required: false,
+      options: [{ value: "id-adm", label: "Administrativo", code: "10" }], batchRefKeys: ["codigo", "nome"] },
+  ];
+  const m: ColumnMapping[] = [
+    { columnIndex: 0, targetKey: "codigo" },
+    { columnIndex: 1, targetKey: "nome" },
+    { columnIndex: 2, targetKey: "item_superior" },
+  ];
+
+  it("avisa quando o pai foi casado por aproximação e quando aponta para outra linha", () => {
+    const rows = applyBatchDependencies(
+      buildAndValidateRows([["20", "A", "Admin"], ["30", "B", "20"]], m, f),
+      f
+    );
+    expect(rows[0].notes.item_superior).toBe("→ Administrativo (código 10)");
+    expect(rows[1].notes.item_superior).toBe("→ linha 1: 20 — A");
+  });
+
+  it("não avisa quando o casamento é exato", () => {
+    const rows = buildAndValidateRows([["20", "A", "10"]], m, f);
+    expect(rows[0].notes.item_superior).toBeUndefined();
+  });
+});

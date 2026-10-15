@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentTenant } from "@/lib/tenant/getCurrentTenant";
-import { BATCH_REF_PREFIX } from "@/lib/import/types";
+import { BATCH_REF_PREFIX, type ImportRunSummary } from "@/lib/import/types";
 
 interface ActionResult {
   success?: true;
@@ -222,7 +222,7 @@ export async function importDimensionNodes(input: {
   structureId?: string;
   year: number;
   rows: { values: Record<string, string> }[];
-}): Promise<{ successCount: number; errorCount: number; errors: { rowIndex: number; message: string }[] }> {
+}): Promise<ImportRunSummary> {
   const { tenantId } = await requireTenant();
   const supabase = await createClient();
 
@@ -247,6 +247,7 @@ export async function importDimensionNodes(input: {
 
   // Itens criados nesta importação, para filhos que apontam (por código ou
   // nome) para um pai que está na mesma planilha: chave normalizada → id/nível.
+  let maxLevel = 0;
   const createdByCode = new Map<string, { id: string; level: number }>();
   const createdByName = new Map<string, { id: string; level: number }>();
 
@@ -331,6 +332,7 @@ export async function importDimensionNodes(input: {
       }
 
       if (!parentNodeId) rootCount++;
+      maxLevel = Math.max(maxLevel, level);
       createdByCode.set(norm(code), { id: node.id, level });
       if (!createdByName.has(norm(name))) createdByName.set(norm(name), { id: node.id, level });
       successCount++;
@@ -355,7 +357,11 @@ export async function importDimensionNodes(input: {
     revalidatePath("/admin/dimensoes");
     revalidatePath("/admin/configuracoes");
   }
-  return { successCount, errorCount: errors.length, errors };
+  const detail =
+    successCount > 0
+      ? `${successCount} ${successCount === 1 ? "item criado" : "itens criados"}, em ${maxLevel} ${maxLevel === 1 ? "nível" : "níveis"}.`
+      : undefined;
+  return { successCount, errorCount: errors.length, errors, detail };
 }
 
 export async function cancelDimensionNode(input: {

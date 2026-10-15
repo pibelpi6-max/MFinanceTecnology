@@ -809,6 +809,7 @@
 .import-row-error td { background: rgba(220,38,38,.04); }
 .import-row-skipped td { opacity: .45; }
 .import-cell-error { color: #dc2626; font-size: 11px; margin-top: 2px; }
+.import-cell-note { color: #2563eb; font-size: 11px; margin-top: 2px; }
 
 .import-review-summary { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-muted); }
 .import-status-tag { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 600; white-space: nowrap; }
