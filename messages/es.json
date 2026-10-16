@@ -370,6 +370,7 @@
       "filterColumn": "Filtrar {column}",
       "noRowsFiltered": "Ninguna fila con estos filtros",
       "filteredFooter": "Mostrando {shown} de {total} filas (filtro activo). Todas se siguen importando.",
+      "actions": "Acciones",
       "dropRoot": "Suelta aquí para quitar el superior (pasa a nivel 1)",
       "dragHandle": "Arrastrar para cambiar el superior",
       "suggestion": "Sugerencia",

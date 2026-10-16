@@ -845,7 +845,7 @@
 .import-icon-btn.is-save { color: #15803d; }
 .import-icon-btn.is-cancel { color: #dc2626; }
 .import-icon-btn.is-cancel:hover { background: rgba(220,38,38,.08); color: #dc2626; }
-.import-edit-btn { opacity: 0; transition: opacity .12s; }
+.import-edit-btn { opacity: .6; transition: opacity .12s; }
 .import-grid-table tr:hover .import-edit-btn, .import-edit-btn:focus-visible { opacity: 1; }
 .import-tree-wrap { border-radius: 12px; }
 .import-tree-table { table-layout: fixed; }
@@ -901,3 +901,5 @@
 .import-filter-chip button { width: 14px; height: 14px; padding: 0; border: 0; border-radius: 50%; background: rgba(92,184,138,.2); color: #0f6e56; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
 .import-filter-clear { border: 0; background: transparent; color: #5cb88a; font-weight: 500; font-size: 13px; cursor: pointer; }
 .import-filter-clear:hover { text-decoration: underline; }
+.import-th-actions { text-align: center; }
+.import-tree-table .import-row-actions { text-align: center; }

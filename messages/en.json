@@ -370,6 +370,7 @@
       "filterColumn": "Filter {column}",
       "noRowsFiltered": "No rows match these filters",
       "filteredFooter": "Showing {shown} of {total} rows (filter active). All of them are still imported.",
+      "actions": "Actions",
       "dropRoot": "Drop here to remove the parent (becomes level 1)",
       "dragHandle": "Drag to change the parent",
       "suggestion": "Suggestion",

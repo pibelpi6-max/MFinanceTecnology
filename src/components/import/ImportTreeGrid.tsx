@@ -34,7 +34,7 @@ interface GridCol {
 const OBS = "__obs";
 const STATUS = "__status";
 const NONE = "__none__";
-const FIXED_WIDTH = 36 + 30 + 22 + 52; // controle +/-, checkbox, alça, lápis
+const FIXED_WIDTH = 36 + 30 + 22 + 76; // controle +/-, checkbox, alça, lápis
 const MIN_COL = 60;
 const STORAGE_KEY = "import-tree-widths:v1";
 
@@ -448,7 +448,7 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
                   <col key={c.key} style={{ width: widthOf(c.key) }} />
                 ))}
               <col />
-              <col style={{ width: 52 }} />
+              <col style={{ width: 76 }} />
               <col style={{ width: widthOf(STATUS) }} />
             </colgroup>
             <thead>
@@ -488,7 +488,7 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
                     />
                   ))}
                 <th aria-hidden="true" className="import-th-spacer"></th>
-                <th></th>
+                <th className="import-th-actions">{t("review.actions")}</th>
                 {(() => {
                   const c = cols.find((x) => x.kind === "status")!;
                   return (
