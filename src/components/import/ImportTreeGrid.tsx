@@ -2,6 +2,7 @@
 
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { Tooltip } from "@/components/ui/Tooltip";
 import { FilterDropdown } from "@/components/ui/DataTable/FilterDropdown";
 import type { ColumnMeta } from "@/components/ui/DataTable/types";
 import { findBatchProvider } from "@/lib/import/validateRows";
@@ -452,6 +453,22 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
                       onResize={(e) => startResize(e, c.key)}
                       onHover={(on) => setResizeHover(on ? c.key : null)}
                       filterLabel={t("review.filterColumn", { column: c.label })}
+                      extra={
+                        c.field?.key === nameKey && parents.length > 0 && !isFiltering ? (
+                          <Tooltip text={allCollapsed ? t("review.expandAll") : t("review.collapseAll")} side="bottom">
+                            <button
+                              type="button"
+                              className="import-chev-all"
+                              onClick={() => setCollapsed(allCollapsed ? new Set() : new Set(parents))}
+                              aria-label={allCollapsed ? t("review.expandAll") : t("review.collapseAll")}
+                            >
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} aria-hidden="true">
+                                <path strokeLinecap="round" strokeLinejoin="round" d={allCollapsed ? "m6 9 6 6 6-6" : "m6 15 6-6 6 6"} />
+                              </svg>
+                            </button>
+                          </Tooltip>
+                        ) : undefined
+                      }
                     />
                   ))}
                 <th aria-hidden="true" className="import-th-spacer"></th>
@@ -667,27 +684,13 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
         </div>
       )}
 
-      <div className="import-tree-footer">
-        <p>
-          {isFiltering
-            ? t("review.filteredFooter", { shown: visible.length, total: flat.length })
-            : hiddenCount > 0
-              ? t("review.hiddenFooter", { count: hiddenCount })
-              : t("review.allVisibleFooter", { count: flat.length })}
-        </p>
-        {parents.length > 0 && !isFiltering && (
-          <button
-            type="button"
-            className="import-tree-toggle"
-            onClick={() => setCollapsed(allCollapsed ? new Set() : new Set(parents))}
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" d={allCollapsed ? "m7 8 5-5 5 5M7 16l5 5 5-5" : "m7 4 5 5 5-5M7 20l5-5 5 5"} />
-            </svg>
-            {allCollapsed ? t("review.expandAll") : t("review.collapseAll")}
-          </button>
-        )}
-      </div>
+      <p className="import-tree-footer">
+        {isFiltering
+          ? t("review.filteredFooter", { shown: visible.length, total: flat.length })
+          : hiddenCount > 0
+            ? t("review.hiddenFooter", { count: hiddenCount })
+            : t("review.allVisibleFooter", { count: flat.length })}
+      </p>
     </div>
   );
 }
