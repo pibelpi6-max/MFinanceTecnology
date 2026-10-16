@@ -907,6 +907,6 @@
 .import-chevron:hover { background: #e6edff; color: #2f5bd0; }
 .import-chevron.is-collapsed { transform: rotate(-90deg); }
 .import-chevron-spacer { flex: none; width: 22px; }
-.import-chev-all { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 6px; background: transparent; color: #6b6f86; cursor: pointer; }
+.import-chev-all { flex: none; display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: 24px; padding: 0 8px 0 6px; border: 0; border-radius: 6px; background: transparent; color: #6b6f86; cursor: pointer; font-size: 12px; font-weight: 500; text-transform: none; letter-spacing: 0; white-space: nowrap; }
 .import-chev-all:hover { background: #e6edff; color: #2f5bd0; }
 .import-tree-cell .import-cell-text, .import-tree-cell .import-cell-input { min-width: 0; flex: 1 1 auto; }
