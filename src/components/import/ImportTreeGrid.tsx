@@ -416,23 +416,6 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
         </div>
       )}
 
-      {parents.length > 0 && !isFiltering && (
-        <div className="import-tree-toolbar">
-          <button type="button" className={`import-tree-toolbtn${collapsed.size === 0 ? " is-active" : ""}`} aria-pressed={collapsed.size === 0} onClick={() => setCollapsed(new Set())}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" d="m7 8 5-5 5 5M7 16l5 5 5-5" />
-            </svg>
-            {t("review.expandAll")}
-          </button>
-          <button type="button" className={`import-tree-toolbtn${allCollapsed ? " is-active" : ""}`} aria-pressed={allCollapsed} onClick={() => setCollapsed(new Set(parents))}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" d="m7 4 5 5 5-5M7 20l5-5 5 5" />
-            </svg>
-            {t("review.collapseAll")}
-          </button>
-        </div>
-      )}
-
       <div ref={cardRef} className="import-tree-card">
         <div ref={wrapRef} className="import-tree-scroll">
           <table className="import-grid-table import-tree-table" style={{ minWidth: totalWidth }}>
@@ -684,13 +667,27 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
         </div>
       )}
 
-      <p className="import-tree-footer">
-        {isFiltering
-          ? t("review.filteredFooter", { shown: visible.length, total: flat.length })
-          : hiddenCount > 0
-            ? t("review.hiddenFooter", { count: hiddenCount })
-            : t("review.allVisibleFooter", { count: flat.length })}
-      </p>
+      <div className="import-tree-footer">
+        <p>
+          {isFiltering
+            ? t("review.filteredFooter", { shown: visible.length, total: flat.length })
+            : hiddenCount > 0
+              ? t("review.hiddenFooter", { count: hiddenCount })
+              : t("review.allVisibleFooter", { count: flat.length })}
+        </p>
+        {parents.length > 0 && !isFiltering && (
+          <button
+            type="button"
+            className="import-tree-toggle"
+            onClick={() => setCollapsed(allCollapsed ? new Set() : new Set(parents))}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d={allCollapsed ? "m7 8 5-5 5 5M7 16l5 5 5-5" : "m7 4 5 5 5-5M7 20l5-5 5 5"} />
+            </svg>
+            {allCollapsed ? t("review.expandAll") : t("review.collapseAll")}
+          </button>
+        )}
+      </div>
     </div>
   );
 }
