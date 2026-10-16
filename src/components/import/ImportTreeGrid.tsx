@@ -17,6 +17,8 @@ interface ImportTreeGridProps {
   onMoveRow: (rowIndex: number, newParentRowIndex: number | null) => void;
   /** contadores mostrados ao lado do título "Status" */
   counts: { ready: number; errors: number; skipped: number };
+  /** Ação principal (ex.: Importar) exibida à direita da barra do card. */
+  toolbarAction?: React.ReactNode;
 }
 
 interface FlatRow {
@@ -52,7 +54,7 @@ function norm(v: string) {
  * Colunas no padrão do DataTable: redimensionáveis e com filtro (funil),
  * sem ordenação (a ordem aqui é a hierarquia).
  */
-export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRow, counts }: ImportTreeGridProps) {
+export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRow, counts, toolbarAction }: ImportTreeGridProps) {
   const t = useTranslations("import");
   const [dragging, setDragging] = useState<number | null>(null);
   const [over, setOver] = useState<number | "root" | null>(null);
@@ -430,16 +432,7 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
 
       <div ref={cardRef} className="import-tree-card">
         <div className="import-tree-toolbar">
-          <div />
-          <div className="import-tree-toolbar-right">
-            {isFiltering && (
-              <button type="button" className="import-clear-btn" onClick={clearAllFilters}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-                </svg>
-                {t("review.clearFiltersBtn")}
-              </button>
-            )}
+          <div className="import-tree-toolbar-left">
             <div className="import-search">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.2-5.2m0 0A7.5 7.5 0 1 0 5.2 5.2a7.5 7.5 0 0 0 10.6 10.6Z" />
@@ -451,7 +444,16 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
+            {isFiltering && (
+              <button type="button" className="import-clear-btn" onClick={clearAllFilters}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+                {t("review.clearFiltersBtn")}
+              </button>
+            )}
           </div>
+          {toolbarAction && <div className="import-tree-toolbar-right">{toolbarAction}</div>}
         </div>
         <div ref={wrapRef} className="import-tree-scroll">
           <table className="import-grid-table import-tree-table" style={{ minWidth: totalWidth }}>
