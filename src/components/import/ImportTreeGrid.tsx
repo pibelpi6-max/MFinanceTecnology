@@ -418,13 +418,13 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
 
       {parents.length > 0 && !isFiltering && (
         <div className="import-tree-toolbar">
-          <button type="button" className="import-tree-toolbtn" onClick={() => setCollapsed(new Set())} disabled={collapsed.size === 0}>
+          <button type="button" className={`import-tree-toolbtn${collapsed.size === 0 ? " is-active" : ""}`} aria-pressed={collapsed.size === 0} onClick={() => setCollapsed(new Set())}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" d="m7 8 5-5 5 5M7 16l5 5 5-5" />
             </svg>
             {t("review.expandAll")}
           </button>
-          <button type="button" className="import-tree-toolbtn" onClick={() => setCollapsed(new Set(parents))} disabled={allCollapsed}>
+          <button type="button" className={`import-tree-toolbtn${allCollapsed ? " is-active" : ""}`} aria-pressed={allCollapsed} onClick={() => setCollapsed(new Set(parents))}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" d="m7 4 5 5 5-5M7 20l5-5 5 5" />
             </svg>
