@@ -6,10 +6,12 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { parseSpreadsheetFile } from "@/lib/import/parseFile";
 import { suggestColumnMapping } from "@/lib/import/aiMapping";
-import { buildAndValidateRows } from "@/lib/import/validateRows";
+import { applyBatchDependencies, buildAndValidateRows } from "@/lib/import/validateRows";
 import { ImportStepIndicator } from "./ImportStepIndicator";
 import { ColumnMappingFields } from "./ColumnMappingFields";
 import { ImportGrid } from "./ImportGrid";
+import { ImportTreeGrid } from "./ImportTreeGrid";
+import { setCellValue } from "@/lib/import/editRows";
 import type {
   ColumnMapping,
   ImportLayoutConfig,
@@ -34,9 +36,11 @@ interface ImportWizardProps {
    * "done") — pra quem está ouvindo (ex: a tela por trás do modal) puder
    * revalidar os dados sem esperar a usuária fechar o assistente. */
   onImported?: () => void;
+  /** Ação à direita, na altura dos passos (ex.: botão "Tela cheia"). */
+  toolbarRight?: React.ReactNode;
 }
 
-export function ImportWizard({ layout, backHref, onImport, onClose, onImported }: ImportWizardProps) {
+export function ImportWizard({ layout, backHref, onImport, onClose, onImported, toolbarRight }: ImportWizardProps) {
   const t = useTranslations("import");
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -80,15 +84,58 @@ export function ImportWizard({ layout, backHref, onImport, onClose, onImported }
     });
   }
 
+  const hierarchical = layout.fields.some((f) => f.type === "node-ref" && f.batchRefKeys?.length);
+  const refField = layout.fields.find((f) => f.type === "node-ref" && f.batchRefKeys?.length);
+
+  function rebuild(sheetRows: string[][], mappingNow: ColumnMapping[], skipped: Set<number>) {
+    return applyBatchDependencies(buildAndValidateRows(sheetRows, mappingNow, layout.fields, skipped), layout.fields);
+  }
+
   function goToReview() {
     if (!sheet) return;
-    const built = buildAndValidateRows(sheet.rows, mapping, layout.fields);
-    setRows(built);
+    setRows(rebuild(sheet.rows, mapping, new Set()));
     setStep("review");
   }
 
+  function currentSkipped(): Set<number> {
+    return new Set(rows.filter((r) => r.skip).map((r) => r.rowIndex));
+  }
+
   function toggleSkip(rowIndex: number) {
-    setRows((prev) => prev.map((r) => (r.rowIndex === rowIndex ? { ...r, skip: !r.skip } : r)));
+    if (!sheet) return;
+    const skipped = currentSkipped();
+    if (skipped.has(rowIndex)) skipped.delete(rowIndex);
+    else skipped.add(rowIndex);
+    setRows(rebuild(sheet.rows, mapping, skipped));
+  }
+
+  /** Edita uma célula na revisão (código, nome ou item superior) e revalida tudo. */
+  function editCell(rowIndex: number, key: string, value: string) {
+    if (!sheet) return;
+    const next = setCellValue(sheet, mapping, layout.fields, rowIndex, key, value);
+    setSheet(next.sheet);
+    setMapping(next.mapping);
+    setRows(rebuild(next.sheet.rows, next.mapping, currentSkipped()));
+  }
+
+  /** Salva de uma vez os campos editados de uma linha (lápis na revisão). */
+  function editRow(rowIndex: number, values: Record<string, string>) {
+    if (!sheet) return;
+    let next = { sheet, mapping };
+    // código/nome antes do item superior, para a troca de código acompanhar os filhos
+    const order = Object.keys(values).sort((a) => (a === refField?.key ? 1 : -1));
+    for (const key of order) next = setCellValue(next.sheet, next.mapping, layout.fields, rowIndex, key, values[key]);
+    setSheet(next.sheet);
+    setMapping(next.mapping);
+    setRows(rebuild(next.sheet.rows, next.mapping, currentSkipped()));
+  }
+
+  /** Arrastar e soltar: coloca a linha dentro de outra (pelo código dela) ou, com null, tira o item superior. */
+  function moveRow(rowIndex: number, newParentRowIndex: number | null) {
+    if (!refField?.batchRefKeys) return;
+    const parentCode = newParentRowIndex === null ? "" : (rows[newParentRowIndex]?.rawValues[refField.batchRefKeys[0]] ?? "");
+    if (newParentRowIndex !== null && !parentCode) return;
+    editCell(rowIndex, refField.key, parentCode);
   }
 
   const readyRows = rows.filter((r) => !r.skip && Object.keys(r.errors).length === 0);
@@ -100,7 +147,12 @@ export function ImportWizard({ layout, backHref, onImport, onClose, onImported }
     startTransition(async () => {
       try {
         const result = await onImport(readyRows.map((r) => ({ values: r.values })));
-        setSummary(result);
+        // A Server Action devolve o índice dentro das linhas enviadas; mostra
+        // o número da linha da planilha (o mesmo "#" da tela de revisão).
+        setSummary({
+          ...result,
+          errors: result.errors.map((e) => ({ ...e, rowIndex: readyRows[e.rowIndex]?.rowIndex ?? e.rowIndex })),
+        });
         setStep("done");
         if (result.successCount > 0) onImported?.();
       } finally {
@@ -115,8 +167,16 @@ export function ImportWizard({ layout, backHref, onImport, onClose, onImported }
   }
 
   return (
-    <div className="import-wizard">
-      <ImportStepIndicator current={step} />
+    <div className={`import-wizard${toolbarRight ? " import-wizard--wide" : ""}`}>
+      {toolbarRight ? (
+        <div className="import-toolbar">
+          <div />
+          <ImportStepIndicator current={step} />
+          <div className="import-toolbar-right">{step === "review" && hierarchical ? null : toolbarRight}</div>
+        </div>
+      ) : (
+        <ImportStepIndicator current={step} />
+      )}
 
       {step === "upload" && (
         <div className="import-upload-zone">
@@ -163,11 +223,17 @@ export function ImportWizard({ layout, backHref, onImport, onClose, onImported }
             </p>
           )}
           <div className="import-step-actions">
-            <button type="button" className="import-link-btn" onClick={() => setStep("upload")}>
+            <Button size="sm" variant="secondary" onClick={() => setStep("upload")}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0 7-7m-7 7h18" />
+              </svg>
               {t("back")}
-            </button>
-            <Button onClick={goToReview} disabled={requiredKeysUnmapped.length > 0}>
+            </Button>
+            <Button size="sm" onClick={goToReview} disabled={requiredKeysUnmapped.length > 0}>
               {t("continue")}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0-7 7m7-7H3" />
+              </svg>
             </Button>
           </div>
         </div>
@@ -175,23 +241,45 @@ export function ImportWizard({ layout, backHref, onImport, onClose, onImported }
 
       {step === "review" && (
         <div className="import-step-body">
-          <div className="import-review-summary">
-            <span>{t("review.total", { count: rows.length })}</span>
-            <span className="import-status-tag import-status-ok">{t("review.readyCount", { count: readyRows.length })}</span>
-            {errorRows.length > 0 && (
-              <span className="import-status-tag import-status-error">{t("review.errorCount", { count: errorRows.length })}</span>
-            )}
-            {skippedRows.length > 0 && (
-              <span className="import-status-tag import-status-skipped">{t("review.skippedCount", { count: skippedRows.length })}</span>
-            )}
-          </div>
-          <ImportGrid rows={rows} fields={layout.fields} onToggleSkip={toggleSkip} />
-          <div className="import-step-actions">
-            <button type="button" className="import-link-btn" onClick={() => setStep("mapping")}>
+          {!hierarchical && (
+            <div className="import-review-summary">
+              <span>{t("review.total", { count: rows.length })}</span>
+              <span className="import-status-tag import-status-ok">{t("review.readyCount", { count: readyRows.length })}</span>
+              {errorRows.length > 0 && (
+                <span className="import-status-tag import-status-error">{t("review.errorCount", { count: errorRows.length })}</span>
+              )}
+              {skippedRows.length > 0 && (
+                <span className="import-status-tag import-status-skipped">{t("review.skippedCount", { count: skippedRows.length })}</span>
+              )}
+            </div>
+          )}
+          {hierarchical ? (
+            <ImportTreeGrid
+              rows={rows}
+              fields={layout.fields}
+              onToggleSkip={toggleSkip}
+              onEditRow={editRow}
+              onMoveRow={moveRow}
+              counts={{ ready: readyRows.length, errors: errorRows.length, skipped: skippedRows.length }}
+              toolbarAction={toolbarRight}
+            />
+          ) : (
+            <ImportGrid rows={rows} fields={layout.fields} onToggleSkip={toggleSkip} />
+          )}
+          <div className={`import-step-actions${hierarchical ? " import-step-actions--divided" : ""}`}>
+            <Button size="sm" variant="secondary" onClick={() => setStep("mapping")}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0 7-7m-7 7h18" />
+              </svg>
               {t("back")}
-            </button>
-            <Button onClick={runImport} isLoading={isImporting || isPending} disabled={readyRows.length === 0}>
-              {t("review.importButton", { count: readyRows.length })}
+            </Button>
+            <Button size="sm" onClick={runImport} isLoading={isImporting || isPending} disabled={readyRows.length === 0}>
+              {hierarchical && (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 15V4m0 0L8.5 7.5M12 4l3.5 3.5M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" />
+                </svg>
+              )}
+              {hierarchical ? t("review.importCount", { count: readyRows.length }) : t("review.importButton", { count: readyRows.length })}
             </Button>
           </div>
         </div>
@@ -201,6 +289,7 @@ export function ImportWizard({ layout, backHref, onImport, onClose, onImported }
         <div className="import-step-body">
           <div className="import-done-banner">
             <p className="import-done-title">{t("done.title", { count: summary.successCount })}</p>
+            {summary.detail && <p className="import-done-subtitle">{summary.detail}</p>}
             {summary.errorCount > 0 && <p className="import-done-subtitle">{t("done.someFailed", { count: summary.errorCount })}</p>}
           </div>
           {summary.errors.length > 0 && (
