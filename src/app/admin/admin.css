@@ -901,5 +901,5 @@
 .import-filter-chip button { width: 14px; height: 14px; padding: 0; border: 0; border-radius: 50%; background: rgba(92,184,138,.2); color: #0f6e56; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
 .import-filter-clear { border: 0; background: transparent; color: #5cb88a; font-weight: 500; font-size: 13px; cursor: pointer; }
 .import-filter-clear:hover { text-decoration: underline; }
-.import-th-actions { text-align: center; }
+.import-tree-table th.import-th-actions { text-align: center; padding-left: 2px; padding-right: 2px; }
 .import-tree-table .import-row-actions { text-align: center; }
