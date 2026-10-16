@@ -16,7 +16,10 @@ export function ImportStepIndicator({ current }: { current: ImportStep }) {
       {STEPS.map((step, i) => (
         <div key={step} className={`import-step ${i === currentIndex ? "current" : i < currentIndex ? "done" : "upcoming"}`}>
           <span className="import-step-dot">{i < currentIndex ? "✓" : i + 1}</span>
-          <span className="import-step-label">{t(step)}</span>
+          <span className="import-step-text">
+            <span className="import-step-label">{t(step)}</span>
+            <span className="import-step-desc">{t(`${step}Desc`)}</span>
+          </span>
           {i < STEPS.length - 1 && <span className="import-step-line" />}
         </div>
       ))}

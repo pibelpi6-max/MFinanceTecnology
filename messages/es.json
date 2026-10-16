@@ -320,7 +320,10 @@
     "steps": {
       "mapping": "Columnas",
       "review": "Revisión",
-      "done": "Listo"
+      "done": "Listo",
+      "mappingDesc": "Asocia las columnas de la hoja",
+      "reviewDesc": "Revisa los datos antes de importar",
+      "doneDesc": "Finalizar la importación"
     },
     "cancel": "Cancelar",
     "back": "Volver",
@@ -344,11 +347,11 @@
       "includeRow": "Incluir esta fila en la importación",
       "ready": "Lista",
       "hasErrors": "Con error",
-      "skipped": "Ignorada",
+      "skipped": "Excluida",
       "total": "{count} fila(s) en la hoja",
       "readyCount": "{count} lista(s)",
       "errorCount": "{count} con error",
-      "skippedCount": "{count} ignorada(s)",
+      "skippedCount": "{count} excluida(s)",
       "importButton": "Importar {count} fila(s)",
       "collapse": "Contraer",
       "expand": "Expandir",
@@ -360,7 +363,7 @@
       "allVisibleFooter": "Las {count} filas están visibles.",
       "countReadyLabel": "{count, plural, one {# lista} other {# listas}}",
       "countErrorLabel": "{count, plural, one {# con error} other {# con error}}",
-      "countSkippedLabel": "{count, plural, one {# omitida} other {# omitidas}}",
+      "countSkippedLabel": "{count, plural, one {# excluida} other {# excluidas}}",
       "aiNotes": "Observaciones de la IA",
       "parentPlaceholder": "Elemento superior (código o nombre)",
       "noObservation": "Sin observación",
@@ -384,7 +387,14 @@
       "countReady": "listas para importar",
       "countErrors": "con error",
       "countSkipped": "ignoradas",
-      "importAction": "Importar"
+      "importAction": "Importar",
+      "rowsCount": "{count, plural, one {# fila} other {# filas}}",
+      "errorsPill": "{count, plural, one {# fila con error} other {# filas con error}}",
+      "search": "Buscar...",
+      "clearFiltersBtn": "limpiar filtros",
+      "excludeRow": "Excluir esta fila de la importación",
+      "shownFooter": "{shown} de {total} {total, plural, one {fila mostrada} other {filas mostradas}}",
+      "importCount": "Importar {count, plural, one {# elemento} other {# elementos}}"
     },
     "done": {
       "title": "{count} registro(s) importado(s) con éxito",

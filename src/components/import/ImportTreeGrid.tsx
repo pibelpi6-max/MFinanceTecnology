@@ -34,7 +34,7 @@ interface GridCol {
 const OBS = "__obs";
 const STATUS = "__status";
 const NONE = "__none__";
-const FIXED_WIDTH = 30 + 22 + 76; // controle +/-, checkbox, alça, lápis
+const FIXED_WIDTH = 22 + 84; // alça, ações (editar / excluir)
 const MIN_COL = 60;
 const STORAGE_KEY = "import-tree-widths:v1";
 
@@ -59,6 +59,7 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
   const [editing, setEditing] = useState<number | null>(null);
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [collapsed, setCollapsed] = useState<Set<number>>(new Set());
+  const [search, setSearch] = useState("");
 
   const refField = fields.find((f) => f.type === "node-ref" && f.batchRefKeys?.length)!;
   const codeKey = refField.batchRefKeys![0];
@@ -157,13 +158,25 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
   };
 
   const totalFilters = Object.values(applied).reduce((s, v) => s + v.size, 0);
-  const isFiltering = totalFilters > 0;
-  const matches = (row: ImportRowResult) =>
-    Object.entries(applied).every(([colKey, set]) => {
+  const query = search.trim();
+  const isFiltering = totalFilters > 0 || query !== "";
+  const norm = (v: string) => v.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const matches = (row: ImportRowResult) => {
+    if (query) {
+      const hay = norm([...Object.values(row.rawValues), obsText(row)].join(" "));
+      if (!hay.includes(norm(query))) return false;
+    }
+    return Object.entries(applied).every(([colKey, set]) => {
       if (set.size === 0) return true;
       const col = cols.find((c) => c.key === colKey);
       return col ? set.has(filterValue(row, col)) : true;
     });
+  };
+  const onlyErrors = (applied[STATUS]?.size ?? 0) === 1 && applied[STATUS].has("error");
+  const clearAllFilters = () => {
+    setApplied({});
+    setSearch("");
+  };
 
   function positionDropdown(colKey: string) {
     const th = thRefs.current[colKey];
@@ -381,7 +394,7 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
 
   return (
     <div className="import-tree-wrap">
-      {isFiltering && (
+      {totalFilters > 0 && (
         <div className="import-filter-chips">
           <span>{t("review.filtersActive")}</span>
           {Object.entries(applied).flatMap(([colKey, set]) =>
@@ -410,17 +423,53 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
               );
             })
           )}
-          <button type="button" className="import-filter-clear" onClick={() => setApplied({})}>
+          <button type="button" className="import-filter-clear" onClick={clearAllFilters}>
             {t("review.clearFilters")}
           </button>
         </div>
       )}
 
       <div ref={cardRef} className="import-tree-card">
+        <div className="import-tree-toolbar">
+          <div className="import-tree-toolbar-left">
+            <span className="import-tree-rows">{t("review.rowsCount", { count: flat.length })}</span>
+            {counts.errors > 0 && (
+              <button
+                type="button"
+                className={`import-error-pill${onlyErrors ? " is-on" : ""}`}
+                onClick={() =>
+                  setApplied((a) => ({ ...a, [STATUS]: onlyErrors ? new Set() : new Set(["error"]) }))
+                }
+              >
+                {t("review.errorsPill", { count: counts.errors })}
+              </button>
+            )}
+          </div>
+          <div className="import-tree-toolbar-right">
+            {isFiltering && (
+              <button type="button" className="import-clear-btn" onClick={clearAllFilters}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+                {t("review.clearFiltersBtn")}
+              </button>
+            )}
+            <div className="import-search">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.2-5.2m0 0A7.5 7.5 0 1 0 5.2 5.2a7.5 7.5 0 0 0 10.6 10.6Z" />
+              </svg>
+              <input
+                type="text"
+                value={search}
+                placeholder={t("review.search")}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+          </div>
+        </div>
         <div ref={wrapRef} className="import-tree-scroll">
           <table className="import-grid-table import-tree-table" style={{ minWidth: totalWidth }}>
             <colgroup>
-              <col style={{ width: 30 }} />
               <col style={{ width: 22 }} />
               {cols
                 .filter((c) => c.kind !== "status")
@@ -428,12 +477,11 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
                   <col key={c.key} style={{ width: widthOf(c.key) }} />
                 ))}
               <col />
-              <col style={{ width: 76 }} />
+              <col style={{ width: 84 }} />
               <col style={{ width: widthOf(STATUS) }} />
             </colgroup>
             <thead>
               <tr>
-                <th></th>
                 <th></th>
                 {cols
                   .filter((c) => c.kind !== "status")
@@ -494,7 +542,7 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
             <tbody>
               {visible.length === 0 && (
                 <tr>
-                  <td colSpan={cols.length + 4} className="import-tree-empty">
+                  <td colSpan={cols.length + 3} className="import-tree-empty">
                     {t("review.noRowsFiltered")}
                   </td>
                 </tr>
@@ -528,14 +576,6 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
                       endDrag();
                     }}
                   >
-                    <td>
-                      <input
-                        type="checkbox"
-                        checked={!row.skip}
-                        onChange={() => onToggleSkip(row.rowIndex)}
-                        title={t("review.includeRow")}
-                      />
-                    </td>
                     <td className="import-handle-cell">
                       <span
                         className="import-drag-handle"
@@ -613,9 +653,24 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
                           </button>
                         </>
                       ) : (
-                        <button type="button" className="import-icon-btn import-edit-btn" title={t("review.edit")} onClick={() => startEdit(row)}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16.86 4.49a1.75 1.75 0 1 1 2.47 2.47L7.5 18.79l-3.3.82.82-3.3Z" /></svg>
-                        </button>
+                        <>
+                          <button type="button" className="import-icon-btn import-edit-btn" title={t("review.edit")} onClick={() => startEdit(row)}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16.86 4.49a1.75 1.75 0 1 1 2.47 2.47L7.5 18.79l-3.3.82.82-3.3Z" /></svg>
+                          </button>
+                          <button
+                            type="button"
+                            className={`import-icon-btn ${row.skip ? "import-include-btn" : "import-exclude-btn"}`}
+                            title={row.skip ? t("review.includeRow") : t("review.excludeRow")}
+                            aria-label={row.skip ? t("review.includeRow") : t("review.excludeRow")}
+                            onClick={() => onToggleSkip(row.rowIndex)}
+                          >
+                            {row.skip ? (
+                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+                            ) : (
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                            )}
+                          </button>
+                        </>
                       )}
                     </td>
                     <td>
@@ -669,7 +724,7 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
 
       <p className="import-tree-footer">
         {isFiltering
-          ? t("review.filteredFooter", { shown: visible.length, total: flat.length })
+          ? t("review.shownFooter", { shown: visible.length, total: flat.length })
           : hiddenCount > 0
             ? t("review.hiddenFooter", { count: hiddenCount })
             : t("review.allVisibleFooter", { count: flat.length })}

@@ -72,7 +72,7 @@ describe("ImportTreeGrid", () => {
     fireEvent.click(screen.getByText("Comercial", { selector: "span.block" }));
     fireEvent.click(screen.getByText("Aplicar"));
     expect(screen.queryByText("Administrativo")).toBeNull();
-    expect(screen.getByText(/Mostrando 1 de 4 linhas/)).toBeTruthy();
+    expect(screen.getByText(/1 de 4 linhas exibidas/)).toBeTruthy();
     expect(document.querySelectorAll("th button[aria-sort], th [aria-sort]").length).toBe(0);
   });
 });
@@ -96,5 +96,40 @@ describe("ImportTreeGrid arrastar e soltar", () => {
     fireEvent.dragOver(rowsEls[1], { dataTransfer }); // Administrativo
     fireEvent.drop(rowsEls[1], { dataTransfer });
     expect(onMoveRow).toHaveBeenCalledWith(3, 1);
+  });
+});
+
+describe("ImportTreeGrid padrão do desenhe-app", () => {
+  it("busca filtra as linhas e 'limpar filtros' restaura", () => {
+    renderGrid();
+    expect(screen.getByText("4 linhas")).toBeTruthy();
+    fireEvent.change(screen.getByPlaceholderText("Buscar..."), { target: { value: "recursos" } });
+    expect(screen.queryByText("Comercial")).toBeNull();
+    expect(screen.getByText("Recursos Humanos")).toBeTruthy();
+    fireEvent.click(screen.getByText("limpar filtros"));
+    expect(screen.getByText("Comercial")).toBeTruthy();
+  });
+
+  it("botão X por linha exclui da importação e não há mais checkbox", () => {
+    const rows = applyBatchDependencies(buildAndValidateRows(sheet, mapping, fields), fields);
+    const onToggleSkip = vi.fn();
+    render(
+      <NextIntlClientProvider locale="pt-BR" messages={messages}>
+        <ImportTreeGrid rows={rows} fields={fields} onToggleSkip={onToggleSkip} onEditRow={() => {}} onMoveRow={() => {}} counts={{ ready: 4, errors: 0, skipped: 0 }} />
+      </NextIntlClientProvider>
+    );
+    expect(document.querySelectorAll('input[type="checkbox"]').length).toBe(0);
+    fireEvent.click(screen.getAllByTitle(messages.import.review.excludeRow)[0]);
+    expect(onToggleSkip).toHaveBeenCalledTimes(1);
+  });
+
+  it("mostra a pílula de linhas com erro quando há erros", () => {
+    const rows = applyBatchDependencies(buildAndValidateRows(sheet, mapping, fields), fields);
+    render(
+      <NextIntlClientProvider locale="pt-BR" messages={messages}>
+        <ImportTreeGrid rows={rows} fields={fields} onToggleSkip={() => {}} onEditRow={() => {}} onMoveRow={() => {}} counts={{ ready: 3, errors: 1, skipped: 0 }} />
+      </NextIntlClientProvider>
+    );
+    expect(screen.getByText("1 linha com erro")).toBeTruthy();
   });
 });

@@ -269,7 +269,7 @@ export function ImportWizard({ layout, backHref, onImport, onClose, onImported, 
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 15V4m0 0L8.5 7.5M12 4l3.5 3.5M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" />
                   </svg>
-                  {t("review.importAction")}
+                  {t("review.importCount", { count: readyRows.length })}
                 </>
               ) : (
                 t("review.importButton", { count: readyRows.length })
