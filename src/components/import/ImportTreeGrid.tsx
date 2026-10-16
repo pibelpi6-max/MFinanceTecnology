@@ -382,24 +382,6 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
 
   return (
     <div className="import-tree-wrap">
-      {dragging !== null && (
-        <div
-          className={`import-tree-rootzone${over === "root" ? " is-over" : ""}`}
-          onDragOver={(e) => {
-            e.preventDefault();
-            setOver("root");
-          }}
-          onDragLeave={() => setOver(null)}
-          onDrop={(e) => {
-            e.preventDefault();
-            onMoveRow(dragging, null);
-            endDrag();
-          }}
-        >
-          {t("review.dropRoot")}
-        </div>
-      )}
-
       {isFiltering && (
         <div className="import-filter-chips">
           <span>{t("review.filtersActive")}</span>
@@ -488,7 +470,10 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
                     />
                   ))}
                 <th aria-hidden="true" className="import-th-spacer"></th>
-                <th className="import-th-actions">{t("review.actions")}</th>
+                <th className="import-th import-th-actions">
+                  {t("review.actions")}
+                  <div className="import-th-divider" />
+                </th>
                 {(() => {
                   const c = cols.find((x) => x.kind === "status")!;
                   return (
@@ -542,6 +527,9 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
                       dragging === row.rowIndex ? "import-row-dragging" : "",
                       dropOk ? "import-row-dropover" : "",
                     ].join(" ")}
+                    onDragEnter={(e) => {
+                      if (canDrop(row.rowIndex)) e.preventDefault();
+                    }}
                     onDragOver={(e) => {
                       if (canDrop(row.rowIndex)) {
                         e.preventDefault();
@@ -587,7 +575,8 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
                           e.dataTransfer.setData("text/plain", String(row.rowIndex));
                           const tr = e.currentTarget.closest("tr");
                           if (tr) e.dataTransfer.setDragImage(tr, 0, 0);
-                          setDragging(row.rowIndex);
+                          const idx = row.rowIndex;
+                          setTimeout(() => setDragging(idx), 0);
                         }}
                         onDragEnd={endDrag}
                       >
@@ -671,6 +660,24 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
           />
         )}
       </div>
+
+      {dragging !== null && (
+        <div
+          className={`import-tree-rootzone${over === "root" ? " is-over" : ""}`}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setOver("root");
+          }}
+          onDragLeave={() => setOver(null)}
+          onDrop={(e) => {
+            e.preventDefault();
+            onMoveRow(dragging, null);
+            endDrag();
+          }}
+        >
+          {t("review.dropRoot")}
+        </div>
+      )}
 
       <p className="import-tree-footer">
         {isFiltering

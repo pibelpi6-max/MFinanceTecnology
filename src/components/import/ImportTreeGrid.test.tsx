@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import { ImportTreeGrid } from "./ImportTreeGrid";
 import { applyBatchDependencies, buildAndValidateRows } from "@/lib/import/validateRows";
@@ -65,5 +65,27 @@ describe("ImportTreeGrid", () => {
     expect(screen.queryByText("Administrativo")).toBeNull();
     expect(screen.getByText(/Mostrando 1 de 4 linhas/)).toBeTruthy();
     expect(document.querySelectorAll("th button[aria-sort], th [aria-sort]").length).toBe(0);
+  });
+});
+
+describe("ImportTreeGrid arrastar e soltar", () => {
+  it("arrastar pela alça e soltar sobre outra linha move o item para dentro dela", async () => {
+    const rows = applyBatchDependencies(buildAndValidateRows(sheet, mapping, fields), fields);
+    const onMoveRow = vi.fn();
+    render(
+      <NextIntlClientProvider locale="pt-BR" messages={messages}>
+        <ImportTreeGrid rows={rows} fields={fields} onToggleSkip={() => {}} onEditRow={() => {}} onMoveRow={onMoveRow} counts={{ ready: 4, errors: 0, skipped: 0 }} />
+      </NextIntlClientProvider>
+    );
+    const handles = screen.getAllByTitle(messages.import.review.dragHandle);
+    const dataTransfer = { effectAllowed: "", setData: vi.fn(), setDragImage: vi.fn() };
+    fireEvent.dragStart(handles[2], { dataTransfer }); // Comercial (1.2), 3ª linha na árvore
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 10));
+    });
+    const rowsEls = document.querySelectorAll("tbody tr");
+    fireEvent.dragOver(rowsEls[1], { dataTransfer }); // Administrativo
+    fireEvent.drop(rowsEls[1], { dataTransfer });
+    expect(onMoveRow).toHaveBeenCalledWith(3, 1);
   });
 });
