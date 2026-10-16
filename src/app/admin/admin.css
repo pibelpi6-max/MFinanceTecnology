@@ -882,7 +882,7 @@
 .import-tree-table th.import-th { position: relative; }
 .import-th-inner.has-actions > :last-child { margin-left: 0; }
 .import-th-inner.has-actions > :nth-last-child(2) { margin-left: auto; }
-.import-chev-all { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; padding: 0; border: 0; border-radius: 6px; background: transparent; color: #2f5bd0; cursor: pointer; }
+.import-chev-all { flex: none; display: inline-flex; align-items: center; justify-content: center; gap: 2px; height: 22px; padding: 0 5px; border: 0; border-radius: 6px; background: transparent; color: #2f5bd0; cursor: pointer; }
 .import-chev-all:hover { background: #e6edff; }
 .import-tree-table th.is-filtered { background: rgba(92,184,138,.06); }
 .import-tree-table th.is-resize-hover { background: rgba(29,158,117,.1); }
