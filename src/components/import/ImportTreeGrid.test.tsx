@@ -48,6 +48,15 @@ describe("ImportTreeGrid", () => {
     expect(screen.getByText(/"Admin" não encontrado/)).toBeTruthy();
   });
 
+  it("cabeçalho e linhas têm o mesmo número de colunas", () => {
+    renderGrid();
+    const head = document.querySelectorAll("thead th").length;
+    const colgroup = document.querySelectorAll("colgroup col").length;
+    const cells = document.querySelectorAll("tbody tr:first-child td").length;
+    expect(head).toBe(cells);
+    expect(colgroup).toBe(cells);
+  });
+
   it("recolhe e expande pelo +/−", () => {
     renderGrid();
     expect(screen.getByText("Comercial")).toBeTruthy();

@@ -435,6 +435,7 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
             <thead>
               <tr>
                 <th></th>
+                <th></th>
                 {cols
                   .filter((c) => c.kind !== "status")
                   .map((c) => (
