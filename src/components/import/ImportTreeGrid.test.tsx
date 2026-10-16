@@ -102,7 +102,6 @@ describe("ImportTreeGrid arrastar e soltar", () => {
 describe("ImportTreeGrid padrão do desenhe-app", () => {
   it("busca filtra as linhas e 'limpar filtros' restaura", () => {
     renderGrid();
-    expect(screen.getByText("4 linhas")).toBeTruthy();
     fireEvent.change(screen.getByPlaceholderText("Buscar..."), { target: { value: "recursos" } });
     expect(screen.queryByText("Comercial")).toBeNull();
     expect(screen.getByText("Recursos Humanos")).toBeTruthy();
@@ -121,15 +120,5 @@ describe("ImportTreeGrid padrão do desenhe-app", () => {
     expect(document.querySelectorAll('input[type="checkbox"]').length).toBe(0);
     fireEvent.click(screen.getAllByTitle(messages.import.review.excludeRow)[0]);
     expect(onToggleSkip).toHaveBeenCalledTimes(1);
-  });
-
-  it("mostra a pílula de linhas com erro quando há erros", () => {
-    const rows = applyBatchDependencies(buildAndValidateRows(sheet, mapping, fields), fields);
-    render(
-      <NextIntlClientProvider locale="pt-BR" messages={messages}>
-        <ImportTreeGrid rows={rows} fields={fields} onToggleSkip={() => {}} onEditRow={() => {}} onMoveRow={() => {}} counts={{ ready: 3, errors: 1, skipped: 0 }} />
-      </NextIntlClientProvider>
-    );
-    expect(screen.getByText("1 linha com erro")).toBeTruthy();
   });
 });

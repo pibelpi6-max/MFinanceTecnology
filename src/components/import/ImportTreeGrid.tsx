@@ -172,7 +172,6 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
       return col ? set.has(filterValue(row, col)) : true;
     });
   };
-  const onlyErrors = (applied[STATUS]?.size ?? 0) === 1 && applied[STATUS].has("error");
   const clearAllFilters = () => {
     setApplied({});
     setSearch("");
@@ -431,20 +430,7 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
 
       <div ref={cardRef} className="import-tree-card">
         <div className="import-tree-toolbar">
-          <div className="import-tree-toolbar-left">
-            <span className="import-tree-rows">{t("review.rowsCount", { count: flat.length })}</span>
-            {counts.errors > 0 && (
-              <button
-                type="button"
-                className={`import-error-pill${onlyErrors ? " is-on" : ""}`}
-                onClick={() =>
-                  setApplied((a) => ({ ...a, [STATUS]: onlyErrors ? new Set() : new Set(["error"]) }))
-                }
-              >
-                {t("review.errorsPill", { count: counts.errors })}
-              </button>
-            )}
-          </div>
+          <div />
           <div className="import-tree-toolbar-right">
             {isFiltering && (
               <button type="button" className="import-clear-btn" onClick={clearAllFilters}>
