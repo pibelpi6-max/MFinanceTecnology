@@ -327,7 +327,7 @@
     },
     "cancel": "Cancel",
     "back": "Back",
-    "continue": "Continue",
+    "continue": "Next",
     "upload": {
       "dropzoneTitle": "Drag a file here or click to choose one",
       "dropzoneHint": "Accepts .csv, .xlsx or .xls",
