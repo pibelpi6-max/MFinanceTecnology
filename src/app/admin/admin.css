@@ -762,7 +762,7 @@
 .import-wizard--wide { max-width: none; gap: 12px; min-height: calc(100% + 16px); margin-bottom: -16px; }
 .import-wizard--wide .import-step-body { flex: 1; }
 /* No modal o rodapé (Voltar/Avançar) fica sempre no fim da área visível, com ou sem muitos registros. */
-.import-wizard--wide .import-step-actions { position: sticky; bottom: -16px; z-index: 5; margin: auto -2px 0; padding: 8px 2px 8px; background: #fff; border-top: 1px solid rgba(0,0,0,.08); }
+.import-wizard--wide .import-step-actions { position: sticky; bottom: -16px; z-index: 5; margin: auto -2px 0; padding: 14px 4px 14px; background: #fff; border-top: 1px solid rgba(0,0,0,.08); }
 
 .import-step-indicator { display: flex; align-items: center; justify-content: center; gap: 0; padding: 4px 0 8px; }
 .import-step { display: flex; align-items: center; gap: 8px; }
