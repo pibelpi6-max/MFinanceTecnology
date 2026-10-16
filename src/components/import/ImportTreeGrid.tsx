@@ -453,7 +453,18 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
               </button>
             )}
           </div>
-          {toolbarAction && <div className="import-tree-toolbar-right">{toolbarAction}</div>}
+          <div className="import-tree-toolbar-right">
+            <span className="import-status-head">
+              <span className="import-count import-count-ok">{t("review.countReadyLabel", { count: counts.ready })}</span>
+              {counts.errors > 0 && (
+                <span className="import-count import-count-error">{t("review.countErrorLabel", { count: counts.errors })}</span>
+              )}
+              {counts.skipped > 0 && (
+                <span className="import-count import-count-skipped">{t("review.countSkippedLabel", { count: counts.skipped })}</span>
+              )}
+            </span>
+            {toolbarAction}
+          </div>
         </div>
         <div ref={wrapRef} className="import-tree-scroll">
           <table className="import-grid-table import-tree-table" style={{ minWidth: totalWidth }}>
@@ -511,17 +522,6 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
                       onResize={(e) => startResize(e, c.key)}
                       onHover={(on) => setResizeHover(on ? c.key : null)}
                       filterLabel={t("review.filterColumn", { column: c.label })}
-                      extra={
-                        <span className="import-status-head">
-                          <span className="import-count import-count-ok">{t("review.countReadyLabel", { count: counts.ready })}</span>
-                          {counts.errors > 0 && (
-                            <span className="import-count import-count-error">{t("review.countErrorLabel", { count: counts.errors })}</span>
-                          )}
-                          {counts.skipped > 0 && (
-                            <span className="import-count import-count-skipped">{t("review.countSkippedLabel", { count: counts.skipped })}</span>
-                          )}
-                        </span>
-                      }
                     />
                   );
                 })()}

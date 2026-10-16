@@ -167,7 +167,7 @@ export function ImportWizard({ layout, backHref, onImport, onClose, onImported, 
   }
 
   return (
-    <div className="import-wizard">
+    <div className={`import-wizard${toolbarRight ? " import-wizard--wide" : ""}`}>
       {toolbarRight ? (
         <div className="import-toolbar">
           <div />
@@ -223,9 +223,12 @@ export function ImportWizard({ layout, backHref, onImport, onClose, onImported, 
             </p>
           )}
           <div className="import-step-actions">
-            <button type="button" className="import-link-btn" onClick={() => setStep("upload")}>
+            <Button variant="secondary" onClick={() => setStep("upload")}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0 7-7m-7 7h18" />
+              </svg>
               {t("back")}
-            </button>
+            </Button>
             <Button onClick={goToReview} disabled={requiredKeysUnmapped.length > 0}>
               {t("continue")}
             </Button>
@@ -268,9 +271,12 @@ export function ImportWizard({ layout, backHref, onImport, onClose, onImported, 
             <ImportGrid rows={rows} fields={layout.fields} onToggleSkip={toggleSkip} />
           )}
           <div className={`import-step-actions${hierarchical ? " import-step-actions--divided" : ""}`}>
-            <button type="button" className="import-link-btn" onClick={() => setStep("mapping")}>
+            <Button variant="secondary" onClick={() => setStep("mapping")}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0 7-7m-7 7h18" />
+              </svg>
               {t("back")}
-            </button>
+            </Button>
             {!hierarchical && (
               <Button onClick={runImport} isLoading={isImporting || isPending} disabled={readyRows.length === 0}>
                 {t("review.importButton", { count: readyRows.length })}
