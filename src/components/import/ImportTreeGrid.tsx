@@ -34,7 +34,7 @@ interface GridCol {
 const OBS = "__obs";
 const STATUS = "__status";
 const NONE = "__none__";
-const FIXED_WIDTH = 36 + 30 + 22 + 76; // controle +/-, checkbox, alça, lápis
+const FIXED_WIDTH = 30 + 22 + 76; // controle +/-, checkbox, alça, lápis
 const MIN_COL = 60;
 const STORAGE_KEY = "import-tree-widths:v1";
 
@@ -421,7 +421,6 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
         <div ref={wrapRef} className="import-tree-scroll">
           <table className="import-grid-table import-tree-table" style={{ minWidth: totalWidth }}>
             <colgroup>
-              <col style={{ width: 36 }} />
               <col style={{ width: 30 }} />
               <col style={{ width: 22 }} />
               {cols
@@ -435,20 +434,6 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
             </colgroup>
             <thead>
               <tr>
-                <th>
-                  {parents.length > 0 && (
-                    <button
-                      type="button"
-                      className="import-sq"
-                      onClick={toggleAll}
-                      title={allCollapsed ? t("review.expandAll") : t("review.collapseAll")}
-                      aria-label={allCollapsed ? t("review.expandAll") : t("review.collapseAll")}
-                    >
-                      <SqIcon plus={allCollapsed} />
-                    </button>
-                  )}
-                </th>
-                <th></th>
                 <th></th>
                 {cols
                   .filter((c) => c.kind !== "status")
@@ -467,6 +452,21 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
                       onResize={(e) => startResize(e, c.key)}
                       onHover={(on) => setResizeHover(on ? c.key : null)}
                       filterLabel={t("review.filterColumn", { column: c.label })}
+                      extra={
+                        c.field?.key === nameKey && parents.length > 0 && !isFiltering ? (
+                          <button
+                            type="button"
+                            className="import-chev-all"
+                            onClick={toggleAll}
+                            title={allCollapsed ? t("review.expandAll") : t("review.collapseAll")}
+                            aria-label={allCollapsed ? t("review.expandAll") : t("review.collapseAll")}
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
+                              <path strokeLinecap="round" strokeLinejoin="round" d={allCollapsed ? "m7 8 5-5 5 5M7 16l5 5 5-5" : "m7 4 5 5 5-5M7 20l5-5 5 5"} />
+                            </svg>
+                          </button>
+                        ) : undefined
+                      }
                     />
                   ))}
                 <th aria-hidden="true" className="import-th-spacer"></th>
@@ -509,7 +509,7 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
             <tbody>
               {visible.length === 0 && (
                 <tr>
-                  <td colSpan={cols.length + 5} className="import-tree-empty">
+                  <td colSpan={cols.length + 4} className="import-tree-empty">
                     {t("review.noRowsFiltered")}
                   </td>
                 </tr>
@@ -543,20 +543,6 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
                       endDrag();
                     }}
                   >
-                    <td>
-                      {isParent && !isFiltering && (
-                        <button
-                          type="button"
-                          className="import-sq"
-                          onClick={() => toggleCollapse(row.rowIndex)}
-                          title={collapsed.has(row.rowIndex) ? t("review.expand") : t("review.collapse")}
-                          aria-label={`${collapsed.has(row.rowIndex) ? t("review.expand") : t("review.collapse")}: ${row.rawValues[nameKey] ?? ""}`}
-                          aria-expanded={!collapsed.has(row.rowIndex)}
-                        >
-                          <SqIcon plus={collapsed.has(row.rowIndex)} />
-                        </button>
-                      )}
-                    </td>
                     <td>
                       <input
                         type="checkbox"
@@ -593,6 +579,23 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
                         return (
                           <td key={c.key}>
                             <div className="import-tree-cell" style={isName ? { paddingLeft: depth * 24 } : undefined}>
+                              {isName &&
+                                (isParent && !isFiltering ? (
+                                  <button
+                                    type="button"
+                                    className={`import-chevron${collapsed.has(row.rowIndex) ? " is-collapsed" : ""}`}
+                                    onClick={() => toggleCollapse(row.rowIndex)}
+                                    title={collapsed.has(row.rowIndex) ? t("review.expand") : t("review.collapse")}
+                                    aria-label={`${collapsed.has(row.rowIndex) ? t("review.expand") : t("review.collapse")}: ${row.rawValues[nameKey] ?? ""}`}
+                                    aria-expanded={!collapsed.has(row.rowIndex)}
+                                  >
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.6} aria-hidden="true">
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
+                                    </svg>
+                                  </button>
+                                ) : (
+                                  <span className="import-chevron-spacer" />
+                                ))}
                               {isEditing ? (
                                 <input
                                   className={`import-cell-input${row.errors[f.key] ? " is-invalid" : ""}`}
@@ -742,13 +745,5 @@ function HeaderCell({ col, icon, isFiltered, isOpen, hover, thRef, onFilter, onR
       />
       <div className="import-th-divider" />
     </th>
-  );
-}
-
-function SqIcon({ plus }: { plus: boolean }) {
-  return (
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3.2} aria-hidden="true">
-      <path strokeLinecap="round" d={plus ? "M12 5v14M5 12h14" : "M5 12h14"} />
-    </svg>
   );
 }

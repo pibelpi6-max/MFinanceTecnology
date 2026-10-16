@@ -903,3 +903,10 @@
 .import-filter-clear:hover { text-decoration: underline; }
 .import-tree-table th.import-th-actions { text-align: center; padding-left: 2px; padding-right: 2px; }
 .import-tree-table .import-row-actions { text-align: center; }
+.import-chevron { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; padding: 0; border: 0; border-radius: 6px; background: transparent; color: #5b5f76; cursor: pointer; transition: transform .15s; }
+.import-chevron:hover { background: #e6edff; color: #2f5bd0; }
+.import-chevron.is-collapsed { transform: rotate(-90deg); }
+.import-chevron-spacer { flex: none; width: 22px; }
+.import-chev-all { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 6px; background: transparent; color: #6b6f86; cursor: pointer; }
+.import-chev-all:hover { background: #e6edff; color: #2f5bd0; }
+.import-tree-cell .import-cell-text, .import-tree-cell .import-cell-input { min-width: 0; flex: 1 1 auto; }
