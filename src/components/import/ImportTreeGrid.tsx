@@ -282,7 +282,6 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
       else n.add(i);
       return n;
     });
-  const toggleAll = () => setCollapsed(allCollapsed ? new Set() : new Set(parents));
 
   // ── Arrastar para mudar o item superior ────────────────────
   const descendantsOf = (index: number): Set<number> => {
@@ -417,6 +416,23 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
         </div>
       )}
 
+      {parents.length > 0 && !isFiltering && (
+        <div className="import-tree-toolbar">
+          <button type="button" className="import-tree-toolbtn" onClick={() => setCollapsed(new Set())} disabled={collapsed.size === 0}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="m7 8 5-5 5 5M7 16l5 5 5-5" />
+            </svg>
+            {t("review.expandAll")}
+          </button>
+          <button type="button" className="import-tree-toolbtn" onClick={() => setCollapsed(new Set(parents))} disabled={allCollapsed}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="m7 4 5 5 5-5M7 20l5-5 5 5" />
+            </svg>
+            {t("review.collapseAll")}
+          </button>
+        </div>
+      )}
+
       <div ref={cardRef} className="import-tree-card">
         <div ref={wrapRef} className="import-tree-scroll">
           <table className="import-grid-table import-tree-table" style={{ minWidth: totalWidth }}>
@@ -453,22 +469,6 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
                       onResize={(e) => startResize(e, c.key)}
                       onHover={(on) => setResizeHover(on ? c.key : null)}
                       filterLabel={t("review.filterColumn", { column: c.label })}
-                      extra={
-                        c.field?.key === nameKey && parents.length > 0 && !isFiltering ? (
-                          <button
-                            type="button"
-                            className="import-chev-all"
-                            onClick={toggleAll}
-                            title={allCollapsed ? t("review.expandAll") : t("review.collapseAll")}
-                            aria-label={allCollapsed ? t("review.expandAll") : t("review.collapseAll")}
-                          >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
-                              <path strokeLinecap="round" strokeLinejoin="round" d={allCollapsed ? "m7 8 5-5 5 5M7 16l5 5 5-5" : "m7 4 5 5 5-5M7 20l5-5 5 5"} />
-                            </svg>
-                            <span>{allCollapsed ? t("review.expandAll") : t("review.collapseAll")}</span>
-                          </button>
-                        ) : undefined
-                      }
                     />
                   ))}
                 <th aria-hidden="true" className="import-th-spacer"></th>
