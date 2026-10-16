@@ -3,13 +3,14 @@
 import { useTranslations } from "next-intl";
 import type { ImportStep } from "@/lib/import/types";
 
-const STEPS: ImportStep[] = ["mapping", "review", "done"];
+const STEPS: ImportStep[] = ["mapping", "review"];
 
 export function ImportStepIndicator({ current }: { current: ImportStep }) {
   const t = useTranslations("import.steps");
   if (current === "upload") return null;
 
-  const currentIndex = STEPS.indexOf(current);
+  // A conclusão não é um passo: depois de importar, os dois passos aparecem concluídos.
+  const currentIndex = current === "done" ? STEPS.length : STEPS.indexOf(current);
 
   return (
     <div className="import-step-indicator">

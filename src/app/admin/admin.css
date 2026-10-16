@@ -765,8 +765,8 @@
   display: flex; align-items: center; justify-content: center; width: 22px; height: 22px;
   border-radius: 999px; font-size: 11px; font-weight: 700; background: #f1f2f6; color: #8a8fa3;
 }
-.import-step.current .import-step-dot { background: transparent; border: 2px solid #5cb88a; color: #0F6E56; }
-.import-step.done .import-step-dot { background: #5cb88a; color: #fff; }
+.import-step.current .import-step-dot { background: #3E6FE0; color: #fff; }
+.import-step.done .import-step-dot { background: rgba(21,128,61,.12); color: #15803d; }
 .import-step-text { display: flex; flex-direction: column; gap: 1px; }
 .import-step-label { font-size: 13px; font-weight: 600; color: var(--text-muted); }
 .import-step.current .import-step-label, .import-step.done .import-step-label { color: var(--text-strong); }
@@ -923,8 +923,8 @@
 .import-search { position: relative; width: 256px; }
 .import-search svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: #9aa0b4; pointer-events: none; }
 .import-search input { width: 100%; height: 32px; padding: 0 12px 0 34px; border: 1px solid #e3e5ee; border-radius: 8px; background: #f8f9fc; color: var(--text-strong); font-size: 13px; }
-.import-search input:focus { outline: none; border-color: #5cb88a; background: #fff; box-shadow: 0 0 0 3px rgba(92,184,138,.2); }
+.import-search input:focus { outline: none; border-color: #3E6FE0; background: #fff; box-shadow: 0 0 0 3px rgba(62,111,224,.18); }
 .import-exclude-btn { color: #9aa0b4; }
 .import-exclude-btn:hover { background: #fef2f2; color: #dc2626; }
 .import-include-btn { color: #c4c7d2; }
-.import-include-btn:hover { color: #5cb88a; }
+.import-include-btn:hover { color: #3E6FE0; }
