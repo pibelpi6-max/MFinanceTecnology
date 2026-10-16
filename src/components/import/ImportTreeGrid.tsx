@@ -453,7 +453,7 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
                       onResize={(e) => startResize(e, c.key)}
                       onHover={(on) => setResizeHover(on ? c.key : null)}
                       filterLabel={t("review.filterColumn", { column: c.label })}
-                      extra={
+                      actions={
                         c.field?.key === nameKey && parents.length > 0 && !isFiltering ? (
                           <Tooltip text={allCollapsed ? t("review.expandAll") : t("review.collapseAll")} side="bottom">
                             <button
@@ -707,21 +707,24 @@ interface HeaderCellProps {
   onHover: (on: boolean) => void;
   filterLabel: string;
   extra?: React.ReactNode;
+  /** Botões à direita do título, colados ao ícone de filtro. */
+  actions?: React.ReactNode;
 }
 
 /** Cabeçalho no padrão do DataTable: rótulo, funil de filtro, divisor e alça de redimensionar. */
-function HeaderCell({ col, icon, isFiltered, isOpen, hover, thRef, onFilter, onResize, onHover, filterLabel, extra }: HeaderCellProps) {
+function HeaderCell({ col, icon, isFiltered, isOpen, hover, thRef, onFilter, onResize, onHover, filterLabel, extra, actions }: HeaderCellProps) {
   return (
     <th
       ref={thRef}
       className={`import-th${isFiltered ? " is-filtered" : ""}${hover ? " is-resize-hover" : ""}`}
     >
-      <div className="import-th-inner">
+      <div className={`import-th-inner${actions ? " has-actions" : ""}`}>
         <span className="import-th-label">
           {icon}
           {col.label}
         </span>
         {extra}
+        {actions}
         <button
           type="button"
           className={`import-th-funnel${isFiltered || isOpen ? " is-on" : ""}`}
