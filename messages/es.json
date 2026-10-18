@@ -405,7 +405,9 @@
       "importCount": "Importar {count, plural, one {# elemento} other {# elementos}}",
       "dropInto": "Mover dentro de “{name}”",
       "dropHere": "Suelta sobre una fila",
-      "filterByStatus": "Haz clic para filtrar por este estado"
+      "filterByStatus": "Haz clic para filtrar por este estado",
+      "movedInto": "“{name}” ahora está dentro de “{parent}”",
+      "movedToRoot": "“{name}” quedó sin elemento superior (nivel 1)"
     },
     "done": {
       "title": "{count} registro(s) importado(s) con éxito",

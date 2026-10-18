@@ -63,6 +63,7 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [collapsed, setCollapsed] = useState<Set<number>>(new Set());
   const [search, setSearch] = useState("");
+  const [moved, setMoved] = useState<{ row: number; msg: string } | null>(null);
 
   const refField = fields.find((f) => f.type === "node-ref" && f.batchRefKeys?.length)!;
   const codeKey = refField.batchRefKeys![0];
@@ -392,7 +393,14 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
       window.removeEventListener("keydown", onKey);
       cancelAnimationFrame(raf);
       document.body.classList.remove("import-dragging-body");
-      if (active && commit && current !== null) onMoveRow(source, current === "root" ? null : current);
+      if (active && commit && current !== null) {
+        const name = (i: number) => rows[i]?.rawValues[nameKey] || rows[i]?.rawValues[codeKey] || "";
+        onMoveRow(source, current === "root" ? null : current);
+        setMoved({
+          row: source,
+          msg: current === "root" ? t("review.movedToRoot", { name: name(source) }) : t("review.movedInto", { name: name(source), parent: name(current) }),
+        });
+      }
       setDragging(null);
       setOver(null);
     };
@@ -408,6 +416,12 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
     window.addEventListener("keydown", onKey);
   }
   useEffect(() => () => document.body.classList.remove("import-dragging-body"), []);
+  useEffect(() => {
+    if (!moved) return;
+    wrapRef.current?.querySelector(`tr[data-row-index="${moved.row}"]`)?.scrollIntoView({ block: "nearest" });
+    const timer = setTimeout(() => setMoved(null), 4000);
+    return () => clearTimeout(timer);
+  }, [moved]);
 
   // ── Edição por linha ───────────────────────────────────────
   function startEdit(row: ImportRowResult) {
@@ -633,6 +647,7 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
                       isParent ? "import-row-parent" : "",
                       dragging === row.rowIndex ? "import-row-dragging" : "",
                       dropOk ? "import-row-dropover" : "",
+                      moved?.row === row.rowIndex ? "import-row-moved" : "",
                     ].join(" ")}
                   >
                     <td
@@ -779,8 +794,10 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
         )}
 
       <div className="import-tree-footer">
-        <p>
-        {isFiltering
+        <p className={moved ? "import-moved-msg" : undefined}>
+        {moved
+          ? moved.msg
+          : isFiltering
           ? t("review.shownFooter", { shown: visible.length, total: flat.length })
           : hiddenCount > 0
             ? t("review.hiddenFooter", { count: hiddenCount })
