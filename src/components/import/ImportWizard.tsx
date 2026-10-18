@@ -317,12 +317,7 @@ export function ImportWizard({ layout, backHref, onImport, onClose, onImported, 
             onSubmit={submitGrid}
             onClear={clearGrid}
           />
-          <div className="import-upload-foot">
-            <button type="button" className="import-link-btn" onClick={goBack}>
-              {t("cancel")}
-            </button>
-            {isMapping && <span className="import-dropzone-hint">{t("upload.mappingInProgress")}</span>}
-          </div>
+          {isMapping && <p className="import-dropzone-hint">{t("upload.mappingInProgress")}</p>}
         </div>
       )}
 
