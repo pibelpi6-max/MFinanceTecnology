@@ -459,6 +459,16 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
   }
 
   const hiddenCount = flat.length - visible.length;
+  // "Depois de" uma linha com subitens visíveis: a linha de inserção aparece no fim do bloco dela (depois do último subitem)
+  const dropIndicatorFor = (rowIndex: number): Place | null => {
+    if (dragging === null || over === null || over === "root") return null;
+    if (over.kind !== "after") return over.row === rowIndex ? over.kind : null;
+    const at = visible.findIndex((v) => v.row.rowIndex === over.row);
+    if (at < 0) return null;
+    let last = at;
+    while (last + 1 < visible.length && visible[last + 1].depth > visible[at].depth) last++;
+    return visible[last].row.rowIndex === rowIndex ? "after" : null;
+  };
   const movedMessage = (() => {
     if (!moved) return "";
     const { name, parent } = moved;
@@ -664,7 +674,7 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
               )}
               {visible.map(({ row, depth }) => {
                 const hasErrors = Object.keys(row.errors).length > 0;
-                const dropKind = dragging !== null && over !== null && over !== "root" && over.row === row.rowIndex ? over.kind : null;
+                const dropKind = dropIndicatorFor(row.rowIndex);
                 const isParent = (childrenOf.get(row.rowIndex)?.length ?? 0) > 0;
                 return (
                   <tr

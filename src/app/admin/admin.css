@@ -1015,3 +1015,4 @@ body.import-dragging-body, body.import-dragging-body * { cursor: grabbing !impor
 .import-row-moved td { animation: import-moved-flash 1.6s ease-out; }
 .import-moved-close { margin-left: 8px; border: 0; background: none; color: #2f58b8; font-size: 15px; line-height: 1; cursor: pointer; padding: 0 4px; border-radius: 4px; }
 .import-moved-close:hover { background: rgba(62,111,224,.12); }
+.import-step-review .import-tree-scroll { padding-bottom: 12px; }
