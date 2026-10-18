@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import { FilterDropdown } from "@/components/ui/DataTable/FilterDropdown";
 import type { ColumnMeta } from "@/components/ui/DataTable/types";
-import { findBatchProvider } from "@/lib/import/validateRows";
+import { normalizeMatch } from "@/lib/import/validateRows";
 import type { ImportFieldConfig, ImportRowResult, MoveTarget } from "@/lib/import/types";
 
 type Place = "into" | "before" | "after";
@@ -89,8 +89,16 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
   // ── Árvore ─────────────────────────────────────────────────
   const { flat, childrenOf, parents } = useMemo(() => {
     const childrenOf = new Map<number | null, ImportRowResult[]>();
+    // A árvore mostra a hierarquia da PLANILHA: o item superior de cada linha é a linha (código ou nome) que ele cita,
+    // mesmo que a estrutura já tenha um item com o mesmo código.
+    const batchKeys = refField.batchRefKeys ?? [];
+    const parentOf = (r: ImportRowResult): ImportRowResult | null => {
+      const ref = normalizeMatch(r.rawValues[refField.key] ?? "");
+      if (!ref) return null;
+      return rows.find((p) => p.rowIndex !== r.rowIndex && batchKeys.some((k) => normalizeMatch(p.rawValues[k] ?? "") === ref)) ?? null;
+    };
     for (const r of rows) {
-      const parent = findBatchProvider(rows, fields, r);
+      const parent = parentOf(r);
       const parentIndex = parent ? parent.rowIndex : null;
       const list = childrenOf.get(parentIndex) ?? [];
       list.push(r);
@@ -111,7 +119,7 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
       .filter(([k, v]) => k !== null && v.length > 0)
       .map(([k]) => k as number);
     return { flat, childrenOf, parents };
-  }, [rows, fields]);
+  }, [rows, refField]);
 
   // ── Observações da AI (sugestões e problemas da linha) ─────
   const noteOf = useCallback(
@@ -457,12 +465,7 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
     if (moved.kind === "root") return t("review.movedToRoot", { name });
     if (moved.kind === "before") return t("review.movedBefore", { name, parent });
     if (moved.kind === "after") return t("review.movedAfter", { name, parent });
-    const row = rows.find((r) => (r.rawValues[codeKey] ?? "") === moved.code);
-    const actual = row ? findBatchProvider(rows, fields, row) : null;
-    // o código do destino também existe na estrutura: a ligação vale, mas não vira aninhamento nesta lista
-    return actual && (actual.rawValues[codeKey] ?? "") === moved.targetCode
-      ? t("review.movedInto", { name, parent })
-      : t("review.movedToExisting", { name, parent });
+    return t("review.movedInto", { name, parent });
   })();
   const totalWidth = FIXED_WIDTH + cols.reduce((s, c) => s + widthOf(c.key), 0);
 
