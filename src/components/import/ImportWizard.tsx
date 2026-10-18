@@ -172,7 +172,7 @@ export function ImportWizard({ layout, backHref, onImport, onClose, onImported, 
         <div className="import-toolbar">
           <div />
           <ImportStepIndicator current={step} />
-          <div className="import-toolbar-right">{step === "review" && hierarchical ? null : toolbarRight}</div>
+          <div className="import-toolbar-right">{step === "mapping" || (step === "review" && hierarchical) ? null : toolbarRight}</div>
         </div>
       ) : (
         <ImportStepIndicator current={step} />
@@ -215,7 +215,10 @@ export function ImportWizard({ layout, backHref, onImport, onClose, onImported, 
 
       {step === "mapping" && sheet && (
         <div className="import-step-body">
-          <p className="import-step-hint">{t("mapping.hint")}</p>
+          <div className="import-step-hint-row">
+            <p className="import-step-hint">{t("mapping.hint")}</p>
+            {toolbarRight}
+          </div>
           <ColumnMappingFields sheet={sheet} fields={layout.fields} mapping={mapping} onChange={handleMappingChange} />
           {requiredKeysUnmapped.length > 0 && (
             <p className="import-error-banner">
