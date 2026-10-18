@@ -63,7 +63,7 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [collapsed, setCollapsed] = useState<Set<number>>(new Set());
   const [search, setSearch] = useState("");
-  const [moved, setMoved] = useState<{ row: number; msg: string } | null>(null);
+  const [moved, setMoved] = useState<{ row: number; target: number | null } | null>(null);
 
   const refField = fields.find((f) => f.type === "node-ref" && f.batchRefKeys?.length)!;
   const codeKey = refField.batchRefKeys![0];
@@ -394,12 +394,8 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
       cancelAnimationFrame(raf);
       document.body.classList.remove("import-dragging-body");
       if (active && commit && current !== null) {
-        const name = (i: number) => rows[i]?.rawValues[nameKey] || rows[i]?.rawValues[codeKey] || "";
         onMoveRow(source, current === "root" ? null : current);
-        setMoved({
-          row: source,
-          msg: current === "root" ? t("review.movedToRoot", { name: name(source) }) : t("review.movedInto", { name: name(source), parent: name(current) }),
-        });
+        setMoved({ row: source, target: current === "root" ? null : current });
       }
       setDragging(null);
       setOver(null);
@@ -439,6 +435,18 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
   }
 
   const hiddenCount = flat.length - visible.length;
+  const movedMessage = (() => {
+    if (!moved) return "";
+    const nameOf = (i: number) => rows[i]?.rawValues[nameKey] || rows[i]?.rawValues[codeKey] || "";
+    const name = nameOf(moved.row);
+    if (moved.target === null) return t("review.movedToRoot", { name });
+    const parent = nameOf(moved.target);
+    const actual = rows[moved.row] ? findBatchProvider(rows, fields, rows[moved.row]) : null;
+    // o código do destino também existe na estrutura: a ligação vale, mas não vira aninhamento nesta lista
+    return actual?.rowIndex === moved.target
+      ? t("review.movedInto", { name, parent })
+      : t("review.movedToExisting", { name, parent });
+  })();
   const totalWidth = FIXED_WIDTH + cols.reduce((s, c) => s + widthOf(c.key), 0);
 
   // ── Células ────────────────────────────────────────────────
@@ -796,7 +804,7 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
       <div className="import-tree-footer">
         <p className={moved ? "import-moved-msg" : undefined}>
         {moved
-          ? moved.msg
+          ? movedMessage
           : isFiltering
           ? t("review.shownFooter", { shown: visible.length, total: flat.length })
           : hiddenCount > 0

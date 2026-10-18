@@ -407,7 +407,8 @@
       "dropHere": "Suelta sobre una fila",
       "filterByStatus": "Haz clic para filtrar por este estado",
       "movedInto": "“{name}” ahora está dentro de “{parent}”",
-      "movedToRoot": "“{name}” quedó sin elemento superior (nivel 1)"
+      "movedToRoot": "“{name}” quedó sin elemento superior (nivel 1)",
+      "movedToExisting": "“{name}” ahora apunta al elemento “{parent}” que ya existe en la estructura (por eso no aparece anidado en esta lista)"
     },
     "done": {
       "title": "{count} registro(s) importado(s) con éxito",

@@ -407,7 +407,8 @@
       "dropHere": "Drop on a row",
       "filterByStatus": "Click to filter by this status",
       "movedInto": "“{name}” is now inside “{parent}”",
-      "movedToRoot": "“{name}” now has no parent (level 1)"
+      "movedToRoot": "“{name}” now has no parent (level 1)",
+      "movedToExisting": "“{name}” now points to the item “{parent}” that already exists in the structure (so it isn't nested in this list)"
     },
     "done": {
       "title": "{count} record(s) imported successfully",
