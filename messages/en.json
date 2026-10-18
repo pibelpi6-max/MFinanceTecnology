@@ -404,7 +404,8 @@
       "shownFooter": "{shown} of {total} {total, plural, one {row shown} other {rows shown}}",
       "importCount": "Import {count, plural, one {# item} other {# items}}",
       "dropInto": "Move inside “{name}”",
-      "dropHere": "Drop on a row"
+      "dropHere": "Drop on a row",
+      "filterByStatus": "Click to filter by this status"
     },
     "done": {
       "title": "{count} record(s) imported successfully",

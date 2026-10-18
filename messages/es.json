@@ -404,7 +404,8 @@
       "shownFooter": "{shown} de {total} {total, plural, one {fila mostrada} other {filas mostradas}}",
       "importCount": "Importar {count, plural, one {# elemento} other {# elementos}}",
       "dropInto": "Mover dentro de “{name}”",
-      "dropHere": "Suelta sobre una fila"
+      "dropHere": "Suelta sobre una fila",
+      "filterByStatus": "Haz clic para filtrar por este estado"
     },
     "done": {
       "title": "{count} registro(s) importado(s) con éxito",

@@ -525,15 +525,6 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
       <div ref={cardRef} className="import-tree-card">
         <div className="import-tree-toolbar">
           <div className="import-tree-toolbar-left">
-            <span className="import-status-head">
-              <span className="import-count import-count-ok">{t("review.countReadyLabel", { count: counts.ready })}</span>
-              {counts.errors > 0 && (
-                <span className="import-count import-count-error">{t("review.countErrorLabel", { count: counts.errors })}</span>
-              )}
-              {counts.skipped > 0 && (
-                <span className="import-count import-count-skipped">{t("review.countSkippedLabel", { count: counts.skipped })}</span>
-              )}
-            </span>
             {toolbarAction}
           </div>
           <div className="import-tree-toolbar-right">
@@ -792,13 +783,47 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
           document.body
         )}
 
-      <p className="import-tree-footer">
+      <div className="import-tree-footer">
+        <p>
         {isFiltering
           ? t("review.shownFooter", { shown: visible.length, total: flat.length })
           : hiddenCount > 0
             ? t("review.hiddenFooter", { count: hiddenCount })
             : t("review.allVisibleFooter", { count: flat.length })}
-      </p>
+</p>
+        <span className="import-status-head">
+          {(
+            [
+              ["ready", counts.ready, "import-count-ok", "review.countReadyLabel"],
+              ["error", counts.errors, "import-count-error", "review.countErrorLabel"],
+              ["skipped", counts.skipped, "import-count-skipped", "review.countSkippedLabel"],
+            ] as const
+          )
+            .filter(([key, n]) => n > 0 || key === "ready")
+            .map(([key, n, cls, label]) => {
+              const on = applied[STATUS]?.has(key) ?? false;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  className={`import-count ${cls} import-count-btn${on ? " is-on" : ""}`}
+                  aria-pressed={on}
+                  title={t("review.filterByStatus")}
+                  onClick={() =>
+                    setApplied((a) => {
+                      const next = new Set(a[STATUS] ?? []);
+                      if (next.has(key)) next.delete(key);
+                      else next.add(key);
+                      return { ...a, [STATUS]: next };
+                    })
+                  }
+                >
+                  {t(label, { count: n })}
+                </button>
+              );
+            })}
+        </span>
+      </div>
     </div>
   );
 }
