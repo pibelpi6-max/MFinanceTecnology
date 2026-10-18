@@ -487,44 +487,39 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
 
   return (
     <div className="import-tree-wrap">
-      {totalFilters > 0 && (
-        <div className="import-filter-chips">
-          <span>{t("review.filtersActive")}</span>
-          {Object.entries(applied).flatMap(([colKey, set]) =>
-            Array.from(set).map((val) => {
-              const col = cols.find((c) => c.key === colKey);
-              const label = (col && filterLabels(col)?.[val]) ?? val;
-              return (
-                <span key={`${colKey}-${val}`} className="import-filter-chip">
-                  {col?.label ?? colKey}: {label}
-                  <button
-                    type="button"
-                    aria-label={t("review.removeFilter")}
-                    onClick={() =>
-                      setApplied((a) => {
-                        const next = new Set(a[colKey]);
-                        next.delete(val);
-                        return { ...a, [colKey]: next };
-                      })
-                    }
-                  >
-                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3.4} aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </span>
-              );
-            })
-          )}
-          <button type="button" className="import-filter-clear" onClick={clearAllFilters}>
-            {t("review.clearFilters")}
-          </button>
-        </div>
-      )}
-
       <div ref={cardRef} className="import-tree-card">
         <div className="import-tree-toolbar">
           <div className="import-tree-toolbar-left">
+            {totalFilters > 0 && (
+              <div className="import-filter-chips">
+                {Object.entries(applied).flatMap(([colKey, set]) =>
+                  Array.from(set).map((val) => {
+                    const col = cols.find((c) => c.key === colKey);
+                    const label = (col && filterLabels(col)?.[val]) ?? val;
+                    return (
+                      <span key={`${colKey}-${val}`} className="import-filter-chip">
+                        {col?.label ?? colKey}: {label}
+                        <button
+                          type="button"
+                          aria-label={t("review.removeFilter")}
+                          onClick={() =>
+                            setApplied((a) => {
+                              const next = new Set(a[colKey]);
+                              next.delete(val);
+                              return { ...a, [colKey]: next };
+                            })
+                          }
+                        >
+                          <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3.4} aria-hidden="true">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </span>
+                    );
+                  })
+                )}
+              </div>
+            )}
             {toolbarAction}
           </div>
           <div className="import-tree-toolbar-right">
