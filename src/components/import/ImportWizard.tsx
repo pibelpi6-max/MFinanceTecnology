@@ -40,14 +40,20 @@ interface ImportWizardProps {
   onImported?: () => void;
   /** Ação à direita, na altura dos passos (ex.: botão "Tela cheia"). */
   toolbarRight?: React.ReactNode;
+  /** Avisa a cada troca de passo (o modal usa para mostrar "Tela cheia" no cabeçalho só nos passos sem barra própria). */
+  onStepChange?: (step: ImportStep) => void;
 }
 
-export function ImportWizard({ layout, backHref, onImport, onClose, onImported, toolbarRight }: ImportWizardProps) {
+export function ImportWizard({ layout, backHref, onImport, onClose, onImported, toolbarRight, onStepChange }: ImportWizardProps) {
   const t = useTranslations("import");
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  const [step, setStep] = useState<ImportStep>("upload");
+  const [step, setStepState] = useState<ImportStep>("upload");
+  const setStep = (next: ImportStep) => {
+    setStepState(next);
+    onStepChange?.(next);
+  };
   const [sheet, setSheet] = useState<ParsedSheet | null>(null);
   const [mapping, setMapping] = useState<ColumnMapping[]>([]);
   const [rows, setRows] = useState<ImportRowResult[]>([]);
@@ -230,7 +236,7 @@ export function ImportWizard({ layout, backHref, onImport, onClose, onImported, 
         <div className="import-toolbar">
           <div />
           <ImportStepIndicator current={step} />
-          <div className="import-toolbar-right">{step === "mapping" || (step === "review" && hierarchical) ? null : toolbarRight}</div>
+          <div className="import-toolbar-right">{step === "review" && !hierarchical ? toolbarRight : null}</div>
         </div>
       ) : (
         <ImportStepIndicator current={step} />

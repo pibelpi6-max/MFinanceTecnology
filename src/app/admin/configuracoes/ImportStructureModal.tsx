@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { ImportWizard } from "@/components/import/ImportWizard";
 import { importDimensionNodes } from "../dimensoes/_actions";
 import type { DimensionType, DimensionStructure, DimensionNodeRow } from "@/lib/dimensions/types";
-import type { ImportLayoutConfig } from "@/lib/import/types";
+import type { ImportLayoutConfig, ImportStep } from "@/lib/import/types";
 
 interface ImportStructureModalProps {
   open: boolean;
@@ -52,6 +52,7 @@ export function ImportStructureModal({
   );
 
   const [fullscreen, setFullscreen] = useState(false);
+  const [step, setStep] = useState<ImportStep>("upload");
   // Tela cheia de verdade: além de o modal cobrir o sistema, o navegador sai
   // do modo janela (esconde barra de endereço/abas) via Fullscreen API.
   useEffect(() => {
@@ -73,6 +74,7 @@ export function ImportStructureModal({
   }
 
   function handleClose() {
+    setStep("upload");
     setFullscreen(false);
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
     onClose();
@@ -106,11 +108,34 @@ export function ImportStructureModal({
     [structure.name, existingNodes, existingRoot, t]
   );
 
+  const fullscreenButton = (
+          <Button size="sm" variant="accent-blue" className="px-3" onClick={toggleFullscreen}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2}>
+              {fullscreen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />
+              )}
+            </svg>
+            {fullscreen ? tImport("review.exitFullscreen") : tImport("review.fullscreen")}
+          </Button>
+  );
+
   return (
     <Modal
       open={open}
       onClose={handleClose}
-      title={`${tImport("titlePrefix")} ${structure.name}`}
+      title={
+        <span className="flex items-center gap-2.5">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#3E6FE0] text-white">
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+            </svg>
+          </span>
+          {`${tImport("titlePrefix")} ${structure.name}`}
+        </span>
+      }
+      headerActions={step === "upload" || step === "done" ? fullscreenButton : undefined}
       size={fullscreen ? "screen" : "full"}
       fullBleed={fullscreen}
     >
@@ -124,18 +149,8 @@ export function ImportStructureModal({
             rows,
           })
         }
-        toolbarRight={
-          <Button size="sm" variant="accent-blue" className="px-3" onClick={toggleFullscreen}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2}>
-              {fullscreen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" />
-              ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />
-              )}
-            </svg>
-            {fullscreen ? tImport("review.exitFullscreen") : tImport("review.fullscreen")}
-          </Button>
-        }
+        toolbarRight={fullscreenButton}
+        onStepChange={setStep}
         onClose={handleClose}
         onImported={onImported}
       />
