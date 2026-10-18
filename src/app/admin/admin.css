@@ -969,3 +969,9 @@
 .import-paste-table td input:focus { box-shadow: inset 0 0 0 2px #3E6FE0; background: #fff; }
 .import-paste-table td.is-header-row input { font-weight: 600; background: rgba(62,111,224,.05); }
 .import-upload-card .import-dropzone { width: 100%; max-width: none; box-sizing: border-box; }
+/* Escolha de aba — mesmas proporções da Desenhe (texto 14px cinza, botões tingidos, link 12px sublinhado), com o azul do sistema. */
+.import-dropzone.is-static .import-dropzone-title { font-size: 14px; font-weight: 400; color: #4b5563; }
+.import-dropzone.is-static { gap: 12px; }
+.import-sheet-btn { background: rgba(62,111,224,.08) !important; border-color: rgba(62,111,224,.25) !important; color: #2f58b8 !important; font-weight: 500 !important; }
+.import-dropzone.is-static .import-link-btn { font-size: 12px; font-weight: 400; color: #9aa0b4; text-decoration: underline; }
+.import-dropzone.is-static .import-link-btn:hover { color: #4b5563; }
