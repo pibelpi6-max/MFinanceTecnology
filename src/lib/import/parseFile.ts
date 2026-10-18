@@ -10,22 +10,29 @@ import type { ParsedSheet } from "./types";
  * tabela de verdade); linhas totalmente vazias são descartadas.
  */
 export async function parseSpreadsheetFile(file: File): Promise<ParsedSheet> {
-  const buffer = await file.arrayBuffer();
-  const workbook = XLSX.read(buffer, { type: "array", codepage: 65001 });
+  const workbook = await readWorkbook(file);
   const sheetName = workbook.SheetNames[0];
   if (!sheetName) throw new Error("A planilha não tem nenhuma aba.");
-  const sheet = workbook.Sheets[sheetName];
+  return matrixToSheet(sheetToMatrix(workbook, sheetName), file.name);
+}
 
-  const matrix = XLSX.utils.sheet_to_json<string[]>(sheet, {
+/** Abre o arquivo sem escolher a aba (o assistente deixa a usuária escolher). */
+export async function readWorkbook(file: File): Promise<XLSX.WorkBook> {
+  const buffer = await file.arrayBuffer();
+  return XLSX.read(buffer, { type: "array", codepage: 65001 });
+}
+
+/** Conteúdo bruto de uma aba como matriz de textos (linhas × colunas). */
+export function sheetToMatrix(workbook: XLSX.WorkBook, sheetName: string): string[][] {
+  const matrix = XLSX.utils.sheet_to_json<string[]>(workbook.Sheets[sheetName], {
     header: 1,
     raw: false,
     defval: "",
   });
-
-  return matrixToSheet(matrix, file.name);
+  return matrix.map((row) => (Array.isArray(row) ? row.map((c) => String(c ?? "")) : []));
 }
 
-function matrixToSheet(matrix: unknown[][], fileName: string): ParsedSheet {
+export function matrixToSheet(matrix: unknown[][], fileName: string): ParsedSheet {
   const rows = matrix
     .map((row) => (Array.isArray(row) ? row.map((cell) => String(cell ?? "").trim()) : []))
     .filter((row) => row.some((cell) => cell !== ""));
