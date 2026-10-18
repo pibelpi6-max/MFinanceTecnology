@@ -360,7 +360,7 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
       const rect = tr.getBoundingClientRect();
       const ratio = (y - rect.top) / rect.height;
       // faixa de cima/baixo da linha = reposicionar; meio = colocar dentro
-      return { kind: ratio < 0.28 ? "before" : ratio > 0.72 ? "after" : "into", row: idx };
+      return { kind: ratio < 0.38 ? "before" : ratio > 0.62 ? "after" : "into", row: idx };
     };
     const refreshTarget = () => {
       const next = targetAt();
