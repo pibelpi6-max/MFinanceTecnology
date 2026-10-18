@@ -39,21 +39,16 @@ interface ImportWizardProps {
    * revalidar os dados sem esperar a usuária fechar o assistente. */
   onImported?: () => void;
   /** Ação à direita, na altura dos passos (ex.: botão "Tela cheia"). */
-  toolbarRight?: React.ReactNode;
-  /** Avisa a cada troca de passo (o modal usa para mostrar "Tela cheia" no cabeçalho só nos passos sem barra própria). */
-  onStepChange?: (step: ImportStep) => void;
+  /** Ocupa toda a largura do modal e fixa o rodapé (uso em modal). */
+  wide?: boolean;
 }
 
-export function ImportWizard({ layout, backHref, onImport, onClose, onImported, toolbarRight, onStepChange }: ImportWizardProps) {
+export function ImportWizard({ layout, backHref, onImport, onClose, onImported, wide }: ImportWizardProps) {
   const t = useTranslations("import");
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  const [step, setStepState] = useState<ImportStep>("upload");
-  const setStep = (next: ImportStep) => {
-    setStepState(next);
-    onStepChange?.(next);
-  };
+  const [step, setStep] = useState<ImportStep>("upload");
   const [sheet, setSheet] = useState<ParsedSheet | null>(null);
   const [mapping, setMapping] = useState<ColumnMapping[]>([]);
   const [rows, setRows] = useState<ImportRowResult[]>([]);
@@ -63,8 +58,7 @@ export function ImportWizard({ layout, backHref, onImport, onClose, onImported, 
   const [fileName, setFileName] = useState<string | null>(null);
   const [workbook, setWorkbook] = useState<WorkBook | null>(null);
   const [sheetChoices, setSheetChoices] = useState<string[] | null>(null);
-  const [gridMatrix, setGridMatrix] = useState<string[][] | undefined>(undefined);
-  const [gridVersion, setGridVersion] = useState(0);
+  const [gridMatrix, setGridMatrix] = useState<string[][]>([]);
   const [cardOpen, setCardOpen] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isImporting, setIsImporting] = useState(false);
@@ -98,7 +92,6 @@ export function ImportWizard({ layout, backHref, onImport, onClose, onImported, 
     }
     setUploadError(null);
     setGridMatrix(matrix);
-    setGridVersion((v) => v + 1);
     setSheetChoices(null);
     setWorkbook(null);
     setCardOpen(false);
@@ -112,8 +105,7 @@ export function ImportWizard({ layout, backHref, onImport, onClose, onImported, 
   }
 
   function clearGrid() {
-    setGridMatrix(undefined);
-    setGridVersion((v) => v + 1);
+    setGridMatrix([]);
     setFileName(null);
     setSheetChoices(null);
     setWorkbook(null);
@@ -231,19 +223,11 @@ export function ImportWizard({ layout, backHref, onImport, onClose, onImported, 
   }
 
   return (
-    <div className={`import-wizard${toolbarRight ? " import-wizard--wide" : ""}`}>
-      {toolbarRight ? (
-        <div className="import-toolbar">
-          <div />
-          <ImportStepIndicator current={step} />
-          <div className="import-toolbar-right">{step === "review" && !hierarchical ? toolbarRight : null}</div>
-        </div>
-      ) : (
-        <ImportStepIndicator current={step} />
-      )}
+    <div className={`import-wizard${wide ? " import-wizard--wide" : ""}`}>
+      <ImportStepIndicator current={step} />
 
       {step === "upload" && (
-        <div className="import-upload-step">
+        <div className="import-upload-step import-step-body">
           <input
             ref={fileInputRef}
             type="file"
@@ -310,23 +294,27 @@ export function ImportWizard({ layout, backHref, onImport, onClose, onImported, 
           </div>
           <div className="import-or-divider"><span>{t("upload.orPasteData")}</span></div>
           <PasteGrid
-            key={gridVersion}
-            initialMatrix={gridMatrix}
-            disabled={isMapping}
+            matrix={gridMatrix}
+            onChange={setGridMatrix}
             error={uploadError}
-            onSubmit={submitGrid}
             onClear={clearGrid}
           />
           {isMapping && <p className="import-dropzone-hint">{t("upload.mappingInProgress")}</p>}
+          <div className="import-step-actions">
+            <span />
+            <Button size="sm" onClick={() => submitGrid(gridMatrix)} disabled={!gridMatrix.some((r) => r.some((c) => c.trim() !== "")) || isMapping}>
+              {t("continue")}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0-7 7m7-7H3" />
+              </svg>
+            </Button>
+          </div>
         </div>
       )}
 
       {step === "mapping" && sheet && (
         <div className="import-step-body">
-          <div className="import-step-hint-row">
-            <p className="import-step-hint">{t("mapping.hint")}</p>
-            {toolbarRight}
-          </div>
+          <p className="import-step-hint">{t("mapping.hint")}</p>
           <ColumnMappingFields sheet={sheet} fields={layout.fields} mapping={mapping} onChange={handleMappingChange} />
           {requiredKeysUnmapped.length > 0 && (
             <p className="import-error-banner">
@@ -372,7 +360,6 @@ export function ImportWizard({ layout, backHref, onImport, onClose, onImported, 
               onEditRow={editRow}
               onMoveRow={moveRow}
               counts={{ ready: readyRows.length, errors: errorRows.length, skipped: skippedRows.length }}
-              toolbarAction={toolbarRight}
             />
           ) : (
             <ImportGrid rows={rows} fields={layout.fields} onToggleSkip={toggleSkip} />

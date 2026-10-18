@@ -1,8 +1,7 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef } from "react";
 import { useTranslations } from "next-intl";
-import { Button } from "@/components/ui/Button";
 
 const MIN_COLS = 6;
 const MIN_ROWS = 8;
@@ -41,17 +40,16 @@ export function parseClipboardText(text: string): string[][] {
 }
 
 interface PasteGridProps {
-  initialMatrix?: string[][];
-  disabled?: boolean;
+  matrix: string[][];
+  onChange: (matrix: string[][]) => void;
   error?: string | null;
-  onSubmit: (matrix: string[][]) => void;
   onClear: () => void;
 }
 
 /** Grade estilo planilha: cole (Ctrl+V) direto do Excel/Google Sheets ou edite célula a célula. A 1ª linha são os cabeçalhos. */
-export function PasteGrid({ initialMatrix, disabled, error, onSubmit, onClear }: PasteGridProps) {
+export function PasteGrid({ matrix, onChange, error, onClear }: PasteGridProps) {
   const t = useTranslations("import");
-  const [matrix, setMatrix] = useState<string[][]>(initialMatrix ?? []);
+  const setMatrix = (update: (prev: string[][]) => string[][]) => onChange(update(matrix));
   const gridRef = useRef<HTMLDivElement>(null);
 
   const cols = useMemo(() => Math.max(MIN_COLS, ...matrix.map((r) => r.length)), [matrix]);
@@ -101,7 +99,6 @@ export function PasteGrid({ initialMatrix, disabled, error, onSubmit, onClear }:
   }
 
   function clear() {
-    setMatrix([]);
     onClear();
   }
 
@@ -115,12 +112,6 @@ export function PasteGrid({ initialMatrix, disabled, error, onSubmit, onClear }:
               {t("upload.clearGrid")}
             </button>
           )}
-          <Button size="sm" onClick={() => onSubmit(matrix)} disabled={!hasData || disabled}>
-            {t("continue")}
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0-7 7m7-7H3" />
-            </svg>
-          </Button>
         </div>
       </div>
       {error && <p className="import-error-banner">{error}</p>}

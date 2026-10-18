@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { ImportWizard } from "@/components/import/ImportWizard";
 import { importDimensionNodes } from "../dimensoes/_actions";
 import type { DimensionType, DimensionStructure, DimensionNodeRow } from "@/lib/dimensions/types";
-import type { ImportLayoutConfig, ImportStep } from "@/lib/import/types";
+import type { ImportLayoutConfig } from "@/lib/import/types";
 
 interface ImportStructureModalProps {
   open: boolean;
@@ -52,7 +52,6 @@ export function ImportStructureModal({
   );
 
   const [fullscreen, setFullscreen] = useState(false);
-  const [step, setStep] = useState<ImportStep>("upload");
   // Tela cheia de verdade: além de o modal cobrir o sistema, o navegador sai
   // do modo janela (esconde barra de endereço/abas) via Fullscreen API.
   useEffect(() => {
@@ -74,7 +73,6 @@ export function ImportStructureModal({
   }
 
   function handleClose() {
-    setStep("upload");
     setFullscreen(false);
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
     onClose();
@@ -135,7 +133,7 @@ export function ImportStructureModal({
           {`${tImport("titlePrefix")} ${structure.name}`}
         </span>
       }
-      headerActions={step === "upload" || step === "done" ? fullscreenButton : undefined}
+      headerActions={fullscreenButton}
       size={fullscreen ? "screen" : "full"}
       fullBleed={fullscreen}
     >
@@ -149,8 +147,7 @@ export function ImportStructureModal({
             rows,
           })
         }
-        toolbarRight={fullscreenButton}
-        onStepChange={setStep}
+        wide
         onClose={handleClose}
         onImported={onImported}
       />

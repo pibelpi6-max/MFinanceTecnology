@@ -975,3 +975,5 @@
 .import-sheet-btn { background: rgba(62,111,224,.08) !important; border-color: rgba(62,111,224,.25) !important; color: #2f58b8 !important; font-weight: 500 !important; }
 .import-dropzone.is-static .import-link-btn { font-size: 12px; font-weight: 400; color: #9aa0b4; text-decoration: underline; }
 .import-dropzone.is-static .import-link-btn:hover { color: #4b5563; }
+.import-wizard--wide .import-upload-step { margin-top: 0; }
+.import-upload-step .import-step-actions { justify-content: flex-end; }
