@@ -418,7 +418,7 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
   useEffect(() => () => document.body.classList.remove("import-dragging-body"), []);
   useEffect(() => {
     if (!moved) return;
-    wrapRef.current?.querySelector(`tr[data-row-index="${moved.row}"]`)?.scrollIntoView({ block: "nearest" });
+    wrapRef.current?.querySelector(`tr[data-row-index="${moved.row}"]`)?.scrollIntoView?.({ block: "nearest" });
     const timer = setTimeout(() => setMoved(null), 4000);
     return () => clearTimeout(timer);
   }, [moved]);
