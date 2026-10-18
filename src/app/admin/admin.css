@@ -995,7 +995,7 @@ body.import-dragging-body, body.import-dragging-body * { cursor: grabbing !impor
 .import-step-review .import-tree-wrap { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .import-step-review .import-tree-card { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .import-step-review .import-tree-scroll { flex: 1; min-height: 120px; overflow: auto; }
-.import-step-review .import-tree-footer { flex: none; }
+.import-step-review .import-tree-footer { flex: none; padding: 0 6px; }
 .import-step-review .import-tree-table { overflow: visible; border: 0; border-radius: 0; }
 .import-tree-table thead th, .import-tree-table thead th.import-th { position: sticky; top: 0; }
 .import-tree-table thead th.import-th { z-index: auto; }
