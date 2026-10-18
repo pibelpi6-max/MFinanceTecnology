@@ -1,10 +1,12 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
-import { parseSpreadsheetFile } from "@/lib/import/parseFile";
+import { matrixToSheet, readWorkbook, sheetToMatrix } from "@/lib/import/parseFile";
+import type { WorkBook } from "xlsx";
+import { PasteGrid } from "./PasteGrid";
 import { suggestColumnMapping } from "@/lib/import/aiMapping";
 import { applyBatchDependencies, buildAndValidateRows } from "@/lib/import/validateRows";
 import { ImportStepIndicator } from "./ImportStepIndicator";
@@ -52,6 +54,13 @@ export function ImportWizard({ layout, backHref, onImport, onClose, onImported, 
   const [summary, setSummary] = useState<ImportRunSummary | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isMapping, setIsMapping] = useState(false);
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [workbook, setWorkbook] = useState<WorkBook | null>(null);
+  const [sheetChoices, setSheetChoices] = useState<string[] | null>(null);
+  const [gridMatrix, setGridMatrix] = useState<string[][] | undefined>(undefined);
+  const [gridVersion, setGridVersion] = useState(0);
+  const [cardOpen, setCardOpen] = useState(true);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isImporting, setIsImporting] = useState(false);
 
   const requiredKeysUnmapped = useMemo(() => {
@@ -59,11 +68,60 @@ export function ImportWizard({ layout, backHref, onImport, onClose, onImported, 
     return layout.fields.filter((f) => f.required && !mappedKeys.has(f.key));
   }, [mapping, layout.fields]);
 
+  /** Lê o arquivo e pergunta qual aba usar (mesmo com uma só, como na Desenhe). */
   async function handleFile(file: File) {
+    setUploadError(null);
+    try {
+      const wb = await readWorkbook(file);
+      if (wb.SheetNames.length === 0) throw new Error(t("upload.noData"));
+      setWorkbook(wb);
+      setSheetChoices(wb.SheetNames);
+      setFileName(file.name);
+      setCardOpen(true);
+    } catch (e) {
+      setUploadError(e instanceof Error ? e.message : t("upload.genericError"));
+    }
+  }
+
+  function chooseSheet(name: string) {
+    if (!workbook) return;
+    const matrix = sheetToMatrix(workbook, name);
+    if (!matrix.some((r) => r.some((c) => c.trim() !== ""))) {
+      setUploadError(t("upload.noData"));
+      return;
+    }
+    setUploadError(null);
+    setGridMatrix(matrix);
+    setGridVersion((v) => v + 1);
+    setSheetChoices(null);
+    setWorkbook(null);
+    setCardOpen(false);
+  }
+
+  function chooseAnotherFile() {
+    setSheetChoices(null);
+    setWorkbook(null);
+    setFileName(null);
+    fileInputRef.current?.click();
+  }
+
+  function clearGrid() {
+    setGridMatrix(undefined);
+    setGridVersion((v) => v + 1);
+    setFileName(null);
+    setSheetChoices(null);
+    setWorkbook(null);
+    setCardOpen(true);
+    setUploadError(null);
+  }
+
+  /** Usa o que está na grade (arquivo ou colado) e segue para o mapeamento de colunas. */
+  async function submitGrid(matrix: string[][]) {
     setUploadError(null);
     setIsMapping(true);
     try {
-      const parsed = await parseSpreadsheetFile(file);
+      const parsed = matrixToSheet(matrix, fileName ?? "");
+      if (parsed.rows.length === 0) throw new Error(t("upload.noData"));
       setSheet(parsed);
       const suggested = await suggestColumnMapping(parsed.headers, parsed.rows, layout.fields);
       setMapping(suggested);
@@ -179,37 +237,86 @@ export function ImportWizard({ layout, backHref, onImport, onClose, onImported, 
       )}
 
       {step === "upload" && (
-        <div className="import-upload-zone">
-          <label className="import-dropzone">
-            <input
-              type="file"
-              accept=".csv,.xlsx,.xls"
-              className="import-file-input"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) handleFile(file);
-              }}
-              onDrop={(e) => {
-                e.preventDefault();
-                const file = e.dataTransfer.files?.[0];
-                if (file) handleFile(file);
-              }}
-              onDragOver={(e) => e.preventDefault()}
-              disabled={isMapping}
-            />
-            {isMapping ? (
-              <p>{t("upload.mappingInProgress")}</p>
-            ) : (
-              <>
-                <p className="import-dropzone-title">{t("upload.dropzoneTitle")}</p>
-                <p className="import-dropzone-hint">{t("upload.dropzoneHint")}</p>
-              </>
+        <div className="import-upload-step">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv,.xlsx,.xls"
+            className="import-file-input"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              e.target.value = "";
+              if (file) handleFile(file);
+            }}
+          />
+          <div className="import-upload-card">
+            <button type="button" className="import-upload-card-head" onClick={() => setCardOpen((v) => !v)} aria-expanded={cardOpen}>
+              <span className="import-upload-card-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                </svg>
+                {t("upload.sendFile")}
+                {fileName && <span className="import-upload-file">{fileName}</span>}
+              </span>
+              <svg className={`import-upload-chevron${cardOpen ? "" : " is-closed"}`} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+              </svg>
+            </button>
+            {cardOpen && (
+              <div className="import-upload-card-body">
+                {sheetChoices ? (
+                  <div className="import-dropzone is-static">
+                    <p className="import-dropzone-title">{t("upload.sheetsFound", { count: sheetChoices.length })}</p>
+                    <div className="import-sheet-choices">
+                      {sheetChoices.map((name) => (
+                        <Button key={name} size="sm" variant="secondary" className="import-sheet-btn" onClick={() => chooseSheet(name)}>
+                          {name}
+                        </Button>
+                      ))}
+                    </div>
+                    <button type="button" className="import-link-btn" onClick={chooseAnotherFile}>
+                      {t("upload.chooseAnotherFile")}
+                    </button>
+                  </div>
+                ) : (
+                  <div
+                    className="import-dropzone"
+                    onClick={() => fileInputRef.current?.click()}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      const file = e.dataTransfer.files?.[0];
+                      if (file) handleFile(file);
+                    }}
+                  >
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#c4c8d8" strokeWidth={1.5} aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+                    </svg>
+                    <p className="import-dropzone-title">{t("upload.dropzoneTitle")}</p>
+                    <Button size="sm" variant="secondary" onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}>
+                      {t("upload.chooseFile")}
+                    </Button>
+                    <p className="import-dropzone-hint">{t("upload.dropzoneHint")}</p>
+                  </div>
+                )}
+              </div>
             )}
-          </label>
-          {uploadError && <p className="import-error-banner">{uploadError}</p>}
-          <button type="button" className="import-link-btn" onClick={goBack}>
-            {t("cancel")}
-          </button>
+          </div>
+          <div className="import-or-divider"><span>{t("upload.orPasteData")}</span></div>
+          <PasteGrid
+            key={gridVersion}
+            initialMatrix={gridMatrix}
+            disabled={isMapping}
+            error={uploadError}
+            onSubmit={submitGrid}
+            onClear={clearGrid}
+          />
+          <div className="import-upload-foot">
+            <button type="button" className="import-link-btn" onClick={goBack}>
+              {t("cancel")}
+            </button>
+            {isMapping && <span className="import-dropzone-hint">{t("upload.mappingInProgress")}</span>}
+          </div>
         </div>
       )}
 

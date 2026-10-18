@@ -332,7 +332,15 @@
       "dropzoneTitle": "Arrastra un archivo aquí o haz clic para elegirlo",
       "dropzoneHint": "Acepta .csv, .xlsx o .xls",
       "mappingInProgress": "La IA está identificando las columnas de tu hoja…",
-      "genericError": "No pude leer este archivo. Revisa el formato e inténtalo de nuevo."
+      "genericError": "No pude leer este archivo. Revisa el formato e inténtalo de nuevo.",
+      "sendFile": "Enviar archivo",
+      "sheetsFound": "Esta planilla tiene {count} hojas. ¿Cuál quieres importar?",
+      "chooseAnotherFile": "Elegir otro archivo",
+      "chooseFile": "Elegir archivo",
+      "orPasteData": "o pega los datos (Ctrl+V, directo de Excel/Google Sheets)",
+      "pasteHint": "Haz clic en una celda y pega (Ctrl+V) los datos copiados de una planilla. La primera fila debe tener los encabezados.",
+      "clearGrid": "Limpiar",
+      "noData": "No se encontró ninguna fila con datos."
     },
     "mapping": {
       "hint": "Revisa qué campo va a completar cada columna de la hoja. Los campos con * son obligatorios.",

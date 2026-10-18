@@ -332,7 +332,15 @@
       "dropzoneTitle": "Arraste um arquivo aqui ou clique para escolher",
       "dropzoneHint": "Aceita .csv, .xlsx ou .xls",
       "mappingInProgress": "IA identificando as colunas da sua planilha…",
-      "genericError": "Não consegui ler esse arquivo. Confira o formato e tente novamente."
+      "genericError": "Não consegui ler esse arquivo. Confira o formato e tente novamente.",
+      "sendFile": "Enviar arquivo",
+      "sheetsFound": "Esta planilha tem {count} abas. Qual você quer importar?",
+      "chooseAnotherFile": "Escolher outro arquivo",
+      "chooseFile": "Escolher arquivo",
+      "orPasteData": "ou cole os dados (Ctrl+V, direto do Excel/Google Sheets)",
+      "pasteHint": "Clique em uma célula e cole (Ctrl+V) os dados copiados de uma planilha. A primeira linha deve ter os cabeçalhos.",
+      "clearGrid": "Limpar",
+      "noData": "Não encontrei nenhuma linha com dados."
     },
     "mapping": {
       "hint": "Confira o campo que cada coluna da planilha vai preencher. Os campos com * são obrigatórios.",

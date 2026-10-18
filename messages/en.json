@@ -332,7 +332,15 @@
       "dropzoneTitle": "Drag a file here or click to choose one",
       "dropzoneHint": "Accepts .csv, .xlsx or .xls",
       "mappingInProgress": "AI is identifying your spreadsheet columns…",
-      "genericError": "Could not read this file. Check the format and try again."
+      "genericError": "Could not read this file. Check the format and try again.",
+      "sendFile": "Upload file",
+      "sheetsFound": "This workbook has {count} sheets. Which one do you want to import?",
+      "chooseAnotherFile": "Choose another file",
+      "chooseFile": "Choose file",
+      "orPasteData": "or paste the data (Ctrl+V, straight from Excel/Google Sheets)",
+      "pasteHint": "Click a cell and paste (Ctrl+V) data copied from a spreadsheet. The first row must contain the headers.",
+      "clearGrid": "Clear",
+      "noData": "No rows with data were found."
     },
     "mapping": {
       "hint": "Check which field each spreadsheet column will fill. Fields marked * are required.",

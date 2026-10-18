@@ -934,3 +934,37 @@
 .import-exclude-btn:hover { background: #fef2f2; color: #dc2626; }
 .import-include-btn { color: #c4c7d2; }
 .import-include-btn:hover { color: #3E6FE0; }
+
+/* ── Passo "Enviar arquivo" (padrão Desenhe): card recolhível + divisor + grade para colar ── */
+.import-upload-step { display: flex; flex-direction: column; gap: 16px; }
+.import-upload-card { border: 1px solid rgba(0,0,0,.1); border-radius: 12px; overflow: hidden; background: #fff; }
+.import-upload-card-head { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 16px; background: none; border: none; cursor: pointer; text-align: left; color: #5b5f76; }
+.import-upload-card-head:hover { background: #f8f9fb; }
+.import-upload-card-title { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; }
+.import-upload-file { font-size: 12px; font-weight: 400; color: #3E6FE0; }
+.import-upload-chevron { color: #9aa0b4; transition: transform .15s; }
+.import-upload-chevron.is-closed { transform: rotate(-90deg); }
+.import-upload-card-body { padding: 0 16px 16px; }
+.import-upload-card .import-dropzone { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 24px; border: 2px dashed rgba(0,0,0,.12); border-radius: 12px; background: #f8f9fb; text-align: center; cursor: pointer; }
+.import-upload-card .import-dropzone:hover { border-color: rgba(62,111,224,.5); background: rgba(62,111,224,.04); }
+.import-upload-card .import-dropzone.is-static { cursor: default; }
+.import-sheet-choices { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.import-sheet-btn:hover { background: #3E6FE0 !important; border-color: #3E6FE0 !important; color: #fff !important; }
+.import-or-divider { display: flex; align-items: center; gap: 12px; font-size: 12px; color: #9aa0b4; }
+.import-or-divider::before, .import-or-divider::after { content: ""; flex: 1; height: 1px; background: rgba(0,0,0,.1); }
+.import-upload-foot { display: flex; align-items: center; justify-content: space-between; }
+
+.import-paste { border: 1px solid rgba(0,0,0,.1); border-radius: 12px; overflow: hidden; background: #fff; display: flex; flex-direction: column; }
+.import-paste-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 10px 16px; border-bottom: 1px solid rgba(0,0,0,.08); }
+.import-paste-hint { font-size: 12.5px; color: var(--text-muted); }
+.import-paste-actions { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+.import-paste .import-error-banner { margin: 8px 16px 0; }
+.import-paste-scroll { max-height: 260px; overflow: auto; }
+.import-paste-table { border-collapse: separate; border-spacing: 0; width: 100%; table-layout: fixed; font-size: 13px; }
+.import-paste-table th { position: sticky; top: 0; z-index: 2; background: #f8f9fb; color: #5b5f76; font-weight: 600; font-size: 12px; padding: 8px 4px; border-bottom: 1px solid rgba(0,0,0,.08); border-right: 1px solid rgba(0,0,0,.06); }
+.import-paste-table th.import-paste-corner, .import-paste-table th.import-paste-rownum { position: sticky; left: 0; width: 44px; z-index: 3; }
+.import-paste-table th.import-paste-rownum { top: auto; font-weight: 500; color: #9aa0b4; border-bottom: 1px solid rgba(0,0,0,.06); }
+.import-paste-table td { padding: 0; border-bottom: 1px solid rgba(0,0,0,.06); border-right: 1px solid rgba(0,0,0,.06); }
+.import-paste-table td input { width: 100%; height: 32px; padding: 0 8px; border: none; background: transparent; font: inherit; color: var(--text-strong); outline: none; }
+.import-paste-table td input:focus { box-shadow: inset 0 0 0 2px #3E6FE0; background: #fff; }
+.import-paste-table td.is-header-row input { font-weight: 600; background: rgba(62,111,224,.05); }
