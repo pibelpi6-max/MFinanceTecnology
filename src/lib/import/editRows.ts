@@ -43,3 +43,23 @@ export function setCellValue(
 
   return { sheet: { ...sheet, headers, rows }, mapping: map };
 }
+
+/**
+ * Muda a posição de uma linha da planilha: coloca `from` logo antes/depois de `anchor`.
+ * `remap[antigo] = novo` serve para ajustar os índices das linhas ignoradas.
+ */
+export function reorderRow(
+  sheet: ParsedSheet,
+  from: number,
+  anchor: number,
+  place: "before" | "after"
+): { sheet: ParsedSheet; remap: number[] } {
+  const order = sheet.rows.map((_, i) => i).filter((i) => i !== from);
+  const at = order.indexOf(anchor);
+  order.splice(place === "before" ? at : at + 1, 0, from);
+  const remap: number[] = [];
+  order.forEach((oldIndex, newIndex) => {
+    remap[oldIndex] = newIndex;
+  });
+  return { sheet: { ...sheet, rows: order.map((i) => sheet.rows[i]) }, remap };
+}

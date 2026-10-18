@@ -94,7 +94,7 @@ describe("ImportTreeGrid arrastar e soltar", () => {
     fireEvent.pointerDown(handles[2], { button: 0, clientX: 10, clientY: 10 }); // Comercial (1.2), 3ª linha na árvore
     fireEvent.pointerMove(window, { clientX: 40, clientY: 40 });
     fireEvent.pointerUp(window, { clientX: 40, clientY: 40 });
-    expect(onMoveRow).toHaveBeenCalledWith(3, 1);
+    expect(onMoveRow).toHaveBeenCalledWith(3, { kind: "into", row: 1 });
   });
 });
 

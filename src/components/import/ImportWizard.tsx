@@ -13,13 +13,14 @@ import { ImportStepIndicator } from "./ImportStepIndicator";
 import { ColumnMappingFields } from "./ColumnMappingFields";
 import { ImportGrid } from "./ImportGrid";
 import { ImportTreeGrid } from "./ImportTreeGrid";
-import { setCellValue } from "@/lib/import/editRows";
+import { reorderRow, setCellValue } from "@/lib/import/editRows";
 import type {
   ColumnMapping,
   ImportLayoutConfig,
   ImportRowResult,
   ImportRunSummary,
   ImportStep,
+  MoveTarget,
   ParsedSheet,
 } from "@/lib/import/types";
 
@@ -186,12 +187,26 @@ export function ImportWizard({ layout, backHref, onImport, onClose, onImported, 
     setRows(rebuild(next.sheet.rows, next.mapping, currentSkipped()));
   }
 
-  /** Arrastar e soltar: coloca a linha dentro de outra (pelo código dela) ou, com null, tira o item superior. */
-  function moveRow(rowIndex: number, newParentRowIndex: number | null) {
-    if (!refField?.batchRefKeys) return;
-    const parentCode = newParentRowIndex === null ? "" : (rows[newParentRowIndex]?.rawValues[refField.batchRefKeys[0]] ?? "");
-    if (newParentRowIndex !== null && !parentCode) return;
-    editCell(rowIndex, refField.key, parentCode);
+  /** Arrastar e soltar: dentro de outra linha (muda o item superior), antes/depois dela (muda a posição) ou no nível 1. */
+  function moveRow(rowIndex: number, target: MoveTarget) {
+    if (!refField?.batchRefKeys || !sheet) return;
+    let parentRaw: string;
+    if (target.kind === "root") parentRaw = "";
+    else if (target.kind === "into") {
+      parentRaw = rows[target.row]?.rawValues[refField.batchRefKeys[0]] ?? "";
+      if (!parentRaw) return;
+    } else parentRaw = rows[target.row]?.rawValues[refField.key] ?? ""; // antes/depois: mesmo item superior do destino
+    const next = setCellValue(sheet, mapping, layout.fields, rowIndex, refField.key, parentRaw);
+    let nextSheet = next.sheet;
+    let skipped = currentSkipped();
+    if (target.kind === "before" || target.kind === "after") {
+      const moved = reorderRow(nextSheet, rowIndex, target.row, target.kind);
+      nextSheet = moved.sheet;
+      skipped = new Set(Array.from(skipped).map((i) => moved.remap[i]));
+    }
+    setSheet(nextSheet);
+    setMapping(next.mapping);
+    setRows(rebuild(nextSheet.rows, next.mapping, skipped));
   }
 
   const readyRows = rows.filter((r) => !r.skip && Object.keys(r.errors).length === 0);

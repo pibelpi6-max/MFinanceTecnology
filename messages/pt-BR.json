@@ -408,7 +408,12 @@
       "filterByStatus": "Clique para filtrar por este status",
       "movedInto": "“{name}” agora está dentro de “{parent}”",
       "movedToRoot": "“{name}” ficou sem item superior (nível 1)",
-      "movedToExisting": "“{name}” passou a apontar para o item “{parent}” que já existe na estrutura (por isso não aparece aninhado nesta lista)"
+      "movedToExisting": "“{name}” passou a apontar para o item “{parent}” que já existe na estrutura (por isso não aparece aninhado nesta lista)",
+      "dropBefore": "Mover para antes de “{name}”",
+      "dropAfter": "Mover para depois de “{name}”",
+      "movedBefore": "“{name}” foi movido para antes de “{parent}”",
+      "movedAfter": "“{name}” foi movido para depois de “{parent}”",
+      "dismissMessage": "Fechar aviso"
     },
     "done": {
       "title": "{count} registro(s) importado(s) com sucesso",

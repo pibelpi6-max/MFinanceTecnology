@@ -832,8 +832,10 @@
 .import-tree-rootzone.is-over { border-style: solid; border-color: #3E6FE0; background: #eaf0ff; color: #2f58b8; }
 .import-row-dragging td { opacity: .35; }
 .import-tree-table tbody td { transition: background-color .12s; }
-.import-row-dropover td { background: rgba(62,111,224,.12) !important; box-shadow: inset 0 1px 0 #3E6FE0, inset 0 -1px 0 #3E6FE0; }
-.import-row-dropover td:first-child { box-shadow: inset 2px 0 0 #3E6FE0, inset 0 1px 0 #3E6FE0, inset 0 -1px 0 #3E6FE0; }
+.import-row-drop-into td { background: rgba(62,111,224,.12) !important; box-shadow: inset 0 1px 0 #3E6FE0, inset 0 -1px 0 #3E6FE0; }
+.import-row-drop-into td:first-child { box-shadow: inset 2px 0 0 #3E6FE0, inset 0 1px 0 #3E6FE0, inset 0 -1px 0 #3E6FE0; }
+.import-row-drop-before td { box-shadow: inset 0 3px 0 #3E6FE0; }
+.import-row-drop-after td { box-shadow: inset 0 -3px 0 #3E6FE0; }
 body.import-dragging-body, body.import-dragging-body * { cursor: grabbing !important; user-select: none !important; }
 .import-handle-cell { cursor: grab; touch-action: none; text-align: center; user-select: none; }
 .import-handle-cell:hover .import-drag-handle { color: #3E6FE0; }
@@ -1011,3 +1013,5 @@ body.import-dragging-body, body.import-dragging-body * { cursor: grabbing !impor
 .import-moved-msg { color: #2f58b8; font-weight: 500; }
 @keyframes import-moved-flash { 0% { background-color: rgba(62,111,224,.28); } 100% { background-color: transparent; } }
 .import-row-moved td { animation: import-moved-flash 1.6s ease-out; }
+.import-moved-close { margin-left: 8px; border: 0; background: none; color: #2f58b8; font-size: 15px; line-height: 1; cursor: pointer; padding: 0 4px; border-radius: 4px; }
+.import-moved-close:hover { background: rgba(62,111,224,.12); }

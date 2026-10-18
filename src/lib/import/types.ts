@@ -101,3 +101,6 @@ export interface ImportRunSummary {
   /** resumo opcional do que foi criado, mostrado na tela final */
   detail?: string;
 }
+
+/** Onde soltar uma linha arrastada na revisão em árvore: dentro de outra (vira filha), antes/depois dela (mesmo item superior, nova posição) ou no nível 1. */
+export type MoveTarget = { kind: "root" } | { kind: "into" | "before" | "after"; row: number };

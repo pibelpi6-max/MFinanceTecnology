@@ -6,7 +6,11 @@ import { useTranslations } from "next-intl";
 import { FilterDropdown } from "@/components/ui/DataTable/FilterDropdown";
 import type { ColumnMeta } from "@/components/ui/DataTable/types";
 import { findBatchProvider } from "@/lib/import/validateRows";
-import type { ImportFieldConfig, ImportRowResult } from "@/lib/import/types";
+import type { ImportFieldConfig, ImportRowResult, MoveTarget } from "@/lib/import/types";
+
+type Place = "into" | "before" | "after";
+type Over = { kind: Place; row: number } | "root" | null;
+const overKey = (o: Over) => (o === null ? "" : o === "root" ? "root" : `${o.kind}:${o.row}`);
 
 interface ImportTreeGridProps {
   rows: ImportRowResult[];
@@ -14,8 +18,8 @@ interface ImportTreeGridProps {
   onToggleSkip: (rowIndex: number) => void;
   /** salva de uma vez os campos editados de uma linha */
   onEditRow: (rowIndex: number, values: Record<string, string>) => void;
-  /** newParentRowIndex = null → vira item sem superior (nível 1) */
-  onMoveRow: (rowIndex: number, newParentRowIndex: number | null) => void;
+  /** dentro de outra linha, antes/depois dela (nova posição) ou no nível 1 */
+  onMoveRow: (rowIndex: number, target: MoveTarget) => void;
   /** contadores mostrados ao lado do título "Status" */
   counts: { ready: number; errors: number; skipped: number };
   /** Ação principal (ex.: Importar) exibida à direita da barra do card. */
@@ -58,12 +62,12 @@ function norm(v: string) {
 export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRow, counts, toolbarAction }: ImportTreeGridProps) {
   const t = useTranslations("import");
   const [dragging, setDragging] = useState<number | null>(null);
-  const [over, setOver] = useState<number | "root" | null>(null);
+  const [over, setOver] = useState<Over>(null);
   const [editing, setEditing] = useState<number | null>(null);
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [collapsed, setCollapsed] = useState<Set<number>>(new Set());
   const [search, setSearch] = useState("");
-  const [moved, setMoved] = useState<{ row: number; target: number | null } | null>(null);
+  const [moved, setMoved] = useState<{ code: string; name: string; parent: string; kind: Place | "root"; targetCode: string } | null>(null);
 
   const refField = fields.find((f) => f.type === "node-ref" && f.batchRefKeys?.length)!;
   const codeKey = refField.batchRefKeys![0];
@@ -332,7 +336,7 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
     let x = startX;
     let y = startY;
     let active = false;
-    let current: number | "root" | null = null;
+    let current: Over = null;
     let raf = 0;
 
     const scroller = (() => {
@@ -345,18 +349,22 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
       return null;
     })();
 
-    const targetAt = (): number | "root" | null => {
+    const targetAt = (): Over => {
       const el = typeof document.elementFromPoint === "function" ? document.elementFromPoint(x, y) : null;
       if (!el) return null;
       if (el.closest("[data-root-drop]")) return "root";
       const tr = el.closest<HTMLElement>("tr[data-row-index]");
       if (!tr) return null;
       const idx = Number(tr.dataset.rowIndex);
-      return idx === source || blocked.has(idx) ? null : idx;
+      if (idx === source || blocked.has(idx)) return null;
+      const rect = tr.getBoundingClientRect();
+      const ratio = (y - rect.top) / rect.height;
+      // faixa de cima/baixo da linha = reposicionar; meio = colocar dentro
+      return { kind: ratio < 0.28 ? "before" : ratio > 0.72 ? "after" : "into", row: idx };
     };
     const refreshTarget = () => {
       const next = targetAt();
-      if (next !== current) {
+      if (overKey(next) !== overKey(current)) {
         current = next;
         setOver(next);
       }
@@ -380,6 +388,7 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
         active = true;
         document.body.classList.add("import-dragging-body");
         setDragging(source);
+        setMoved(null);
         raf = requestAnimationFrame(tick);
       }
       ghostPos.current = { x, y };
@@ -394,8 +403,15 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
       cancelAnimationFrame(raf);
       document.body.classList.remove("import-dragging-body");
       if (active && commit && current !== null) {
-        onMoveRow(source, current === "root" ? null : current);
-        setMoved({ row: source, target: current === "root" ? null : current });
+        // nomes/códigos guardados ANTES de mover: depois de reposicionar, os índices das linhas mudam
+        const info = (i: number) => ({
+          code: rows[i]?.rawValues[codeKey] ?? "",
+          name: rows[i]?.rawValues[nameKey] || rows[i]?.rawValues[codeKey] || "",
+        });
+        const src = info(source);
+        const dst = current === "root" ? { code: "", name: "" } : info(current.row);
+        onMoveRow(source, current === "root" ? { kind: "root" } : { kind: current.kind, row: current.row });
+        setMoved({ code: src.code, name: src.name, parent: dst.name, kind: current === "root" ? "root" : current.kind, targetCode: dst.code });
       }
       setDragging(null);
       setOver(null);
@@ -414,9 +430,9 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
   useEffect(() => () => document.body.classList.remove("import-dragging-body"), []);
   useEffect(() => {
     if (!moved) return;
-    wrapRef.current?.querySelector(`tr[data-row-index="${moved.row}"]`)?.scrollIntoView?.({ block: "nearest" });
-    const timer = setTimeout(() => setMoved(null), 4000);
-    return () => clearTimeout(timer);
+    const idx = rows.findIndex((r) => (r.rawValues[codeKey] ?? "") === moved.code);
+    wrapRef.current?.querySelector(`tr[data-row-index="${idx}"]`)?.scrollIntoView?.({ block: "nearest" });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [moved]);
 
   // ── Edição por linha ───────────────────────────────────────
@@ -437,13 +453,14 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
   const hiddenCount = flat.length - visible.length;
   const movedMessage = (() => {
     if (!moved) return "";
-    const nameOf = (i: number) => rows[i]?.rawValues[nameKey] || rows[i]?.rawValues[codeKey] || "";
-    const name = nameOf(moved.row);
-    if (moved.target === null) return t("review.movedToRoot", { name });
-    const parent = nameOf(moved.target);
-    const actual = rows[moved.row] ? findBatchProvider(rows, fields, rows[moved.row]) : null;
+    const { name, parent } = moved;
+    if (moved.kind === "root") return t("review.movedToRoot", { name });
+    if (moved.kind === "before") return t("review.movedBefore", { name, parent });
+    if (moved.kind === "after") return t("review.movedAfter", { name, parent });
+    const row = rows.find((r) => (r.rawValues[codeKey] ?? "") === moved.code);
+    const actual = row ? findBatchProvider(rows, fields, row) : null;
     // o código do destino também existe na estrutura: a ligação vale, mas não vira aninhamento nesta lista
-    return actual?.rowIndex === moved.target
+    return actual && (actual.rawValues[codeKey] ?? "") === moved.targetCode
       ? t("review.movedInto", { name, parent })
       : t("review.movedToExisting", { name, parent });
   })();
@@ -644,7 +661,7 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
               )}
               {visible.map(({ row, depth }) => {
                 const hasErrors = Object.keys(row.errors).length > 0;
-                const dropOk = dragging !== null && over === row.rowIndex;
+                const dropKind = dragging !== null && over !== null && over !== "root" && over.row === row.rowIndex ? over.kind : null;
                 const isParent = (childrenOf.get(row.rowIndex)?.length ?? 0) > 0;
                 return (
                   <tr
@@ -654,8 +671,8 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
                       row.skip ? "import-row-skipped" : hasErrors ? "import-row-error" : "",
                       isParent ? "import-row-parent" : "",
                       dragging === row.rowIndex ? "import-row-dragging" : "",
-                      dropOk ? "import-row-dropover" : "",
-                      moved?.row === row.rowIndex ? "import-row-moved" : "",
+                      dropKind ? `import-row-drop-${dropKind}` : "",
+                      moved && moved.code !== "" && (row.rawValues[codeKey] ?? "") === moved.code ? "import-row-moved" : "",
                     ].join(" ")}
                   >
                     <td
@@ -793,8 +810,10 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
             <span className="import-drag-ghost-hint">
               {over === "root"
                 ? t("review.dropRoot")
-                : typeof over === "number"
-                  ? t("review.dropInto", { name: rows[over]?.rawValues[nameKey] || rows[over]?.rawValues[codeKey] || "" })
+                : over
+                  ? t(over.kind === "into" ? "review.dropInto" : over.kind === "before" ? "review.dropBefore" : "review.dropAfter", {
+                      name: rows[over.row]?.rawValues[nameKey] || rows[over.row]?.rawValues[codeKey] || "",
+                    })
                   : t("review.dropHere")}
             </span>
           </div>,
@@ -810,7 +829,12 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
           : hiddenCount > 0
             ? t("review.hiddenFooter", { count: hiddenCount })
             : t("review.allVisibleFooter", { count: flat.length })}
-</p>
+        {moved && (
+          <button type="button" className="import-moved-close" aria-label={t("review.dismissMessage")} onClick={() => setMoved(null)}>
+            ×
+          </button>
+        )}
+        </p>
         <span className="import-status-head">
           {(
             [
