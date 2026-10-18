@@ -402,7 +402,9 @@
       "clearFiltersBtn": "limpar filtros",
       "excludeRow": "Excluir esta linha da importação",
       "shownFooter": "{shown} de {total} {total, plural, one {linha exibida} other {linhas exibidas}}",
-      "importCount": "Importar {count, plural, one {# item} other {# itens}}"
+      "importCount": "Importar {count, plural, one {# item} other {# itens}}",
+      "dropInto": "Mover para dentro de “{name}”",
+      "dropHere": "Solte sobre uma linha"
     },
     "done": {
       "title": "{count} registro(s) importado(s) com sucesso",

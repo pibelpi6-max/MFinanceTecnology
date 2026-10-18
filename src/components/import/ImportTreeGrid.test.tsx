@@ -87,14 +87,13 @@ describe("ImportTreeGrid arrastar e soltar", () => {
       </NextIntlClientProvider>
     );
     const handles = screen.getAllByTitle(messages.import.review.dragHandle);
-    const dataTransfer = { effectAllowed: "", setData: vi.fn(), setDragImage: vi.fn() };
-    fireEvent.dragStart(handles[2], { dataTransfer }); // Comercial (1.2), 3ª linha na árvore
-    await act(async () => {
-      await new Promise((r) => setTimeout(r, 10));
-    });
     const rowsEls = document.querySelectorAll("tbody tr");
-    fireEvent.dragOver(rowsEls[1], { dataTransfer }); // Administrativo
-    fireEvent.drop(rowsEls[1], { dataTransfer });
+    // jsdom não tem layout: o "ponto sob o cursor" é simulado
+    let under: Element = rowsEls[1]; // Administrativo
+    document.elementFromPoint = () => under;
+    fireEvent.pointerDown(handles[2], { button: 0, clientX: 10, clientY: 10 }); // Comercial (1.2), 3ª linha na árvore
+    fireEvent.pointerMove(window, { clientX: 40, clientY: 40 });
+    fireEvent.pointerUp(window, { clientX: 40, clientY: 40 });
     expect(onMoveRow).toHaveBeenCalledWith(3, 1);
   });
 });

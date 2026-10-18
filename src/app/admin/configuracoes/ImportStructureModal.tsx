@@ -134,7 +134,7 @@ export function ImportStructureModal({
         </span>
       }
       headerActions={fullscreenButton}
-      size={fullscreen ? "screen" : "full"}
+      size="screen"
       fullBleed={fullscreen}
     >
       <ImportWizard

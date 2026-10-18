@@ -759,7 +759,7 @@
 /* ── Importação assistida por IA (Dimensões, Matriz, Realizado, Pacotes) ── */
 .import-wizard { display: flex; flex-direction: column; gap: 20px; max-width: 980px; margin: 0 auto; }
 /* margin-bottom negativo anula o pb-4 do corpo do modal: o rodapé encosta na borda inferior, com a mesma altura/posição no início, meio e fim do scroll. */
-.import-wizard--wide { max-width: none; gap: 12px; min-height: calc(100% + 16px); margin-bottom: -16px; }
+.import-wizard--wide { max-width: none; gap: 12px; height: calc(100% + 16px); margin-bottom: -16px; }
 .import-wizard--wide .import-step-body { flex: 1; margin-top: 20px; }
 .import-step-hint-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 /* No modal o rodapé (Voltar/Avançar) fica sempre no fim da área visível, com ou sem muitos registros. */
@@ -828,10 +828,19 @@
 .import-drag-handle { cursor: grab; color: #9aa0b4; user-select: none; padding: 0 2px; font-size: 15px; line-height: 1; }
 .import-drag-handle:active { cursor: grabbing; }
 .import-tree-elbow { width: 8px; height: 12px; border-left: 1.5px solid #cbd0e0; border-bottom: 1.5px solid #cbd0e0; border-bottom-left-radius: 4px; margin-top: -8px; flex: none; }
-.import-tree-rootzone { border: 1.5px dashed #cbd0e0; border-radius: 8px; padding: 8px; text-align: center; font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
-.import-tree-rootzone.is-over { border-color: #3e6fe0; background: rgba(62,111,224,.06); color: #3e6fe0; }
-.import-row-dragging td { opacity: .4; }
-.import-row-dropover td { background: rgba(62,111,224,.1); }
+.import-tree-rootzone { position: absolute; left: 50%; top: 8px; white-space: nowrap; transform: translateX(-50%); z-index: 30; padding: 8px 18px; border: 1.5px dashed #9fb4ee; border-radius: 999px; background: rgba(255,255,255,.96); box-shadow: 0 6px 18px rgba(30,40,90,.14); font-size: 12.5px; font-weight: 500; color: #5b5f76; transition: background .12s, border-color .12s, color .12s; }
+.import-tree-rootzone.is-over { border-style: solid; border-color: #3E6FE0; background: #eaf0ff; color: #2f58b8; }
+.import-row-dragging td { opacity: .35; }
+.import-tree-table tbody td { transition: background-color .12s; }
+.import-row-dropover td { background: rgba(62,111,224,.12) !important; box-shadow: inset 0 1px 0 #3E6FE0, inset 0 -1px 0 #3E6FE0; }
+.import-row-dropover td:first-child { box-shadow: inset 2px 0 0 #3E6FE0, inset 0 1px 0 #3E6FE0, inset 0 -1px 0 #3E6FE0; }
+body.import-dragging-body, body.import-dragging-body * { cursor: grabbing !important; user-select: none !important; }
+.import-handle-cell { cursor: grab; touch-action: none; text-align: center; user-select: none; }
+.import-handle-cell:hover .import-drag-handle { color: #3E6FE0; }
+.import-drag-ghost { position: fixed; left: 0; top: 0; z-index: 10000; pointer-events: none; will-change: transform; display: flex; flex-direction: column; gap: 2px; max-width: 320px; padding: 8px 12px; border-radius: 10px; background: #fff; border: 1px solid #3E6FE0; border-left-width: 4px; box-shadow: 0 12px 28px rgba(30,40,90,.22); font-size: 13px; color: var(--text-strong); }
+.import-drag-ghost-main { display: flex; align-items: center; gap: 8px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.import-drag-ghost-grip { color: #9aa0b4; }
+.import-drag-ghost-hint { font-size: 11.5px; color: #3E6FE0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .import-review-summary { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--text-muted); }
 .import-status-tag { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 600; white-space: nowrap; }
@@ -977,3 +986,13 @@
 .import-dropzone.is-static .import-link-btn:hover { color: #4b5563; }
 .import-wizard--wide .import-upload-step { margin-top: 0; }
 .import-upload-step .import-step-actions { justify-content: flex-end; }
+
+/* Revisão em árvore: a grade rola por dentro (barra horizontal sempre visível) e o cabeçalho fica fixo. */
+.import-wizard--wide .import-step-review { min-height: 0; }
+.import-step-review .import-tree-wrap { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.import-step-review .import-tree-card { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.import-step-review .import-tree-scroll { flex: 1; min-height: 120px; overflow: auto; }
+.import-step-review .import-tree-footer { flex: none; }
+.import-step-review .import-tree-table { overflow: visible; border: 0; border-radius: 0; }
+.import-tree-table thead th, .import-tree-table thead th.import-th { position: sticky; top: 0; }
+.import-tree-table thead th.import-th { z-index: auto; }

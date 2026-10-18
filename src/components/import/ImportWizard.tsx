@@ -339,7 +339,7 @@ export function ImportWizard({ layout, backHref, onImport, onClose, onImported, 
       )}
 
       {step === "review" && (
-        <div className="import-step-body">
+        <div className={`import-step-body${hierarchical ? " import-step-review" : ""}`}>
           {!hierarchical && (
             <div className="import-review-summary">
               <span>{t("review.total", { count: rows.length })}</span>

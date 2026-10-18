@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import { FilterDropdown } from "@/components/ui/DataTable/FilterDropdown";
 import type { ColumnMeta } from "@/components/ui/DataTable/types";
@@ -251,13 +252,14 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
 
   const widthOf = (key: string) => widths[key] ?? 140;
 
-  function startResize(e: React.MouseEvent, key: string) {
+  /** `invert`: o divisor está na borda ESQUERDA da coluna (ex.: entre Ações e Status) — arrastar para a esquerda alarga. */
+  function startResize(e: React.MouseEvent, key: string, invert = false) {
     e.preventDefault();
     e.stopPropagation();
     const startX = e.clientX;
     const startW = widthOf(key);
     const onMove = (ev: MouseEvent) =>
-      setWidths((w) => ({ ...w, [key]: Math.max(MIN_COL, startW + ev.clientX - startX) }));
+      setWidths((w) => ({ ...w, [key]: Math.max(MIN_COL, startW + (invert ? startX - ev.clientX : ev.clientX - startX)) }));
     const onUp = () => {
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseup", onUp);
@@ -310,12 +312,102 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
     visit(index);
     return out;
   };
-  const blocked = dragging !== null ? descendantsOf(dragging) : new Set<number>();
-  const canDrop = (target: number) => dragging !== null && target !== dragging && !blocked.has(target);
-  function endDrag() {
-    setDragging(null);
-    setOver(null);
+  const ghostRef = useRef<HTMLDivElement>(null);
+  const ghostPos = useRef({ x: 0, y: 0 });
+  const placeGhost = () => {
+    const g = ghostRef.current;
+    if (g) g.style.transform = `translate3d(${ghostPos.current.x + 14}px, ${ghostPos.current.y + 14}px, 0)`;
+  };
+  useLayoutEffect(placeGhost);
+
+  /** Arrastar com eventos de ponteiro (em vez do drag HTML5): fantasma suave, alvo sob o cursor e rolagem automática. */
+  function startPointerDrag(e: React.PointerEvent, row: ImportRowResult) {
+    if (editing !== null || e.button > 0) return;
+    e.preventDefault();
+    const source = row.rowIndex;
+    const blocked = descendantsOf(source);
+    const startX = e.clientX;
+    const startY = e.clientY;
+    let x = startX;
+    let y = startY;
+    let active = false;
+    let current: number | "root" | null = null;
+    let raf = 0;
+
+    const scroller = (() => {
+      let el: HTMLElement | null = wrapRef.current;
+      while (el) {
+        const oy = getComputedStyle(el).overflowY;
+        if ((oy === "auto" || oy === "scroll") && el.scrollHeight > el.clientHeight + 1) return el;
+        el = el.parentElement;
+      }
+      return null;
+    })();
+
+    const targetAt = (): number | "root" | null => {
+      const el = typeof document.elementFromPoint === "function" ? document.elementFromPoint(x, y) : null;
+      if (!el) return null;
+      if (el.closest("[data-root-drop]")) return "root";
+      const tr = el.closest<HTMLElement>("tr[data-row-index]");
+      if (!tr) return null;
+      const idx = Number(tr.dataset.rowIndex);
+      return idx === source || blocked.has(idx) ? null : idx;
+    };
+    const refreshTarget = () => {
+      const next = targetAt();
+      if (next !== current) {
+        current = next;
+        setOver(next);
+      }
+    };
+    const tick = () => {
+      if (scroller) {
+        const r = scroller.getBoundingClientRect();
+        const edge = 56;
+        const speed = (d: number) => Math.min(18, Math.max(2, Math.round(d / 3)));
+        if (y < r.top + edge) scroller.scrollTop -= speed(r.top + edge - y);
+        else if (y > r.bottom - edge) scroller.scrollTop += speed(y - (r.bottom - edge));
+        refreshTarget();
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    const onMove = (ev: PointerEvent) => {
+      x = ev.clientX;
+      y = ev.clientY;
+      if (!active) {
+        if (Math.hypot(x - startX, y - startY) < 5) return;
+        active = true;
+        document.body.classList.add("import-dragging-body");
+        setDragging(source);
+        raf = requestAnimationFrame(tick);
+      }
+      ghostPos.current = { x, y };
+      placeGhost();
+      refreshTarget();
+    };
+    const finish = (commit: boolean) => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onCancel);
+      window.removeEventListener("keydown", onKey);
+      cancelAnimationFrame(raf);
+      document.body.classList.remove("import-dragging-body");
+      if (active && commit && current !== null) onMoveRow(source, current === "root" ? null : current);
+      setDragging(null);
+      setOver(null);
+    };
+    const onUp = () => finish(true);
+    const onCancel = () => finish(false);
+    const onKey = (ev: KeyboardEvent) => {
+      if (ev.key === "Escape") finish(false);
+    };
+    ghostPos.current = { x, y };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onCancel);
+    window.addEventListener("keydown", onKey);
   }
+  useEffect(() => () => document.body.classList.remove("import-dragging-body"), []);
 
   // ── Edição por linha ───────────────────────────────────────
   function startEdit(row: ImportRowResult) {
@@ -433,6 +525,26 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
       <div ref={cardRef} className="import-tree-card">
         <div className="import-tree-toolbar">
           <div className="import-tree-toolbar-left">
+            <span className="import-status-head">
+              <span className="import-count import-count-ok">{t("review.countReadyLabel", { count: counts.ready })}</span>
+              {counts.errors > 0 && (
+                <span className="import-count import-count-error">{t("review.countErrorLabel", { count: counts.errors })}</span>
+              )}
+              {counts.skipped > 0 && (
+                <span className="import-count import-count-skipped">{t("review.countSkippedLabel", { count: counts.skipped })}</span>
+              )}
+            </span>
+            {toolbarAction}
+          </div>
+          <div className="import-tree-toolbar-right">
+            {isFiltering && (
+              <button type="button" className="import-clear-btn" onClick={clearAllFilters}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+                {t("review.clearFiltersBtn")}
+              </button>
+            )}
             <div className="import-search">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.2-5.2m0 0A7.5 7.5 0 1 0 5.2 5.2a7.5 7.5 0 0 0 10.6 10.6Z" />
@@ -444,26 +556,6 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-            {isFiltering && (
-              <button type="button" className="import-clear-btn" onClick={clearAllFilters}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-                </svg>
-                {t("review.clearFiltersBtn")}
-              </button>
-            )}
-          </div>
-          <div className="import-tree-toolbar-right">
-            <span className="import-status-head">
-              <span className="import-count import-count-ok">{t("review.countReadyLabel", { count: counts.ready })}</span>
-              {counts.errors > 0 && (
-                <span className="import-count import-count-error">{t("review.countErrorLabel", { count: counts.errors })}</span>
-              )}
-              {counts.skipped > 0 && (
-                <span className="import-count import-count-skipped">{t("review.countSkippedLabel", { count: counts.skipped })}</span>
-              )}
-            </span>
-            {toolbarAction}
           </div>
         </div>
         <div ref={wrapRef} className="import-tree-scroll">
@@ -504,6 +596,13 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
                 <th aria-hidden="true" className="import-th-spacer"></th>
                 <th className="import-th import-th-actions">
                   {t("review.actions")}
+                  <div
+                    className="import-resize"
+                    onMouseDown={(e) => startResize(e, STATUS, true)}
+                    onMouseEnter={() => setResizeHover(STATUS)}
+                    onMouseLeave={() => setResizeHover(null)}
+                    aria-hidden="true"
+                  />
                   <div className="import-th-divider" />
                 </th>
                 {(() => {
@@ -537,48 +636,25 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
               )}
               {visible.map(({ row, depth }) => {
                 const hasErrors = Object.keys(row.errors).length > 0;
-                const dropOk = over === row.rowIndex && canDrop(row.rowIndex);
+                const dropOk = dragging !== null && over === row.rowIndex;
                 const isParent = (childrenOf.get(row.rowIndex)?.length ?? 0) > 0;
                 return (
                   <tr
                     key={row.rowIndex}
+                    data-row-index={row.rowIndex}
                     className={[
                       row.skip ? "import-row-skipped" : hasErrors ? "import-row-error" : "",
                       isParent ? "import-row-parent" : "",
                       dragging === row.rowIndex ? "import-row-dragging" : "",
                       dropOk ? "import-row-dropover" : "",
                     ].join(" ")}
-                    onDragEnter={(e) => {
-                      if (canDrop(row.rowIndex)) e.preventDefault();
-                    }}
-                    onDragOver={(e) => {
-                      if (canDrop(row.rowIndex)) {
-                        e.preventDefault();
-                        setOver(row.rowIndex);
-                      }
-                    }}
-                    onDragLeave={() => setOver((o) => (o === row.rowIndex ? null : o))}
-                    onDrop={(e) => {
-                      e.preventDefault();
-                      if (dragging !== null && canDrop(row.rowIndex)) onMoveRow(dragging, row.rowIndex);
-                      endDrag();
-                    }}
                   >
-                    <td className="import-handle-cell">
-                      <span
-                        className="import-drag-handle"
-                        draggable={editing === null}
-                        title={t("review.dragHandle")}
-                        onDragStart={(e) => {
-                          e.dataTransfer.effectAllowed = "move";
-                          e.dataTransfer.setData("text/plain", String(row.rowIndex));
-                          const tr = e.currentTarget.closest("tr");
-                          if (tr) e.dataTransfer.setDragImage(tr, 0, 0);
-                          const idx = row.rowIndex;
-                          setTimeout(() => setDragging(idx), 0);
-                        }}
-                        onDragEnd={endDrag}
-                      >
+                    <td
+                      className="import-handle-cell"
+                      title={t("review.dragHandle")}
+                      onPointerDown={(e) => startPointerDrag(e, row)}
+                    >
+                      <span className="import-drag-handle" aria-hidden="true">
                         ⠿
                       </span>
                     </td>
@@ -677,6 +753,11 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
           </table>
         </div>
 
+        {dragging !== null && (
+          <div data-root-drop className={`import-tree-rootzone${over === "root" ? " is-over" : ""}`}>
+            {t("review.dropRoot")}
+          </div>
+        )}
         {dropdownColumn && (
           <FilterDropdown
             open={openCol !== null}
@@ -692,23 +773,24 @@ export function ImportTreeGrid({ rows, fields, onToggleSkip, onEditRow, onMoveRo
         )}
       </div>
 
-      {dragging !== null && (
-        <div
-          className={`import-tree-rootzone${over === "root" ? " is-over" : ""}`}
-          onDragOver={(e) => {
-            e.preventDefault();
-            setOver("root");
-          }}
-          onDragLeave={() => setOver(null)}
-          onDrop={(e) => {
-            e.preventDefault();
-            onMoveRow(dragging, null);
-            endDrag();
-          }}
-        >
-          {t("review.dropRoot")}
-        </div>
-      )}
+      {dragging !== null &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div ref={ghostRef} className="import-drag-ghost" aria-hidden="true">
+            <span className="import-drag-ghost-main">
+              <span className="import-drag-ghost-grip">⠿</span>
+              {[rows[dragging]?.rawValues[codeKey], rows[dragging]?.rawValues[nameKey]].filter(Boolean).join(" · ")}
+            </span>
+            <span className="import-drag-ghost-hint">
+              {over === "root"
+                ? t("review.dropRoot")
+                : typeof over === "number"
+                  ? t("review.dropInto", { name: rows[over]?.rawValues[nameKey] || rows[over]?.rawValues[codeKey] || "" })
+                  : t("review.dropHere")}
+            </span>
+          </div>,
+          document.body
+        )}
 
       <p className="import-tree-footer">
         {isFiltering

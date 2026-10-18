@@ -402,7 +402,9 @@
       "clearFiltersBtn": "clear filters",
       "excludeRow": "Exclude this row from the import",
       "shownFooter": "{shown} of {total} {total, plural, one {row shown} other {rows shown}}",
-      "importCount": "Import {count, plural, one {# item} other {# items}}"
+      "importCount": "Import {count, plural, one {# item} other {# items}}",
+      "dropInto": "Move inside “{name}”",
+      "dropHere": "Drop on a row"
     },
     "done": {
       "title": "{count} record(s) imported successfully",
