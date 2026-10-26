@@ -507,6 +507,8 @@
     "dragHint": "Arraste para reordenar ou mover de ano",
     "officialHint": "Só pode haver um oficial por ano. Ao marcar, o oficial atual de {year} deixa de ser.",
     "zoneFeeds": "Alimentam a DRE",
-    "zoneConsumes": "Consomem da DRE"
+    "zoneConsumes": "Consomem da DRE",
+    "moduleInProgress": "Módulo em construção",
+    "moduleInProgressHint": "Em breve você poderá trabalhar neste módulo aqui."
   }
 }
