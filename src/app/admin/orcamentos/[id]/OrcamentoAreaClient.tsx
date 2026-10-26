@@ -5,14 +5,12 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { setOrcamentoAtual } from "@/lib/orcamentos/_actions";
-import type { ConjuntoEstrutura, Orcamento } from "@/lib/orcamentos/types";
+import type { Orcamento } from "@/lib/orcamentos/types";
 import { OficialStar, StatusPill, TipoLabel } from "../OrcamentoMeta";
 
 interface Props {
   tenantId: string;
   orcamento: Orcamento;
-  conjuntos: ConjuntoEstrutura[];
-  packageCount: number;
   isCurrent: boolean;
 }
 
@@ -22,7 +20,7 @@ interface ModuleTile {
   icon: string;
 }
 
-export function OrcamentoAreaClient({ tenantId, orcamento, conjuntos, packageCount, isCurrent }: Props) {
+export function OrcamentoAreaClient({ tenantId, orcamento, isCurrent }: Props) {
   const router = useRouter();
   const t = useTranslations("orcamentos");
 
@@ -33,7 +31,6 @@ export function OrcamentoAreaClient({ tenantId, orcamento, conjuntos, packageCou
   }, [isCurrent, tenantId, orcamento.id, router]);
 
   const year = orcamento.year;
-  const conjuntoName = conjuntos.find((c) => c.id === orcamento.conjunto_estrutura_id)?.name;
 
   const modules: ModuleTile[] = [
     { key: "matriz", href: `/admin/orcamento/matriz?ano=${year}`, icon: "M3 3v18h18M7 16l4-5 3 3 5-7" },
@@ -75,21 +72,8 @@ export function OrcamentoAreaClient({ tenantId, orcamento, conjuntos, packageCou
         </div>
       </div>
 
-      <div className="admin-content admin-content--scroll">
-        <div className="orc-area">
-          <aside className="orc-context">
-            <p className="orc-context-label">{t("context")}</p>
-            <dl>
-              <dt>{t("contextYear")}</dt>
-              <dd>{orcamento.year}</dd>
-              <dt>{t("contextConjunto")}</dt>
-              <dd>{conjuntoName ?? "—"}</dd>
-              <dt>{t("contextPackages")}</dt>
-              <dd>{packageCount}</dd>
-            </dl>
-            {orcamento.description && <p className="orc-context-desc">{orcamento.description}</p>}
-          </aside>
-
+      <div className="admin-content">
+        <div className="orc-panel orc-panel--scroll">
           <section className="orc-modules-wrap">
             <h2 className="orc-modules-title">{t("modules")}</h2>
             <div className="orc-modules">
