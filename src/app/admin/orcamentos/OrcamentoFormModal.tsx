@@ -96,6 +96,24 @@ export function OrcamentoFormModal({ open, onClose, conjuntos, editing, defaultY
       }
     >
       <form id="orcamento-form" onSubmit={handleSubmit} className="space-y-4">
+        <label className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-gray-200 px-3 py-2.5 hover:bg-gray-50">
+          <input
+            type="checkbox"
+            checked={oficial}
+            onChange={(e) => setOficial(e.target.checked)}
+            className="mt-0.5 h-4 w-4 accent-[#3E6FE0]"
+          />
+          <span className="min-w-0">
+            <span className="flex items-center gap-1.5 text-sm font-medium text-gray-800">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="#F5B301" stroke="#E09B00" strokeWidth={1.4} strokeLinejoin="round" aria-hidden="true">
+                <path d="M12 2.8l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.6l-5.8 3.1 1.1-6.5L2.6 9.6l6.5-.9z" />
+              </svg>
+              {t("official")}
+            </span>
+            <span className="mt-0.5 block text-[11px] text-gray-400">{t("officialHint", { year })}</span>
+          </span>
+        </label>
+
         <div>
           <div className="mb-1 flex items-baseline justify-between">
             <label className="text-xs font-medium text-gray-600">{t("name")}</label>
@@ -170,24 +188,6 @@ export function OrcamentoFormModal({ open, onClose, conjuntos, editing, defaultY
           </select>
           {conjuntos.length === 0 && <p className="mt-1 text-[11px] text-gray-400">{t("noConjuntosHint")}</p>}
         </div>
-
-        <label className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-gray-200 px-3 py-2.5 hover:bg-gray-50">
-          <input
-            type="checkbox"
-            checked={oficial}
-            onChange={(e) => setOficial(e.target.checked)}
-            className="mt-0.5 h-4 w-4 accent-[#3E6FE0]"
-          />
-          <span className="min-w-0">
-            <span className="flex items-center gap-1.5 text-sm font-medium text-gray-800">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="#F5B301" stroke="#E09B00" strokeWidth={1.4} strokeLinejoin="round" aria-hidden="true">
-                <path d="M12 2.8l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.6l-5.8 3.1 1.1-6.5L2.6 9.6l6.5-.9z" />
-              </svg>
-              {t("official")}
-            </span>
-            <span className="mt-0.5 block text-[11px] text-gray-400">{t("officialHint", { year })}</span>
-          </span>
-        </label>
 
         {error && (
           <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2">
