@@ -509,6 +509,9 @@
     "zoneFeeds": "Alimentam a DRE",
     "zoneConsumes": "Consomem da DRE",
     "moduleInProgress": "Módulo em construção",
-    "moduleInProgressHint": "Em breve você poderá trabalhar neste módulo aqui."
+    "moduleInProgressHint": "Em breve você poderá trabalhar neste módulo aqui.",
+    "backToMap": "Mapa do orçamento",
+    "fullscreen": "Tela cheia",
+    "exitFullscreen": "Sair da tela cheia"
   }
 }

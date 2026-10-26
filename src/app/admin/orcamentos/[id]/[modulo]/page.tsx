@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getCurrentTenant } from "@/lib/tenant/getCurrentTenant";
 import { getOrcamentoById } from "@/lib/orcamentos/queries";
+import { BackToMapLink } from "@/components/orcamentos/BackToMapLink";
 import { getOrcamentoModule } from "@/lib/orcamentos/modules";
 
 interface PageProps {
@@ -24,10 +24,8 @@ export default async function OrcamentoModuloPage({ params }: PageProps) {
     <>
       <div className="admin-subheader">
         <div className="orc-area-heading">
+          <BackToMapLink orcamentoId={orcamento.id} label={t("backToMap")} />
           <h1 className="admin-page-title">{mod.title}</h1>
-          <Link href={`/admin/orcamentos/${orcamento.id}`} className="orc-back">
-            {orcamento.label}
-          </Link>
         </div>
       </div>
       <div className="admin-content">

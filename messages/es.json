@@ -509,6 +509,9 @@
     "zoneFeeds": "Alimentan el P&G",
     "zoneConsumes": "Consumen del P&G",
     "moduleInProgress": "Módulo en construcción",
-    "moduleInProgressHint": "Pronto podrá trabajar en este módulo aquí."
+    "moduleInProgressHint": "Pronto podrá trabajar en este módulo aquí.",
+    "backToMap": "Mapa del presupuesto",
+    "fullscreen": "Pantalla completa",
+    "exitFullscreen": "Salir de pantalla completa"
   }
 }
