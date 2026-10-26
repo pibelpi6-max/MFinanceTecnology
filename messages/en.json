@@ -509,6 +509,9 @@
     "zoneFeeds": "Feed the P&L",
     "zoneConsumes": "Consume the P&L",
     "moduleInProgress": "Module under construction",
-    "moduleInProgressHint": "You will soon be able to work on this module here."
+    "moduleInProgressHint": "You will soon be able to work on this module here.",
+    "backToMap": "Budget map",
+    "fullscreen": "Full screen",
+    "exitFullscreen": "Exit full screen"
   }
 }

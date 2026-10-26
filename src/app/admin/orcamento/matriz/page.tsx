@@ -8,6 +8,7 @@ import { getMatrixEntries, type PackageScope } from "@/lib/budget/queries";
 import { getPackages } from "@/lib/packages/queries";
 import { getTenantLabels } from "@/lib/labels/getTenantLabels";
 import { getOrcamentoContext } from "@/lib/orcamentos/queries";
+import { BackToMapLink } from "@/components/orcamentos/BackToMapLink";
 import { ImportLinkButton } from "@/components/import/ImportLinkButton";
 import { MatrixFilters } from "./MatrixFilters";
 import { MatrixGridClient } from "./MatrixGridClient";
@@ -25,6 +26,7 @@ export default async function MatrizPage({ searchParams }: PageProps) {
   if (!tenant) notFound();
 
   const t = await getTranslations("budget");
+  const tOrc = await getTranslations("orcamentos");
   const locale = await getLocale();
   const [labels, orcamentoCtx] = await Promise.all([
     getTenantLabels(tenant.tenantId, locale),
@@ -120,7 +122,8 @@ export default async function MatrizPage({ searchParams }: PageProps) {
   return (
     <>
       <div className="admin-subheader">
-        <div>
+        <div className="orc-area-heading">
+          {orcamentoId && <BackToMapLink orcamentoId={orcamentoId} label={tOrc("backToMap")} />}
           <h1 className="admin-page-title">{t("title")}</h1>
         </div>
         <div className="admin-page-actions">
