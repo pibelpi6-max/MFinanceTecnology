@@ -41,12 +41,11 @@ const FLAGS: Record<SupportedLocale, () => React.ReactElement> = {
 };
 
 interface AdminHeaderProps {
-  tenantId: string;
   orcamentos: Orcamento[];
   currentOrcamentoId: string | null;
 }
 
-export function AdminHeader({ tenantId, orcamentos, currentOrcamentoId }: AdminHeaderProps) {
+export function AdminHeader({ orcamentos, currentOrcamentoId }: AdminHeaderProps) {
   useSessionGuard();
   const t = useTranslations("nav");
   const pathname = usePathname();
@@ -62,7 +61,7 @@ export function AdminHeader({ tenantId, orcamentos, currentOrcamentoId }: AdminH
 
   return (
     <header className="admin-topbar">
-      <OrcamentoSelector tenantId={tenantId} orcamentos={orcamentos} currentOrcamentoId={currentOrcamentoId} />
+      <OrcamentoSelector orcamentos={orcamentos} currentOrcamentoId={currentOrcamentoId} />
       <div className="admin-header-sep" />
       <div className="admin-flags">
         {(Object.keys(FLAGS) as SupportedLocale[]).map((loc) => {

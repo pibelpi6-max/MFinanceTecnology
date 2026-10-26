@@ -4,9 +4,16 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
-import type { ConjuntoEstrutura } from "@/lib/orcamentos/types";
-import type { Orcamento, OrcamentoStatus } from "@/lib/orcamentos/types";
-import { createOrcamento, updateOrcamento } from "./_orcamentoActions";
+import {
+  ORCAMENTO_LABEL_MAX,
+  ORCAMENTO_STATUSES,
+  ORCAMENTO_TIPOS,
+  type ConjuntoEstrutura,
+  type Orcamento,
+  type OrcamentoStatus,
+  type OrcamentoTipo,
+} from "@/lib/orcamentos/types";
+import { createOrcamento, updateOrcamento } from "./_actions";
 
 interface OrcamentoFormModalProps {
   open: boolean;
@@ -15,23 +22,20 @@ interface OrcamentoFormModalProps {
   /** Orçamento sendo editado, ou null para criar um novo. */
   editing: Orcamento | null;
   defaultYear: number;
-  onSaved: () => void;
+  onSaved: (id: string) => void;
 }
 
-const STATUS_OPTIONS: OrcamentoStatus[] = ["rascunho", "ativo", "encerrado"];
+const FIELD =
+  "w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20";
 
-/**
- * Formulário de Orçamento: ano + rótulo de revisão + status + Conjunto de
- * Estruturas (único, não um por dimensão) — ver
- * claude/decisoes-arquitetura.md, "Orçamento (entidade nova,
- * versões/revisões)".
- */
 export function OrcamentoFormModal({ open, onClose, conjuntos, editing, defaultYear, onSaved }: OrcamentoFormModalProps) {
-  const t = useTranslations("settings.orcamentos");
+  const t = useTranslations("orcamentos");
   const tc = useTranslations("common");
 
   const [year, setYear] = useState(defaultYear);
   const [label, setLabel] = useState("");
+  const [description, setDescription] = useState("");
+  const [tipo, setTipo] = useState<OrcamentoTipo>("orcamento");
   const [status, setStatus] = useState<OrcamentoStatus>("rascunho");
   const [conjuntoId, setConjuntoId] = useState("");
   const [loading, setLoading] = useState(false);
@@ -41,6 +45,8 @@ export function OrcamentoFormModal({ open, onClose, conjuntos, editing, defaultY
     if (!open) return;
     setYear(editing?.year ?? defaultYear);
     setLabel(editing?.label ?? "");
+    setDescription(editing?.description ?? "");
+    setTipo(editing?.tipo ?? "orcamento");
     setStatus(editing?.status ?? "rascunho");
     setConjuntoId(editing?.conjunto_estrutura_id ?? "");
     setError(null);
@@ -54,17 +60,19 @@ export function OrcamentoFormModal({ open, onClose, conjuntos, editing, defaultY
     const payload = {
       year,
       label: label.trim(),
+      description,
+      tipo,
       status,
       conjuntoEstruturaId: conjuntoId || null,
     };
     const result = editing ? await updateOrcamento({ id: editing.id, ...payload }) : await createOrcamento(payload);
 
     setLoading(false);
-    if (result.error) {
-      setError(result.error);
+    if (result.error || !result.id) {
+      setError(result.error ?? "Erro inesperado");
       return;
     }
-    onSaved();
+    onSaved(result.id);
   }
 
   return (
@@ -85,7 +93,36 @@ export function OrcamentoFormModal({ open, onClose, conjuntos, editing, defaultY
       }
     >
       <form id="orcamento-form" onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-2 gap-3">
+        <div>
+          <div className="mb-1 flex items-baseline justify-between">
+            <label className="text-xs font-medium text-gray-600">{t("name")}</label>
+            <span className="text-[11px] text-gray-400">
+              {label.length}/{ORCAMENTO_LABEL_MAX}
+            </span>
+          </div>
+          <input
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            maxLength={ORCAMENTO_LABEL_MAX}
+            required
+            autoFocus
+            placeholder={t("namePlaceholder")}
+            className={FIELD}
+          />
+        </div>
+
+        <div>
+          <label className="mb-1 block text-xs font-medium text-gray-600">{t("description")}</label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={3}
+            placeholder={t("descriptionPlaceholder")}
+            className={`${FIELD} resize-none`}
+          />
+        </div>
+
+        <div className="grid grid-cols-3 gap-3">
           <div>
             <label className="mb-1 block text-xs font-medium text-gray-600">{t("year")}</label>
             <input
@@ -93,19 +130,25 @@ export function OrcamentoFormModal({ open, onClose, conjuntos, editing, defaultY
               value={year}
               onChange={(e) => setYear(Number(e.target.value))}
               required
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className={FIELD}
             />
           </div>
           <div>
+            <label className="mb-1 block text-xs font-medium text-gray-600">{t("type")}</label>
+            <select className={FIELD} value={tipo} onChange={(e) => setTipo(e.target.value as OrcamentoTipo)}>
+              {ORCAMENTO_TIPOS.map((v) => (
+                <option key={v} value={v}>
+                  {t(`tipo_${v}`)}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
             <label className="mb-1 block text-xs font-medium text-gray-600">{t("status")}</label>
-            <select
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-              value={status}
-              onChange={(e) => setStatus(e.target.value as OrcamentoStatus)}
-            >
-              {STATUS_OPTIONS.map((s) => (
-                <option key={s} value={s}>
-                  {t(`status_${s}`)}
+            <select className={FIELD} value={status} onChange={(e) => setStatus(e.target.value as OrcamentoStatus)}>
+              {ORCAMENTO_STATUSES.map((v) => (
+                <option key={v} value={v}>
+                  {t(`status_${v}`)}
                 </option>
               ))}
             </select>
@@ -113,24 +156,8 @@ export function OrcamentoFormModal({ open, onClose, conjuntos, editing, defaultY
         </div>
 
         <div>
-          <label className="mb-1 block text-xs font-medium text-gray-600">{t("label")}</label>
-          <input
-            value={label}
-            onChange={(e) => setLabel(e.target.value)}
-            required
-            autoFocus
-            placeholder={t("labelPlaceholder")}
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-          />
-        </div>
-
-        <div>
           <label className="mb-1 block text-xs font-medium text-gray-600">{t("conjunto")}</label>
-          <select
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-            value={conjuntoId}
-            onChange={(e) => setConjuntoId(e.target.value)}
-          >
+          <select className={FIELD} value={conjuntoId} onChange={(e) => setConjuntoId(e.target.value)}>
             <option value="">{t("noneSelected")}</option>
             {conjuntos.map((c) => (
               <option key={c.id} value={c.id}>

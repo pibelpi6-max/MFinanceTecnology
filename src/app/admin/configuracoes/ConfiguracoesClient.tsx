@@ -13,16 +13,13 @@ import { useTreeExpand } from "@/hooks/useTreeExpand";
 import type { DimensionType, DimensionNodeRow, DimensionStructure } from "@/lib/dimensions/types";
 import { isProtectedDimensionCode } from "@/lib/dimensions/constants";
 import type { ConjuntoEstruturaWithItems } from "@/lib/orcamentos/queries";
-import type { Orcamento } from "@/lib/orcamentos/types";
 import { DimensionTypeFormModal } from "./DimensionTypeFormModal";
 import { StructureFormModal } from "./StructureFormModal";
 import { ImportStructureModal } from "./ImportStructureModal";
 import { ConjuntoFormModal } from "./ConjuntoFormModal";
-import { OrcamentoFormModal } from "./OrcamentoFormModal";
 import { deleteDimensionType, updateFiscalYearStartMonth } from "./_actions";
 import { setDimensionStructureActive, deleteDimensionStructure, duplicateDimensionStructure } from "./_structureActions";
 import { deleteConjunto } from "./_conjuntoActions";
-import { deleteOrcamento } from "./_orcamentoActions";
 import { cancelDimensionNode, createDimensionNode, updateDimensionNode } from "../dimensoes/_actions";
 
 type Translator = (key: string, values?: Record<string, string | number>) => string;
@@ -134,7 +131,6 @@ interface ConfiguracoesClientProps {
   fiscalYearStartMonth: number;
   isAdmin: boolean;
   conjuntos: ConjuntoEstruturaWithItems[];
-  orcamentos: Orcamento[];
 }
 
 const MONTH_KEYS = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
@@ -148,7 +144,6 @@ export function ConfiguracoesClient({
   fiscalYearStartMonth,
   isAdmin,
   conjuntos,
-  orcamentos,
 }: ConfiguracoesClientProps) {
   const router = useRouter();
   const t = useTranslations("settings");
@@ -156,17 +151,12 @@ export function ConfiguracoesClient({
   const tm = useTranslations("budget");
   const tc = useTranslations("common");
   const tConjunto = useTranslations("settings.conjuntos");
-  const tOrcamento = useTranslations("settings.orcamentos");
 
   const [conjuntoModal, setConjuntoModal] = useState<{ editing: ConjuntoEstruturaWithItems | null } | null>(null);
   const [conjuntoDeleting, setConjuntoDeleting] = useState<ConjuntoEstruturaWithItems | null>(null);
   const [conjuntoDeleteLoading, setConjuntoDeleteLoading] = useState(false);
   const [conjuntoDeleteError, setConjuntoDeleteError] = useState<string | null>(null);
 
-  const [orcamentoModal, setOrcamentoModal] = useState<{ editing: Orcamento | null } | null>(null);
-  const [orcamentoDeleting, setOrcamentoDeleting] = useState<Orcamento | null>(null);
-  const [orcamentoDeleteLoading, setOrcamentoDeleteLoading] = useState(false);
-  const [orcamentoDeleteError, setOrcamentoDeleteError] = useState<string | null>(null);
 
   async function handleConfirmDeleteConjunto() {
     if (!conjuntoDeleting) return;
@@ -179,20 +169,6 @@ export function ConfiguracoesClient({
       return;
     }
     setConjuntoDeleting(null);
-    router.refresh();
-  }
-
-  async function handleConfirmDeleteOrcamento() {
-    if (!orcamentoDeleting) return;
-    setOrcamentoDeleteLoading(true);
-    setOrcamentoDeleteError(null);
-    const result = await deleteOrcamento({ id: orcamentoDeleting.id });
-    setOrcamentoDeleteLoading(false);
-    if (result.error) {
-      setOrcamentoDeleteError(result.error);
-      return;
-    }
-    setOrcamentoDeleting(null);
     router.refresh();
   }
 
@@ -1028,72 +1004,6 @@ export function ConfiguracoesClient({
         )}
       </section>
 
-      <div className="settings-divider" />
-
-      <section className="settings-block">
-        <div className="settings-block-subtitle-row">
-          <div>
-            <h2 className="settings-block-title">{tOrcamento("title")}</h2>
-            <p className="settings-block-intro">{tOrcamento("intro")}</p>
-          </div>
-          {isAdmin && (
-            <Button size="sm" variant="accent-blue" className="px-3" onClick={() => setOrcamentoModal({ editing: null })}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4}>
-                <path strokeLinecap="round" d="M12 5v14M5 12h14" />
-              </svg>
-              {tOrcamento("new")}
-            </Button>
-          )}
-        </div>
-
-        {orcamentos.length === 0 ? (
-          <p className="settings-structure-empty">{tOrcamento("empty")}</p>
-        ) : (
-          <div className="settings-structure-accordion-list">
-            {orcamentos.map((o) => {
-              const conjuntoName = conjuntos.find((c) => c.id === o.conjunto_estrutura_id)?.name;
-              return (
-                <div key={o.id} className="settings-structure-accordion">
-                  <div className="settings-structure-accordion-row">
-                    <span className="settings-structure-accordion-name flex-1 min-w-0 truncate">
-                      {o.year} — {o.label}
-                    </span>
-                    <span className="settings-structure-row-spacer" />
-                    {conjuntoName && <span className="settings-structure-usage-count">{conjuntoName}</span>}
-                    <span className={`settings-structure-status-badge${o.status === "ativo" ? " is-active" : ""}`}>
-                      {tOrcamento(`status_${o.status}`)}
-                    </span>
-                    {isAdmin && (
-                      <span className="settings-item-actions settings-item-actions--static">
-                        <button
-                          type="button"
-                          className="settings-item-icon-btn"
-                          title={tc("edit")}
-                          onClick={() => setOrcamentoModal({ editing: o })}
-                        >
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M16.86 4.49a1.75 1.75 0 1 1 2.47 2.47L7.5 18.79l-3.3.82.82-3.3Z" />
-                          </svg>
-                        </button>
-                        <button
-                          type="button"
-                          className="settings-item-icon-btn settings-item-icon-btn--danger"
-                          title={tc("delete")}
-                          onClick={() => setOrcamentoDeleting(o)}
-                        >
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" />
-                          </svg>
-                        </button>
-                      </span>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </section>
 
       {isAdmin && (
         <ConjuntoFormModal
@@ -1130,44 +1040,6 @@ export function ConfiguracoesClient({
           loadingText={tc("saving")}
           onConfirm={handleConfirmDeleteConjunto}
           error={conjuntoDeleteError}
-        />
-      )}
-
-      {isAdmin && (
-        <OrcamentoFormModal
-          open={orcamentoModal !== null}
-          onClose={() => setOrcamentoModal(null)}
-          conjuntos={conjuntos}
-          editing={orcamentoModal?.editing ?? null}
-          defaultYear={year}
-          onSaved={() => {
-            setOrcamentoModal(null);
-            router.refresh();
-          }}
-        />
-      )}
-
-      {isAdmin && (
-        <ConfirmModal
-          open={orcamentoDeleting !== null}
-          onClose={() => {
-            setOrcamentoDeleting(null);
-            setOrcamentoDeleteError(null);
-          }}
-          title={tOrcamento("deleteConfirmTitle")}
-          body={
-            orcamentoDeleting &&
-            tOrcamento.rich("deleteConfirmBody", {
-              label: orcamentoDeleting.label,
-              b: (chunks) => <strong className="font-semibold text-gray-900">{chunks}</strong>,
-            })
-          }
-          cancelLabel={tc("cancel")}
-          confirmLabel={tc("delete")}
-          loading={orcamentoDeleteLoading}
-          loadingText={tc("saving")}
-          onConfirm={handleConfirmDeleteOrcamento}
-          error={orcamentoDeleteError}
         />
       )}
 
