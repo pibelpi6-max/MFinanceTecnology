@@ -9,6 +9,7 @@ import { getPackages } from "@/lib/packages/queries";
 import { getTenantLabels } from "@/lib/labels/getTenantLabels";
 import { getOrcamentoContext } from "@/lib/orcamentos/queries";
 import { BackToMapLink } from "@/components/orcamentos/BackToMapLink";
+import { ModuleTitle } from "@/components/orcamentos/ModuleTitle";
 import { ImportLinkButton } from "@/components/import/ImportLinkButton";
 import { MatrixFilters } from "./MatrixFilters";
 import { MatrixGridClient } from "./MatrixGridClient";
@@ -124,7 +125,7 @@ export default async function MatrizPage({ searchParams }: PageProps) {
       <div className="admin-subheader">
         <div className="orc-area-heading">
           {orcamentoId && <BackToMapLink orcamentoId={orcamentoId} label={tOrc("backToMap")} />}
-          <h1 className="admin-page-title">{t("title")}</h1>
+          <ModuleTitle slug="matrix" title={t("title")} />
         </div>
         <div className="admin-page-actions">
           {!missingSetup && (

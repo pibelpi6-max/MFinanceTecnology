@@ -19,22 +19,21 @@ interface Node {
   w: number;
   h: number;
   title: string[];
-  icon: string;
   dark?: boolean;
 }
 
 const NODES: Node[] = [
-  { key: "receita", slug: "receita", x: 75, y: 59, w: 352, h: 101, title: ["Receita"], icon: "M3 17l6-6 4 4 8-8M15 7h6v6" },
-  { key: "custos", slug: "custos", x: 75, y: 223, w: 352, h: 102, title: ["Custos (ficha técnica)"], icon: "M7 3h8l4 4v14H7zM15 3v4h4M10 12h6M10 16h6" },
-  { key: "capex", slug: "capex", x: 75, y: 369, w: 352, h: 101, title: ["Capex"], icon: "M3 21V10l6 4V10l6 4V6h3v15zM3 21h18" },
-  { key: "modelos", slug: "modelos", x: 75, y: 554, w: 352, h: 102, title: ["Modelos"], icon: "M6 3v18M12 3v18M18 3v18M4 8h4M10 15h4M16 10h4" },
-  { key: "matrix", slug: "matrix", x: 75, y: 718, w: 352, h: 102, title: ["Matrix"], icon: "M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z" },
-  { key: "workflow", slug: "workflow-aprovacao", x: 645, y: 59, w: 360, h: 120, title: ["Workflow Aprovação", "DRE"], icon: "M8 4h8v3H8zM6 5H5v16h14V5h-1M9 14l2 2 4-4", dark: true },
-  { key: "dre", slug: "dre", x: 645, y: 306, w: 360, h: 142, title: ["DRE"], icon: "M3 4h18v16H3zM3 10h18M3 15h18M9 10v10", dark: true },
-  { key: "rateio", slug: "rateio", x: 645, y: 575, w: 360, h: 120, title: ["Rateio"], icon: "M12 3v9h9a9 9 0 1 1-9-9zM15 3a9 9 0 0 1 6 6h-6z", dark: true },
-  { key: "caixa", slug: "fluxo-de-caixa", x: 1133, y: 111, w: 330, h: 127, title: ["Fluxo de caixa"], icon: "M4 8h14l-4-4M20 16H6l4 4" },
-  { key: "balanco", slug: "balanco", x: 1133, y: 385, w: 330, h: 127, title: ["Balanço"], icon: "M12 3v18M6 21h12M5 7h14M5 7l-3 7a3 3 0 0 0 6 0zM19 7l-3 7a3 3 0 0 0 6 0z" },
-  { key: "indireto", slug: "fluxo-de-caixa-indireto", x: 1133, y: 580, w: 330, h: 128, title: ["Fluxo de caixa", "Indireto"], icon: "M4 8h14l-4-4M20 16H6l4 4" },
+  { key: "receita", slug: "receita", x: 75, y: 59, w: 352, h: 101, title: ["Receita"], },
+  { key: "custos", slug: "custos", x: 75, y: 223, w: 352, h: 102, title: ["Custos (ficha técnica)"], },
+  { key: "capex", slug: "capex", x: 75, y: 369, w: 352, h: 101, title: ["Capex"], },
+  { key: "modelos", slug: "modelos", x: 75, y: 554, w: 352, h: 102, title: ["Modelos"], },
+  { key: "matrix", slug: "matrix", x: 75, y: 718, w: 352, h: 102, title: ["Matrix"], },
+  { key: "workflow", slug: "workflow-aprovacao", x: 645, y: 59, w: 360, h: 120, title: ["Workflow Aprovação", "DRE"], dark: true },
+  { key: "dre", slug: "dre", x: 645, y: 306, w: 360, h: 142, title: ["DRE"], dark: true },
+  { key: "rateio", slug: "rateio", x: 645, y: 575, w: 360, h: 120, title: ["Rateio"], dark: true },
+  { key: "caixa", slug: "fluxo-de-caixa", x: 1133, y: 111, w: 330, h: 127, title: ["Fluxo de caixa"], },
+  { key: "balanco", slug: "balanco", x: 1133, y: 385, w: 330, h: 127, title: ["Balanço"], },
+  { key: "indireto", slug: "fluxo-de-caixa-indireto", x: 1133, y: 580, w: 330, h: 128, title: ["Fluxo de caixa", "Indireto"], },
 ];
 
 const BLUE = "#3E6FE0";
@@ -162,7 +161,7 @@ export function DreDiagram({ orcamentoId, year }: { orcamentoId: string; year: n
               strokeLinecap="round"
               strokeLinejoin="round"
             >
-              <path d={n.icon} />
+              <path d={mod?.icon} />
             </g>
             {rows}
           </g>
