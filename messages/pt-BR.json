@@ -500,6 +500,9 @@
     "mod_tolerancias": "Tolerâncias",
     "mod_tolerancias_desc": "Limites de economia e estouro por pacote.",
     "mod_versoes": "Versões",
-    "mod_versoes_desc": "Compare orçamentos e acompanhe o histórico."
+    "mod_versoes_desc": "Compare orçamentos e acompanhe o histórico.",
+    "yearCurrent": "ano em andamento",
+    "noneInYear": "Nenhum orçamento",
+    "noneInYearHint": "em {year} ainda"
   }
 }

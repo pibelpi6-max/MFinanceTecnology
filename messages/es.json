@@ -500,6 +500,9 @@
     "mod_tolerancias": "Tolerancias",
     "mod_tolerancias_desc": "Límites de ahorro y exceso por paquete.",
     "mod_versoes": "Versiones",
-    "mod_versoes_desc": "Compare presupuestos y siga el historial."
+    "mod_versoes_desc": "Compare presupuestos y siga el historial.",
+    "yearCurrent": "año en curso",
+    "noneInYear": "Ningún presupuesto",
+    "noneInYearHint": "en {year} todavía"
   }
 }

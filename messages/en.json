@@ -500,6 +500,9 @@
     "mod_tolerancias": "Tolerances",
     "mod_tolerancias_desc": "Savings and overrun limits per package.",
     "mod_versoes": "Versions",
-    "mod_versoes_desc": "Compare budgets and follow the history."
+    "mod_versoes_desc": "Compare budgets and follow the history.",
+    "yearCurrent": "current year",
+    "noneInYear": "No budgets",
+    "noneInYearHint": "in {year} yet"
   }
 }

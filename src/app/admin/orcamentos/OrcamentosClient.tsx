@@ -51,18 +51,19 @@ export function OrcamentosClient({
     return c;
   }, [orcamentos]);
 
-  const byYear = useMemo(() => {
-    const visible = orcamentos.filter((o) => filter === "all" || o.tipo === filter);
-    const groups: Record<number, Orcamento[]> = {};
-    visible.forEach((o) => (groups[o.year] = [...(groups[o.year] ?? []), o]));
-    return Object.keys(groups)
-      .map(Number)
-      .sort((a, b) => b - a)
+  const currentYear = new Date().getFullYear();
+  const columns = useMemo(() => {
+    const years = new Set<number>(orcamentos.map((o) => o.year));
+    years.add(currentYear);
+    return Array.from(years)
+      .sort((a, b) => a - b)
       .map((year) => ({
         year,
-        items: groups[year].sort((a, b) => Number(b.oficial) - Number(a.oficial) || a.created_at.localeCompare(b.created_at)),
+        items: orcamentos
+          .filter((o) => o.year === year && (filter === "all" || o.tipo === filter))
+          .sort((a, b) => Number(b.oficial) - Number(a.oficial) || a.created_at.localeCompare(b.created_at)),
       }));
-  }, [orcamentos, filter]);
+  }, [orcamentos, filter, currentYear]);
 
   function open(o: Orcamento, e: React.MouseEvent) {
     // Ctrl/Cmd/botão do meio: deixa o navegador abrir em nova aba (a página
@@ -121,95 +122,115 @@ export function OrcamentosClient({
         )}
       </div>
 
-      <div className="admin-content admin-content--scroll">
-        <p className="orc-subtitle">{subtitle}</p>
+      <div className="admin-content">
+        <div className="orc-panel">
+          <p className="orc-subtitle">{subtitle}</p>
 
-        <div className="orc-chips">
-          <button type="button" className={`orc-chip${filter === "all" ? " is-active" : ""}`} onClick={() => setFilter("all")}>
-            {t("filterAll")} <span className="orc-chip-count">{orcamentos.length}</span>
-          </button>
-          {ORCAMENTO_TIPOS.map((tipo) => (
+          <div className="orc-chips">
             <button
-              key={tipo}
               type="button"
-              className={`orc-chip${filter === tipo ? " is-active" : ""}`}
-              onClick={() => setFilter(tipo)}
+              className={`orc-chip orc-chip-all${filter === "all" ? " is-active" : ""}`}
+              onClick={() => setFilter("all")}
             >
-              {t(`tipo_${tipo}`)} <span className="orc-chip-count">{counts[tipo] ?? 0}</span>
+              {t("filterAll")}
             </button>
-          ))}
+            {ORCAMENTO_TIPOS.map((tipo) => (
+              <button
+                key={tipo}
+                type="button"
+                className={`orc-chip orc-tipo orc-tipo-${tipo}${filter === tipo ? " is-active" : ""}`}
+                onClick={() => setFilter(filter === tipo ? "all" : tipo)}
+              >
+                {t(`tipo_${tipo}`)}
+              </button>
+            ))}
+          </div>
+
+          {actionError && <div className="orc-error">{actionError}</div>}
+
+          <div className="orc-timeline">
+            {columns.map(({ year, items }) => (
+              <section
+                key={year}
+                className={`orc-year-col ${items.length > 2 ? "is-wide" : "is-narrow"}${year === currentYear ? " is-now" : ""}`}
+              >
+                <div className="orc-axis">
+                  <div className="orc-axis-line">
+                    <span className="orc-axis-dot" />
+                    <span className="orc-axis-bar" />
+                  </div>
+                  <span className="orc-year-label">
+                    {year}
+                    {year === currentYear && <span className="orc-year-note">{t("yearCurrent")}</span>}
+                  </span>
+                </div>
+                {items.length === 0 ? (
+                  <div className="orc-year-empty">
+                    <strong>{orcamentos.length === 0 ? t("empty") : t("noneInYear")}</strong>
+                    {orcamentos.length > 0 && <span>{t("noneInYearHint", { year })}</span>}
+                  </div>
+                ) : (
+                  <div className="orc-cards">
+                    {items.map((o) => (
+                      <a
+                        key={o.id}
+                        href={`/admin/orcamentos/${o.id}`}
+                        className={`orc-card${o.id === currentId ? " is-current" : ""}${busyId === o.id ? " is-busy" : ""}`}
+                        onClick={(e) => open(o, e)}
+                      >
+                        <div className="orc-card-top">
+                          <h3 className="orc-card-title" title={o.label}>
+                            {o.oficial && <OficialStar title={t("official")} />}
+                            {o.label}
+                          </h3>
+                          <StatusPill status={o.status} label={t(`status_${o.status}`)} />
+                        </div>
+                        <div className="orc-card-tipo">
+                          <TipoLabel tipo={o.tipo} label={t(`tipo_${o.tipo}`)} />
+                        </div>
+                        <div className="orc-card-foot">
+                          <span>{t("packagesCount", { count: packageCounts[o.id] ?? 0 })}</span>
+                          {isAdmin && (
+                            <span className="orc-acts">
+                              <button
+                                type="button"
+                                className="orc-act"
+                                title={t("duplicate")}
+                                aria-label={t("duplicate")}
+                                disabled={busyId !== null}
+                                onClick={(e) => handleDuplicate(o, e)}
+                              >
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round">
+                                  <rect x="9" y="9" width="11" height="11" rx="2" />
+                                  <path d="M5 15V6a2 2 0 0 1 2-2h9" />
+                                </svg>
+                              </button>
+                              <button
+                                type="button"
+                                className="orc-act orc-act--danger"
+                                title={t("delete")}
+                                aria-label={t("delete")}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setDeleting(o);
+                                }}
+                              >
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" />
+                                </svg>
+                              </button>
+                            </span>
+                          )}
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </section>
+            ))}
+          </div>
         </div>
-
-        {actionError && <div className="orc-error">{actionError}</div>}
-
-        {byYear.length === 0 ? (
-          <p className="orc-empty">{orcamentos.length === 0 ? t("empty") : t("emptyFiltered")}</p>
-        ) : (
-          byYear.map(({ year, items }) => (
-            <section key={year} className="orc-year">
-              <div className="orc-year-head">
-                <span className="orc-year-label">{year}</span>
-                <span className="orc-year-line" />
-              </div>
-              <div className="orc-grid">
-                {items.map((o) => (
-                  <a
-                    key={o.id}
-                    href={`/admin/orcamentos/${o.id}`}
-                    className={`orc-card${o.id === currentId ? " is-current" : ""}${busyId === o.id ? " is-busy" : ""}`}
-                    onClick={(e) => open(o, e)}
-                  >
-                    <div className="orc-card-top">
-                      <h3 className="orc-card-title" title={o.label}>
-                        {o.oficial && <OficialStar title={t("official")} />}
-                        {o.label}
-                      </h3>
-                      <StatusPill status={o.status} label={t(`status_${o.status}`)} />
-                    </div>
-                    <div className="orc-card-tipo">
-                      <TipoLabel tipo={o.tipo} label={t(`tipo_${o.tipo}`)} />
-                    </div>
-                    <div className="orc-card-foot">
-                      <span>{t("packagesCount", { count: packageCounts[o.id] ?? 0 })}</span>
-                    </div>
-                    {isAdmin && (
-                      <span className="orc-acts">
-                        <button
-                          type="button"
-                          className="orc-act"
-                          title={t("duplicate")}
-                          aria-label={t("duplicate")}
-                          disabled={busyId !== null}
-                          onClick={(e) => handleDuplicate(o, e)}
-                        >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                            <rect x="9" y="9" width="11" height="11" rx="2" />
-                            <path strokeLinecap="round" d="M5 15V6a2 2 0 0 1 2-2h9" />
-                          </svg>
-                        </button>
-                        <button
-                          type="button"
-                          className="orc-act orc-act--danger"
-                          title={t("delete")}
-                          aria-label={t("delete")}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setDeleting(o);
-                          }}
-                        >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" />
-                          </svg>
-                        </button>
-                      </span>
-                    )}
-                  </a>
-                ))}
-              </div>
-            </section>
-          ))
-        )}
       </div>
 
       {isAdmin && (
