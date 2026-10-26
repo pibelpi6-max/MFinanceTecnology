@@ -12,11 +12,19 @@ export async function getMatrixEntries(
   year: number,
   month: number,
   entityNodeId: string,
+  /**
+   * Orçamento selecionado no seletor global (ver
+   * src/lib/orcamentos/queries.ts#getOrcamentoContext) — `null` lê o
+   * bucket implícito de lançamentos legados (orcamento_id IS NULL),
+   * criados antes da religação ao Orçamento (migration
+   * 0015_religar_orcamento.sql).
+   */
+  orcamentoId: string | null,
   /** { [dimensionTypeId]: dimensionNodeId } dos eixos extras selecionados (ver 0011_matriz_eixos_extras.sql). */
   extraDimensions: Record<string, string> = {}
 ): Promise<MatrixEntry[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from("matrix_budget_entries")
     .select("account_node_id, cost_center_node_id, amount")
     .eq("tenant_id", tenantId)
@@ -29,6 +37,9 @@ export async function getMatrixEntries(
     // explícito aqui. "{}" é texto JSON válido e casa normalmente com o
     // default da coluna.
     .eq("extra_dimensions", JSON.stringify(extraDimensions));
+  query = orcamentoId ? query.eq("orcamento_id", orcamentoId) : query.is("orcamento_id", null);
+
+  const { data, error } = await query;
 
   if (error) throw new Error(error.message);
 

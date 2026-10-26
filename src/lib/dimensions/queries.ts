@@ -91,14 +91,12 @@ export async function getDimensionStructuresByType(
  * (o índice único parcial da 0012 foi removido — ver
  * claude/decisoes-arquitetura.md, "Orçamento (entidade nova,
  * versões/revisões)"): várias estruturas podem estar marcadas "Ativa"
- * ao mesmo tempo. Esta função é a ponte de compatibilidade enquanto
- * Matriz/Pacotes/Realizado/Comparativo ainda não foram religados para
- * resolver a estrutura através do Orçamento — por isso usa `limit(1)`
- * em vez de `maybeSingle()` (que lançaria erro com mais de 1 linha) e
- * pega a primeira por `sort_order`, de forma determinística. Isso evita
- * quebrar essas telas se a usuária ativar mais de uma estrutura antes
- * da próxima etapa (religar via Orçamento) estar pronta — é só uma
- * salvaguarda, não a resolução "de verdade" do Conjunto de Estruturas.
+ * ao mesmo tempo. Esta função é usada como FALLBACK por getDimensionTree
+ * abaixo, só quando não há Orçamento selecionado (sem conjuntoEstruturaId)
+ * ou quando o Conjunto do Orçamento selecionado não mapeia este tipo de
+ * dimensão — por isso usa `limit(1)` em vez de `maybeSingle()` (que
+ * lançaria erro com mais de 1 linha) e pega a primeira por `sort_order`,
+ * de forma determinística.
  */
 async function getActiveStructureId(
   tenantId: string,
@@ -116,6 +114,27 @@ async function getActiveStructureId(
 
   if (error) throw new Error(error.message);
   return data?.[0]?.id ?? null;
+}
+
+/**
+ * Estrutura que o Conjunto de Estruturas do Orçamento selecionado
+ * escolheu para este tipo de dimensão — ou null se o Conjunto não
+ * cobre esse tipo (ver conjunto_estrutura_items, migration 0014).
+ */
+async function getConjuntoStructureId(
+  conjuntoEstruturaId: string,
+  dimensionTypeId: string
+): Promise<string | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("conjunto_estrutura_items")
+    .select("structure_id")
+    .eq("conjunto_id", conjuntoEstruturaId)
+    .eq("dimension_type_id", dimensionTypeId)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  return data?.structure_id ?? null;
 }
 
 /**
@@ -166,21 +185,26 @@ export async function getDimensionTreeByStructure(
 }
 
 /**
- * Árvore de itens de uma dimensão, pelo tipo — resolve sozinha qual é a
- * Estrutura ATIVA daquele tipo e devolve a árvore dela (ou [] se não
- * houver nenhuma estrutura ativa no momento). Mantida com a mesma
- * assinatura de antes das "Estruturas" (migration 0012) de propósito:
- * Matriz, Comparativo, Realizado, Pacotes e os assistentes de importação
- * continuam chamando com (tenantId, dimensionTypeId, year) sem nenhuma
- * mudança — sempre leem a estrutura ativa, exatamente como quando só
- * existia uma árvore por tipo.
+ * Árvore de itens de uma dimensão, pelo tipo — resolve qual Estrutura
+ * usar e devolve a árvore dela (ou [] se não houver nenhuma estrutura
+ * disponível). Religada ao Orçamento (ver claude/decisoes-arquitetura.md
+ * e migration 0015_religar_orcamento.sql): quando a chamadora passa o
+ * `conjuntoEstruturaId` do Orçamento selecionado, a estrutura vem do
+ * Conjunto; se o Conjunto não mapear esse tipo de dimensão (ou nenhum
+ * Orçamento estiver selecionado), cai no fallback antigo — a Estrutura
+ * marcada "Ativa" — mantendo Parâmetros, importadores e qualquer tela
+ * ainda não religada funcionando como antes.
  */
 export async function getDimensionTree(
   tenantId: string,
   dimensionTypeId: string,
-  year: number
+  year: number,
+  conjuntoEstruturaId?: string | null
 ): Promise<DimensionNodeRow[]> {
-  const structureId = await getActiveStructureId(tenantId, dimensionTypeId);
+  const structureId = conjuntoEstruturaId
+    ? (await getConjuntoStructureId(conjuntoEstruturaId, dimensionTypeId)) ??
+      (await getActiveStructureId(tenantId, dimensionTypeId))
+    : await getActiveStructureId(tenantId, dimensionTypeId);
   if (!structureId) return [];
   return getDimensionTreeByStructure(tenantId, structureId, year);
 }

@@ -4,6 +4,7 @@ import { getCurrentTenant } from "@/lib/tenant/getCurrentTenant";
 import { getDimensionTypeByCode, getDimensionTree } from "@/lib/dimensions/queries";
 import { DIMENSION_CODES } from "@/lib/dimensions/constants";
 import { getTenantLabels } from "@/lib/labels/getTenantLabels";
+import { getOrcamentoContext } from "@/lib/orcamentos/queries";
 import { ImportPacotesClient } from "./ImportPacotesClient";
 
 interface PageProps {
@@ -16,15 +17,20 @@ export default async function ImportarPacotesPage({ searchParams }: PageProps) {
 
   const year = Number(searchParams.ano) || new Date().getFullYear();
   const locale = await getLocale();
-  const labels = await getTenantLabels(tenant.tenantId, locale);
+  const [labels, { orcamentoId, conjuntoEstruturaId }] = await Promise.all([
+    getTenantLabels(tenant.tenantId, locale),
+    getOrcamentoContext(tenant.tenantId),
+  ]);
 
   const [centroCustoType, entidadeType] = await Promise.all([
     getDimensionTypeByCode(tenant.tenantId, DIMENSION_CODES.CENTRO_CUSTO),
     getDimensionTypeByCode(tenant.tenantId, DIMENSION_CODES.ENTIDADE),
   ]);
   const [costCenterNodes, entityNodes] = await Promise.all([
-    centroCustoType ? getDimensionTree(tenant.tenantId, centroCustoType.id, year) : Promise.resolve([]),
-    entidadeType ? getDimensionTree(tenant.tenantId, entidadeType.id, year) : Promise.resolve([]),
+    centroCustoType
+      ? getDimensionTree(tenant.tenantId, centroCustoType.id, year, conjuntoEstruturaId)
+      : Promise.resolve([]),
+    entidadeType ? getDimensionTree(tenant.tenantId, entidadeType.id, year, conjuntoEstruturaId) : Promise.resolve([]),
   ]);
 
   const t = await getTranslations("import");
@@ -42,6 +48,7 @@ export default async function ImportarPacotesPage({ searchParams }: PageProps) {
         <div className="admin-table-card">
           <ImportPacotesClient
             year={year}
+            orcamentoId={orcamentoId}
             packageLabelPlural={labels.budgetPackagePlural}
             costCenterNodes={costCenterNodes.map((n) => ({ id: n.id, code: n.code, name: n.name }))}
             entityNodes={entityNodes.map((n) => ({ id: n.id, code: n.code, name: n.name }))}

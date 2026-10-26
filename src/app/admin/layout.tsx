@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentTenant } from "@/lib/tenant/getCurrentTenant";
 import { getUserPreference } from "@/app/_actions/userPreferences";
 import { getTenantLabels } from "@/lib/labels/getTenantLabels";
+import { getOrcamentosByTenant, getOrcamentoAtualId } from "@/lib/orcamentos/queries";
 import { AdminHeader } from "@/components/layout/AdminHeader";
 import { AdminSidebar } from "@/components/layout/AdminSidebar";
 import "./admin.css";
@@ -27,10 +28,16 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   const locale = await getLocale();
-  const [labels, collapsedPref] = await Promise.all([
+  const [labels, collapsedPref, orcamentos, orcamentoAtualId] = await Promise.all([
     getTenantLabels(tenant.tenantId, locale),
     getUserPreference<{ collapsed: boolean }>(`sidebar_collapsed:${tenant.tenantId}`),
+    getOrcamentosByTenant(tenant.tenantId),
+    getOrcamentoAtualId(tenant.tenantId),
   ]);
+  // Se a preferência apontar pra um Orçamento que não existe mais (excluído
+  // em outra aba, por exemplo), o seletor cai no "Sem Orçamento" em vez de
+  // mostrar um id órfão — mesma salvaguarda de getOrcamentoContext.
+  const currentOrcamentoId = orcamentos.some((o) => o.id === orcamentoAtualId) ? orcamentoAtualId : null;
 
   return (
     <div className="admin-shell">
@@ -41,7 +48,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         initialCollapsed={collapsedPref?.collapsed ?? false}
       />
       <div className="admin-main">
-        <AdminHeader />
+        <AdminHeader tenantId={tenant.tenantId} orcamentos={orcamentos} currentOrcamentoId={currentOrcamentoId} />
         <main className="admin-page-content">{children}</main>
       </div>
     </div>

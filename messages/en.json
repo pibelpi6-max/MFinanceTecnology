@@ -159,7 +159,8 @@
       "show": "Show tree",
       "goToPackages": "View in Packages"
     },
-    "importButton": "Import"
+    "importButton": "Import",
+    "noOrcamentoHint": "Select a budget at the top of the page to enter values — the data shown below is legacy data (no budget), read-only."
   },
   "packages": {
     "name": "Name",
@@ -192,7 +193,8 @@
     "deleteConfirmBody": "\"{name}\" will be permanently deleted. This action cannot be undone.",
     "entity": "Entity",
     "noEntity": "No entity",
-    "importButton": "Import"
+    "importButton": "Import",
+    "noOrcamentoHint": "Select a budget at the top of the page to create packages — the packages shown below are legacy data (no budget)."
   },
   "actuals": {
     "title": "Actual Expenses",
@@ -313,7 +315,9 @@
       "noConjuntosHint": "Create a Structure Set before linking one to this Budget.",
       "empty": "No budgets yet.",
       "deleteConfirmTitle": "Delete budget",
-      "deleteConfirmBody": "Delete budget <b>{label}</b> permanently?"
+      "deleteConfirmBody": "Delete budget <b>{label}</b> permanently?",
+      "selectorTitle": "Active budget",
+      "selectorNone": "No budget (legacy data)"
     }
   },
   "import": {

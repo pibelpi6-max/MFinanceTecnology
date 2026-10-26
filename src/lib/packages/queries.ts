@@ -1,10 +1,20 @@
 import { createClient } from "@/lib/supabase/server";
 import type { BudgetPackageRow, PackageStatusHistoryRow } from "./types";
 
-export async function getPackages(tenantId: string, year: number): Promise<BudgetPackageRow[]> {
+/**
+ * Pacotes de um tenant/ano. `orcamentoId` filtra pelo Orçamento
+ * selecionado no seletor global (null = bucket legado, pacotes criados
+ * antes da religação ao Orçamento — ver migration
+ * 0015_religar_orcamento.sql).
+ */
+export async function getPackages(
+  tenantId: string,
+  year: number,
+  orcamentoId: string | null
+): Promise<BudgetPackageRow[]> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("budget_packages")
     .select(
       `id, year, name, cost_center_node_id, entity_node_id, owner_user_id, status, created_at, updated_at,
@@ -16,8 +26,10 @@ export async function getPackages(tenantId: string, year: number): Promise<Budge
        )`
     )
     .eq("tenant_id", tenantId)
-    .eq("year", year)
-    .order("created_at", { ascending: false });
+    .eq("year", year);
+  query = orcamentoId ? query.eq("orcamento_id", orcamentoId) : query.is("orcamento_id", null);
+
+  const { data, error } = await query.order("created_at", { ascending: false });
 
   if (error) throw new Error(error.message);
 

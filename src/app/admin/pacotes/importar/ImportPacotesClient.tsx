@@ -15,12 +15,19 @@ interface NodeOption {
 
 interface ImportPacotesClientProps {
   year: number;
+  orcamentoId: string | null;
   packageLabelPlural: string;
   costCenterNodes: NodeOption[];
   entityNodes: NodeOption[];
 }
 
-export function ImportPacotesClient({ year, packageLabelPlural, costCenterNodes, entityNodes }: ImportPacotesClientProps) {
+export function ImportPacotesClient({
+  year,
+  orcamentoId,
+  packageLabelPlural,
+  costCenterNodes,
+  entityNodes,
+}: ImportPacotesClientProps) {
   const t = useTranslations("import.pacotesFields");
 
   const layout: ImportLayoutConfig = useMemo(
@@ -55,7 +62,7 @@ export function ImportPacotesClient({ year, packageLabelPlural, costCenterNodes,
     <ImportWizard
       layout={layout}
       backHref={`/admin/pacotes?ano=${year}`}
-      onImport={(rows) => importPackages({ year, rows })}
+      onImport={(rows) => importPackages({ year, orcamentoId, rows })}
     />
   );
 }
