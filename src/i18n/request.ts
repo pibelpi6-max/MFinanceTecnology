@@ -8,6 +8,15 @@ export function isSupportedLocale(value: string): value is SupportedLocale {
   return (SUPPORTED_LOCALES as readonly string[]).includes(value);
 }
 
+// Imports estáticos (um por idioma): o bundler enxerga cada arquivo, sem depender
+// de um "contexto" dinâmico que o servidor de desenvolvimento perde quando os
+// arquivos de tradução são trocados (ex.: git pull) com o servidor ligado.
+const catalogs: Record<SupportedLocale, () => Promise<{ default: Record<string, unknown> }>> = {
+  "pt-BR": () => import("../../messages/pt-BR.json"),
+  en: () => import("../../messages/en.json"),
+  es: () => import("../../messages/es.json"),
+};
+
 export default getRequestConfig(async () => {
   const headerStore = await headers();
   const headerLocale = headerStore.get("x-locale") ?? "";
@@ -20,7 +29,7 @@ export default getRequestConfig(async () => {
     ? cookieLocale
     : "pt-BR";
 
-  const messages = (await import(`../../messages/${locale}.json`)).default;
+  const messages = (await catalogs[locale]()).default;
 
   return { locale, messages };
 });

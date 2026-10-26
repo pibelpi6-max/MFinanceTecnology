@@ -48,7 +48,10 @@ export function ColumnMappingFields({ sheet, fields, mapping, onChange }: Column
                   className="import-mapping-select"
                 >
                   <option value="">{t("mapping.ignoreColumn")}</option>
-                  {fields.map((f) => (
+                  {fields
+                    // Campo já usado em outra coluna sai da lista (só "Ignorar" se repete).
+                    .filter((f) => !mapping.some((m) => m.targetKey === f.key && m.columnIndex !== columnIndex))
+                    .map((f) => (
                     <option key={f.key} value={f.key}>
                       {f.label}
                       {f.required ? " *" : ""}

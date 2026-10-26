@@ -52,6 +52,7 @@ export function ImportGrid({ rows, fields, onToggleSkip }: ImportGridProps) {
                 {fields.map((f) => (
                   <td key={f.key} title={row.errors[f.key] ?? ""}>
                     {row.rawValues[f.key] || "—"}
+                    {row.notes[f.key] && !row.errors[f.key] && <div className="import-cell-note">{row.notes[f.key].from} → {row.notes[f.key].to}</div>}
                     {row.errors[f.key] && <div className="import-cell-error">{row.errors[f.key]}</div>}
                   </td>
                 ))}

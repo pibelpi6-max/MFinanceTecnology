@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { buildAndValidateRows } from "./validateRows";
+import { applyBatchDependencies, buildAndValidateRows } from "./validateRows";
+import { setCellValue } from "./editRows";
 import type { ColumnMapping, ImportFieldConfig } from "./types";
 
 const fields: ImportFieldConfig[] = [
@@ -70,5 +71,179 @@ describe("buildAndValidateRows", () => {
     expect(Object.keys(rows[0].errors).length).toBeGreaterThan(0);
     expect(Object.keys(rows[1].errors).length).toBeGreaterThan(0);
     expect(Object.keys(rows[2].errors).length).toBe(0);
+  });
+});
+
+describe("buildAndValidateRows — pai na mesma planilha (batchRefKeys)", () => {
+  const hierFields: ImportFieldConfig[] = [
+    { key: "codigo", label: "Código", type: "text", required: true },
+    { key: "nome", label: "Nome", type: "text", required: true },
+    {
+      key: "item_superior",
+      label: "Item Superior",
+      type: "node-ref",
+      required: false,
+      options: [{ value: "id-existente", label: "Existente", code: "9" }],
+      batchRefKeys: ["codigo", "nome"],
+    },
+  ];
+  const hierMapping: ColumnMapping[] = [
+    { columnIndex: 0, targetKey: "codigo" },
+    { columnIndex: 1, targetKey: "nome" },
+    { columnIndex: 2, targetKey: "item_superior" },
+  ];
+
+  it("aceita pai (por código ou nome) que está em outra linha do arquivo", () => {
+    const rows = buildAndValidateRows(
+      [
+        ["1", "Administrativo", ""],
+        ["1.1", "RH", "1"],
+        ["1.2", "Financeiro", "administrativo"],
+        ["1.1.1", "Folha", "1.1"],
+      ],
+      hierMapping,
+      hierFields
+    );
+    expect(rows.every((r) => Object.keys(r.errors).length === 0)).toBe(true);
+    expect(rows[1].values.item_superior).toBe("@batch:1");
+    expect(rows[2].values.item_superior).toBe("@batch:administrativo");
+  });
+
+  it("prefere pai já existente e ainda acusa pai inexistente ou autorreferência", () => {
+    const rows = buildAndValidateRows(
+      [
+        ["5", "A", "9"],
+        ["6", "B", "99"],
+        ["7", "C", "7"],
+      ],
+      hierMapping,
+      hierFields
+    );
+    expect(rows[0].values.item_superior).toBe("id-existente");
+    expect(rows[1].errors.item_superior).toBeDefined();
+    expect(rows[2].errors.item_superior).toBeDefined();
+  });
+});
+
+describe("buildAndValidateRows — um único item raiz (maxEmptyRows)", () => {
+  const f: ImportFieldConfig[] = [
+    { key: "codigo", label: "Código", type: "text", required: true },
+    { key: "nome", label: "Nome", type: "text", required: true },
+    { key: "item_superior", label: "Item Superior", type: "node-ref", required: false, options: [], batchRefKeys: ["codigo", "nome"], maxEmptyRows: 1 },
+  ];
+  const m: ColumnMapping[] = [
+    { columnIndex: 0, targetKey: "codigo" },
+    { columnIndex: 1, targetKey: "nome" },
+    { columnIndex: 2, targetKey: "item_superior" },
+  ];
+
+  it("aceita uma raiz e acusa a segunda", () => {
+    const rows = buildAndValidateRows([["1", "Empresa", ""], ["2", "Outra", ""], ["1.1", "RH", "1"]], m, f);
+    expect(rows[0].errors.item_superior).toBeUndefined();
+    expect(rows[1].errors.item_superior).toBeDefined();
+    expect(rows[2].errors.item_superior).toBeUndefined();
+  });
+});
+
+describe("applyBatchDependencies — filho cujo pai não será importado", () => {
+  const f: ImportFieldConfig[] = [
+    { key: "codigo", label: "Código", type: "text", required: true },
+    { key: "nome", label: "Nome", type: "text", required: true },
+    { key: "item_superior", label: "Item Superior", type: "node-ref", required: false, options: [], batchRefKeys: ["codigo", "nome"], maxEmptyRows: 1 },
+  ];
+  const m: ColumnMapping[] = [
+    { columnIndex: 0, targetKey: "codigo" },
+    { columnIndex: 1, targetKey: "nome" },
+    { columnIndex: 2, targetKey: "item_superior" },
+  ];
+  const build = () =>
+    buildAndValidateRows([["1", "Empresa", ""], ["1.1", "Adm", "1"], ["1.1.1", "RH", "1.1"]], m, f);
+
+  it("tudo ok quando a cadeia inteira está marcada", () => {
+    const rows = applyBatchDependencies(build(), f);
+    expect(rows.every((r) => Object.keys(r.errors).length === 0)).toBe(true);
+  });
+
+  it("desmarcar a raiz derruba os descendentes com mensagem clara, e remarcar volta", () => {
+    const rows = build();
+    rows[0].skip = true;
+    const off = applyBatchDependencies(rows, f);
+    expect(off[1].errors.item_superior).toMatch(/desmarcado/);
+    expect(off[2].errors.item_superior).toMatch(/linha 2/);
+    rows[0].skip = false;
+    const on = applyBatchDependencies(rows, f);
+    expect(on.every((r) => Object.keys(r.errors).length === 0)).toBe(true);
+  });
+
+  it("detecta referência circular", () => {
+    const rows = applyBatchDependencies(buildAndValidateRows([["A", "a", "B"], ["B", "b", "A"]], m, f), f);
+    expect(rows[0].errors.item_superior).toMatch(/circular/);
+  });
+});
+
+describe("avisos de interpretação (notes)", () => {
+  const f: ImportFieldConfig[] = [
+    { key: "codigo", label: "Código", type: "text", required: true },
+    { key: "nome", label: "Nome", type: "text", required: true },
+    { key: "item_superior", label: "Item Superior", type: "node-ref", required: false,
+      options: [{ value: "id-adm", label: "Administrativo", code: "10" }], batchRefKeys: ["codigo", "nome"] },
+  ];
+  const m: ColumnMapping[] = [
+    { columnIndex: 0, targetKey: "codigo" },
+    { columnIndex: 1, targetKey: "nome" },
+    { columnIndex: 2, targetKey: "item_superior" },
+  ];
+
+  it("sugere de/para quando o texto digitado difere do item encontrado", () => {
+    const rows = applyBatchDependencies(
+      buildAndValidateRows([["20", "A", "Admin"], ["30", "B", "20"]], m, f),
+      f
+    );
+    expect(rows[0].notes.item_superior).toEqual({ from: "Admin", to: "10 - Administrativo" });
+    // "20" é o código exato do item achado: não é sugestão, só confirmação.
+    expect(rows[1].notes.item_superior).toBeUndefined();
+  });
+
+  it("não avisa quando o casamento é exato", () => {
+    const rows = buildAndValidateRows([["20", "A", "10"]], m, f);
+    expect(rows[0].notes.item_superior).toBeUndefined();
+  });
+});
+
+describe("código repetido, linha desmarcada e edição de célula", () => {
+  const f: ImportFieldConfig[] = [
+    { key: "codigo", label: "Código", type: "text", required: true },
+    { key: "nome", label: "Nome", type: "text", required: true },
+    { key: "item_superior", label: "Item Superior", type: "node-ref", required: false, options: [], batchRefKeys: ["codigo", "nome"], maxEmptyRows: 1 },
+  ];
+  const m: ColumnMapping[] = [
+    { columnIndex: 0, targetKey: "codigo" },
+    { columnIndex: 1, targetKey: "nome" },
+    { columnIndex: 2, targetKey: "item_superior" },
+  ];
+
+  it("acusa código repetido na segunda ocorrência", () => {
+    const rows = applyBatchDependencies(buildAndValidateRows([["1", "A", ""], ["1.1", "B", "1"], ["1.1", "C", "1"]], m, f), f);
+    expect(rows[1].errors.codigo).toBeUndefined();
+    expect(rows[2].errors.codigo).toMatch(/repetido/);
+  });
+
+  it("desmarcar uma das duas raízes libera a outra", () => {
+    const data = [["1", "A", ""], ["2", "B", ""]];
+    expect(buildAndValidateRows(data, m, f)[1].errors.item_superior).toBeDefined();
+    const rows = buildAndValidateRows(data, m, f, new Set([0]));
+    expect(rows[0].skip).toBe(true);
+    expect(rows[1].errors.item_superior).toBeUndefined();
+  });
+
+  it("setCellValue acompanha a troca de código nos filhos e cria coluna que faltava", () => {
+    const sheet = { headers: ["Código", "Nome"], rows: [["1", "Empresa"], ["1.1", "Adm"]], fileName: "x" };
+    const base: ColumnMapping[] = [{ columnIndex: 0, targetKey: "codigo" }, { columnIndex: 1, targetKey: "nome" }];
+    const withParent = setCellValue(sheet, base, f, 1, "item_superior", "1");
+    expect(withParent.sheet.headers).toEqual(["Código", "Nome", "Item Superior"]);
+    const renamed = setCellValue(withParent.sheet, withParent.mapping, f, 0, "codigo", "EMP");
+    expect(renamed.sheet.rows[1][2]).toBe("EMP");
+    const rows = applyBatchDependencies(buildAndValidateRows(renamed.sheet.rows, renamed.mapping, f), f);
+    expect(rows.every((r) => Object.keys(r.errors).length === 0)).toBe(true);
   });
 });

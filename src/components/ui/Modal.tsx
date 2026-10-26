@@ -21,6 +21,8 @@ interface ModalProps {
   fullBleed?: boolean;
   /** Quando true, a altura do modal se ajusta ao conteudo (a largura continua fixada pelo "size"). Use em modais de conteudo curto ou variavel que nao devem deixar espaco vazio embaixo. */
   autoHeight?: boolean;
+  /** Botões extras no cabeçalho, ao lado do X de fechar (ex.: alternar tela cheia). */
+  headerActions?: React.ReactNode;
   children: React.ReactNode;
 }
 
@@ -44,6 +46,7 @@ export function Modal({
   compact = false,
   fullBleed = false,
   autoHeight = false,
+  headerActions,
   children,
 }: ModalProps) {
   const tt = useTranslations("common.tooltips");
@@ -127,10 +130,12 @@ export function Modal({
                 </p>
               )}
             </div>
+            <div className="-mr-1 -mt-1 flex items-center gap-1">
+            {headerActions}
             <button
               type="button"
               onClick={onClose}
-              className="-mr-1 -mt-1 flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300"
               aria-label={tt("close")}
             >
               <svg
@@ -143,6 +148,7 @@ export function Modal({
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
               </svg>
             </button>
+            </div>
           </div>
         )}
 
