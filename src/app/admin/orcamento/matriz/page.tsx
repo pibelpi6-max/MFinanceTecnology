@@ -124,7 +124,6 @@ export default async function MatrizPage({ searchParams }: PageProps) {
     <>
       <div className="admin-subheader">
         <div className="orc-area-heading">
-          {orcamentoId && <BackToMapLink orcamentoId={orcamentoId} label={tOrc("backToMap")} />}
           <ModuleTitle slug="matrix" title={t("title")} />
         </div>
         <div className="admin-page-actions">
@@ -141,6 +140,7 @@ export default async function MatrizPage({ searchParams }: PageProps) {
             />
           )}
           <ImportLinkButton href={`/admin/orcamento/matriz/importar?ano=${year}`} label={t("importButton")} />
+          {orcamentoId && <BackToMapLink orcamentoId={orcamentoId} label={tOrc("backToMap")} />}
         </div>
       </div>
       <div className="admin-content">
