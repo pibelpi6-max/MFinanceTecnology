@@ -38,6 +38,7 @@ export function OrcamentoFormModal({ open, onClose, conjuntos, editing, defaultY
   const [tipo, setTipo] = useState<OrcamentoTipo>("orcamento");
   const [status, setStatus] = useState<OrcamentoStatus>("rascunho");
   const [conjuntoId, setConjuntoId] = useState("");
+  const [oficial, setOficial] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -49,6 +50,7 @@ export function OrcamentoFormModal({ open, onClose, conjuntos, editing, defaultY
     setTipo(editing?.tipo ?? "orcamento");
     setStatus(editing?.status ?? "rascunho");
     setConjuntoId(editing?.conjunto_estrutura_id ?? "");
+    setOficial(editing?.oficial ?? false);
     setError(null);
   }, [open, editing, defaultYear]);
 
@@ -63,6 +65,7 @@ export function OrcamentoFormModal({ open, onClose, conjuntos, editing, defaultY
       description,
       tipo,
       status,
+      oficial,
       conjuntoEstruturaId: conjuntoId || null,
     };
     const result = editing ? await updateOrcamento({ id: editing.id, ...payload }) : await createOrcamento(payload);
@@ -167,6 +170,24 @@ export function OrcamentoFormModal({ open, onClose, conjuntos, editing, defaultY
           </select>
           {conjuntos.length === 0 && <p className="mt-1 text-[11px] text-gray-400">{t("noConjuntosHint")}</p>}
         </div>
+
+        <label className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-gray-200 px-3 py-2.5 hover:bg-gray-50">
+          <input
+            type="checkbox"
+            checked={oficial}
+            onChange={(e) => setOficial(e.target.checked)}
+            className="mt-0.5 h-4 w-4 accent-[#3E6FE0]"
+          />
+          <span className="min-w-0">
+            <span className="flex items-center gap-1.5 text-sm font-medium text-gray-800">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="#F5B301" stroke="#E09B00" strokeWidth={1.4} strokeLinejoin="round" aria-hidden="true">
+                <path d="M12 2.8l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.6l-5.8 3.1 1.1-6.5L2.6 9.6l6.5-.9z" />
+              </svg>
+              {t("official")}
+            </span>
+            <span className="mt-0.5 block text-[11px] text-gray-400">{t("officialHint", { year })}</span>
+          </span>
+        </label>
 
         {error && (
           <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2">

@@ -504,6 +504,7 @@
     "yearCurrent": "current year",
     "noneInYear": "No budgets",
     "noneInYearHint": "in {year} yet",
-    "dragHint": "Drag to reorder or move to another year"
+    "dragHint": "Drag to reorder or move to another year",
+    "officialHint": "Only one official budget per year. Marking this one replaces the current {year} official."
   }
 }
