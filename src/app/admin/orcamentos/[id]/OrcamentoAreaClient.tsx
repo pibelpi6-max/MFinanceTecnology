@@ -39,7 +39,7 @@ export function OrcamentoAreaClient({ tenantId, orcamento, isCurrent }: Props) {
 
       <div className="admin-content">
         <div className="orc-panel orc-panel--scroll">
-          <DreDiagram />
+          <DreDiagram orcamentoId={orcamento.id} year={orcamento.year} />
         </div>
       </div>
     </>
