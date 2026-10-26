@@ -503,6 +503,7 @@
     "mod_versoes_desc": "Compare presupuestos y siga el historial.",
     "yearCurrent": "año en curso",
     "noneInYear": "Ningún presupuesto",
-    "noneInYearHint": "en {year} todavía"
+    "noneInYearHint": "en {year} todavía",
+    "dragHint": "Arrastre para reordenar o mover de año"
   }
 }

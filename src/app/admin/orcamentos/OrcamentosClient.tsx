@@ -265,6 +265,16 @@ export function OrcamentosClient({
                         }}
                         onDragOver={isAdmin ? (e) => cardDragOver(year, o, items.length <= 2, e) : undefined}
                       >
+                        {isAdmin && (
+                          <span className="orc-grip" title={t("dragHint")} aria-hidden="true">
+                            <svg width="18" height="8" viewBox="0 0 18 8" fill="currentColor">
+                              {[2, 6, 10, 14].flatMap((cx) => [
+                                <circle key={`${cx}a`} cx={cx + 0.5} cy="1.5" r="1.2" />,
+                                <circle key={`${cx}b`} cx={cx + 0.5} cy="6.5" r="1.2" />,
+                              ])}
+                            </svg>
+                          </span>
+                        )}
                         <div className="orc-card-top">
                           <h3 className="orc-card-title" title={o.label}>
                             {o.oficial && <OficialStar title={t("official")} />}
