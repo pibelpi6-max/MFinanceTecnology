@@ -1,19 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Button } from "@/components/ui/Button";
 import { setOrcamentoAtual } from "@/lib/orcamentos/_actions";
 import type { ConjuntoEstrutura, Orcamento } from "@/lib/orcamentos/types";
 import { OficialStar, StatusPill, TipoLabel } from "../OrcamentoMeta";
-import { OrcamentoFormModal } from "../OrcamentoFormModal";
-import { duplicateOrcamento } from "../_actions";
 
 interface Props {
   tenantId: string;
-  isAdmin: boolean;
   orcamento: Orcamento;
   conjuntos: ConjuntoEstrutura[];
   packageCount: number;
@@ -26,12 +22,9 @@ interface ModuleTile {
   icon: string;
 }
 
-export function OrcamentoAreaClient({ tenantId, isAdmin, orcamento, conjuntos, packageCount, isCurrent }: Props) {
+export function OrcamentoAreaClient({ tenantId, orcamento, conjuntos, packageCount, isCurrent }: Props) {
   const router = useRouter();
   const t = useTranslations("orcamentos");
-  const [editOpen, setEditOpen] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   // Abriu por link direto / nova aba: garante que este é o orçamento em uso.
   useEffect(() => {
@@ -63,16 +56,6 @@ export function OrcamentoAreaClient({ tenantId, isAdmin, orcamento, conjuntos, p
     { key: "versoes", icon: "M6 3v12m0 0a3 3 0 1 0 3 3 3 3 0 0 0-3-3Zm12-6a3 3 0 1 0-3-3 3 3 0 0 0 3 3Zm0 0v1a4 4 0 0 1-4 4H9" },
   ];
 
-  async function handleDuplicate() {
-    setBusy(true);
-    setError(null);
-    const result = await duplicateOrcamento({ id: orcamento.id });
-    setBusy(false);
-    if (result.error || !result.id) return setError(result.error ?? "Erro inesperado");
-    await setOrcamentoAtual(tenantId, result.id);
-    router.push(`/admin/orcamentos/${result.id}`);
-  }
-
   return (
     <>
       <div className="admin-subheader">
@@ -90,21 +73,9 @@ export function OrcamentoAreaClient({ tenantId, isAdmin, orcamento, conjuntos, p
           <TipoLabel tipo={orcamento.tipo} label={t(`tipo_${orcamento.tipo}`)} />
           <StatusPill status={orcamento.status} label={t(`status_${orcamento.status}`)} />
         </div>
-        {isAdmin && (
-          <div className="admin-page-actions orc-area-actions">
-            <Button size="sm" variant="secondary" onClick={() => setEditOpen(true)} disabled={busy}>
-              {t("edit")}
-            </Button>
-            <Button size="sm" variant="accent-blue" className="px-3" onClick={handleDuplicate} isLoading={busy} loadingText={t("duplicating")}>
-              {t("duplicate")}
-            </Button>
-          </div>
-        )}
       </div>
 
       <div className="admin-content admin-content--scroll">
-        {error && <div className="orc-error">{error}</div>}
-
         <div className="orc-area">
           <aside className="orc-context">
             <p className="orc-context-label">{t("context")}</p>
@@ -149,20 +120,6 @@ export function OrcamentoAreaClient({ tenantId, isAdmin, orcamento, conjuntos, p
           </section>
         </div>
       </div>
-
-      {isAdmin && (
-        <OrcamentoFormModal
-          open={editOpen}
-          onClose={() => setEditOpen(false)}
-          conjuntos={conjuntos}
-          editing={orcamento}
-          defaultYear={orcamento.year}
-          onSaved={() => {
-            setEditOpen(false);
-            router.refresh();
-          }}
-        />
-      )}
     </>
   );
 }
