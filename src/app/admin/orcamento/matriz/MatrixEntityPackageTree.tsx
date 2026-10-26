@@ -18,6 +18,7 @@ interface MatrixEntityPackageTreeProps {
   /** ids de entidade que são a última subentidade do seu pai (fecha a guia da árvore). */
   entityIsLastChild: Set<string>;
   selectedEntityId: string;
+  selectedPackageId: string | null;
   packages: BudgetPackageRow[];
   packageLabelPlural: string;
 }
@@ -37,6 +38,7 @@ export function MatrixEntityPackageTree({
   entityHasChildren,
   entityIsLastChild,
   selectedEntityId,
+  selectedPackageId,
   packages,
   packageLabelPlural,
 }: MatrixEntityPackageTreeProps) {
@@ -70,8 +72,14 @@ export function MatrixEntityPackageTree({
     router.push(`/admin/orcamento/matriz?${params.toString()}`);
   }
 
-  function goToPackage() {
-    router.push(`/admin/pacotes?ano=${year}`);
+  function selectPackage(pkg: BudgetPackageRow) {
+    const params = new URLSearchParams({
+      ano: String(year),
+      mes: String(month),
+      entidade: pkg.entityNodeId ?? selectedEntityId,
+      pacote: pkg.id,
+    });
+    router.push(`/admin/orcamento/matriz?${params.toString()}`);
   }
 
   if (!open) {
@@ -127,7 +135,7 @@ export function MatrixEntityPackageTree({
               {entityPackages.length > 0 && (
                 <div className="matrix-tree-packages" style={{ paddingLeft: 8 + row.depth * 16 + 42 }}>
                   {entityPackages.map((pkg) => (
-                    <button key={pkg.id} type="button" className="matrix-tree-package" onClick={goToPackage} title={t("goToPackages")}>
+                    <button key={pkg.id} type="button" className={`matrix-tree-package${pkg.id === selectedPackageId ? " is-selected" : ""}`} onClick={() => selectPackage(pkg)}>
                       <span style={{ width: 6, height: 6, borderRadius: 999, background: STATUS_DOT[pkg.status], flexShrink: 0 }} />
                       <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{pkg.name}</span>
                     </button>
@@ -144,7 +152,7 @@ export function MatrixEntityPackageTree({
         ) : (
           <div className="matrix-tree-packages" style={{ paddingLeft: 8 }}>
             {packagesByEntity.others.map((pkg) => (
-              <button key={pkg.id} type="button" className="matrix-tree-package" onClick={goToPackage} title={t("goToPackages")}>
+              <button key={pkg.id} type="button" className={`matrix-tree-package${pkg.id === selectedPackageId ? " is-selected" : ""}`} onClick={() => selectPackage(pkg)}>
                 <span style={{ width: 6, height: 6, borderRadius: 999, background: STATUS_DOT[pkg.status], flexShrink: 0 }} />
                 <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{pkg.name}</span>
               </button>

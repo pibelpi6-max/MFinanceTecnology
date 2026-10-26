@@ -160,6 +160,10 @@
       "goToPackages": "View in Packages"
     },
     "importButton": "Import",
+    "packageAll": "Consolidated",
+    "packageNone": "No package",
+    "consolidatedHint": "Consolidated view (sum of all packages) — read-only. Select a package to enter values.",
+    "packageLockedHint": "This package is submitted or approved — read-only.",
     "noOrcamentoHint": "Select a budget at the top of the page to enter values — the data shown below is legacy data (no budget), read-only."
   },
   "packages": {

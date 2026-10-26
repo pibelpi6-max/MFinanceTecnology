@@ -4,7 +4,7 @@ import { getCurrentTenant } from "@/lib/tenant/getCurrentTenant";
 import { getDimensionTypeByCode, getDimensionTree, getMatrizExtraDimensionTypes } from "@/lib/dimensions/queries";
 import { DIMENSION_CODES } from "@/lib/dimensions/constants";
 import { buildDimensionHierarchy } from "@/lib/dimensions/hierarchy";
-import { getMatrixEntries } from "@/lib/budget/queries";
+import { getMatrixEntries, type PackageScope } from "@/lib/budget/queries";
 import { getPackages } from "@/lib/packages/queries";
 import { getTenantLabels } from "@/lib/labels/getTenantLabels";
 import { getOrcamentoContext } from "@/lib/orcamentos/queries";
@@ -17,7 +17,7 @@ interface PageProps {
   // Além de ano/mes/entidade, cada dimensão marcada com "Usar na Matriz
   // Orçamentária" (ver Parâmetros > Dimensões) ganha sua própria chave
   // dinâmica aqui, nomeada pelo código da dimensão (ex: "projeto").
-  searchParams: { ano?: string; mes?: string; entidade?: string; [key: string]: string | undefined };
+  searchParams: { ano?: string; mes?: string; entidade?: string; pacote?: string; [key: string]: string | undefined };
 }
 
 export default async function MatrizPage({ searchParams }: PageProps) {
@@ -87,12 +87,35 @@ export default async function MatrizPage({ searchParams }: PageProps) {
 
   const missingSetup = accountRows.length === 0 || costCenterRows.length === 0 || entityRows.length === 0;
 
-  const [entries, packages] = await Promise.all([
+  const packages = await getPackages(tenant.tenantId, year, orcamentoId);
+
+  // Pacotes da Entidade selecionada (ou sem Entidade). Recorte da Matriz:
+  // "all" = consolidado (somente leitura), "none" = sem pacote, ou um Pacote.
+  const entityPackages = packages.filter((p) => !p.entityNodeId || p.entityNodeId === entityNodeId);
+  const requestedPackage = searchParams.pacote;
+  const defaultScope = entityPackages.length > 0 ? "all" : "none";
+  const scopeValue =
+    requestedPackage === "all" || requestedPackage === "none"
+      ? requestedPackage
+      : entityPackages.some((p) => p.id === requestedPackage)
+        ? (requestedPackage as string)
+        : defaultScope;
+  const packageScope: PackageScope =
+    scopeValue === "all" ? { kind: "all" } : scopeValue === "none" ? { kind: "none" } : { kind: "package", id: scopeValue };
+  const selectedPackage = packageScope.kind === "package" ? entityPackages.find((p) => p.id === packageScope.id) : null;
+  const packageLocked = selectedPackage?.status === "submetido" || selectedPackage?.status === "aprovado";
+  const gridHint = !orcamentoId
+    ? t("noOrcamentoHint")
+    : packageScope.kind === "all"
+      ? t("consolidatedHint")
+      : packageLocked
+        ? t("packageLockedHint")
+        : null;
+
+  const entries =
     !missingSetup && entityNodeId
-      ? getMatrixEntries(tenant.tenantId, year, month, entityNodeId, orcamentoId, extraDimensionsFilter)
-      : Promise.resolve([]),
-    getPackages(tenant.tenantId, year, orcamentoId),
-  ]);
+      ? await getMatrixEntries(tenant.tenantId, year, month, entityNodeId, orcamentoId, extraDimensionsFilter, packageScope)
+      : [];
 
   return (
     <>
@@ -108,6 +131,9 @@ export default async function MatrizPage({ searchParams }: PageProps) {
               entityNodeId={entityNodeId ?? ""}
               entities={entityRows.map((r) => ({ id: r.item.id, name: r.item.name }))}
               extraSelections={extraSelections.map(({ code, name, nodeId, options }) => ({ code, name, nodeId, options }))}
+              packageValue={scopeValue}
+              packageOptions={entityPackages.map((p) => ({ id: p.id, name: p.name }))}
+              packageLabel={labels.budgetPackage}
             />
           )}
           <ImportLinkButton href={`/admin/orcamento/matriz/importar?ano=${year}`} label={t("importButton")} />
@@ -123,6 +149,7 @@ export default async function MatrizPage({ searchParams }: PageProps) {
               entityHasChildren={entityHierarchy.hasChildren}
               entityIsLastChild={entityHierarchy.isLastChild}
               selectedEntityId={entityNodeId ?? ""}
+              selectedPackageId={selectedPackage?.id ?? null}
               packages={packages}
               packageLabelPlural={labels.budgetPackagePlural}
             />
@@ -142,7 +169,10 @@ export default async function MatrizPage({ searchParams }: PageProps) {
                 costCenters={costCenterRows.map((r) => r.item)}
                 initialEntries={entries}
                 orcamentoId={orcamentoId}
-                readOnlyHint={orcamentoId ? null : t("noOrcamentoHint")}
+                packageId={selectedPackage?.id ?? null}
+                editable={packageScope.kind === "none" || (packageScope.kind === "package" && !packageLocked)}
+                readOnlyHint={gridHint}
+                key={`${scopeValue}:${entityNodeId}:${year}:${month}:${orcamentoId}`}
               />
             )}
           </div>

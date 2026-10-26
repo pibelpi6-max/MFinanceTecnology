@@ -160,6 +160,10 @@
       "goToPackages": "Ver en Paquetes"
     },
     "importButton": "Importar",
+    "packageAll": "Consolidado",
+    "packageNone": "Sin paquete",
+    "consolidatedHint": "Vista consolidada (suma de todos los paquetes) — solo lectura. Selecciona un paquete para ingresar valores.",
+    "packageLockedHint": "Este paquete está enviado o aprobado — solo lectura.",
     "noOrcamentoHint": "Selecciona un Presupuesto en la parte superior de la pantalla para ingresar valores — los datos mostrados abajo son datos heredados (sin Presupuesto), de solo lectura."
   },
   "packages": {
