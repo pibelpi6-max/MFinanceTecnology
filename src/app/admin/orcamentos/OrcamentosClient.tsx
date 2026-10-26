@@ -56,6 +56,8 @@ export function OrcamentosClient({
   const [busyId, setBusyId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
+  // Só dá para arrastar pegando a alça: o card fica "armado" enquanto o mouse está pressionado nela.
+  const [armedId, setArmedId] = useState<string | null>(null);
   const [drop, setDrop] = useState<DropTarget | null>(null);
 
   const counts = useMemo(() => {
@@ -253,20 +255,27 @@ export function OrcamentosClient({
                         href={`/admin/orcamentos/${o.id}`}
                         className={`orc-card${o.id === currentId ? " is-current" : ""}${busyId === o.id ? " is-busy" : ""}${draggingId === o.id ? " is-dragging" : ""}${drop?.id === o.id && drop.year === year && draggingId !== o.id ? ` is-drop-${drop.side}` : ""}`}
                         onClick={(e) => open(o, e)}
-                        draggable={isAdmin}
+                        draggable={isAdmin && armedId === o.id}
                         onDragStart={(e) => {
                           e.dataTransfer.setData("text/plain", o.id);
                           e.dataTransfer.effectAllowed = "move";
                           setDraggingId(o.id);
                         }}
                         onDragEnd={() => {
+                          setArmedId(null);
                           setDraggingId(null);
                           setDrop(null);
                         }}
                         onDragOver={isAdmin ? (e) => cardDragOver(year, o, items.length <= 2, e) : undefined}
                       >
                         {isAdmin && (
-                          <span className="orc-grip" title={t("dragHint")} aria-hidden="true">
+                          <span
+                            className="orc-grip"
+                            title={t("dragHint")}
+                            aria-hidden="true"
+                            onMouseDown={() => setArmedId(o.id)}
+                            onMouseUp={() => setArmedId(null)}
+                          >
                             <svg width="18" height="8" viewBox="0 0 18 8" fill="currentColor">
                               {[2, 6, 10, 14].flatMap((cx) => [
                                 <circle key={`${cx}a`} cx={cx + 0.5} cy="1.5" r="1.2" />,
