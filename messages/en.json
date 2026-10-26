@@ -503,6 +503,7 @@
     "mod_versoes_desc": "Compare budgets and follow the history.",
     "yearCurrent": "current year",
     "noneInYear": "No budgets",
-    "noneInYearHint": "in {year} yet"
+    "noneInYearHint": "in {year} yet",
+    "dragHint": "Drag to reorder or move to another year"
   }
 }
