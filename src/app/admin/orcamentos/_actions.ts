@@ -23,6 +23,7 @@ interface OrcamentoInput {
   description: string;
   tipo: OrcamentoTipo;
   status: OrcamentoStatus;
+  oficial: boolean;
   conjuntoEstruturaId: string | null;
 }
 
@@ -50,6 +51,28 @@ function validate(input: OrcamentoInput): string | null {
   return null;
 }
 
+/** Garante no máximo um oficial por ano: ao marcar, os outros do ano deixam de ser. */
+async function applyOficial(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  tenantId: string,
+  id: string,
+  year: number,
+  oficial: boolean
+): Promise<string | null> {
+  if (oficial) {
+    const { error: clearError } = await supabase
+      .from("orcamentos")
+      .update({ oficial: false })
+      .eq("tenant_id", tenantId)
+      .eq("year", year)
+      .eq("oficial", true)
+      .neq("id", id);
+    if (clearError) return clearError.message;
+  }
+  const { error } = await supabase.from("orcamentos").update({ oficial }).eq("id", id).eq("tenant_id", tenantId);
+  return error ? error.message : null;
+}
+
 const DUPLICATE_LABEL_ERROR = "Já existe um orçamento com esse ano e nome.";
 
 export async function createOrcamento(input: OrcamentoInput): Promise<ActionResult> {
@@ -73,6 +96,11 @@ export async function createOrcamento(input: OrcamentoInput): Promise<ActionResu
       .select("id")
       .single();
     if (error) return { error: error.code === "23505" ? DUPLICATE_LABEL_ERROR : error.message };
+
+    if (input.oficial) {
+      const oficialError = await applyOficial(supabase, tenant.tenantId, created.id, input.year, true);
+      if (oficialError) return { error: oficialError };
+    }
 
     afterMutation();
     return { success: true, id: created.id };
@@ -105,6 +133,9 @@ export async function updateOrcamento(input: OrcamentoInput & { id: string }): P
       if (error.code === "23505") return { error: DUPLICATE_LABEL_ERROR };
       return { error: error.message };
     }
+
+    const oficialError = await applyOficial(supabase, tenant.tenantId, input.id, input.year, input.oficial);
+    if (oficialError) return { error: oficialError };
 
     afterMutation();
     return { success: true, id: input.id };
