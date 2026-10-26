@@ -25,8 +25,10 @@ export default async function OrcamentoModuloPage({ params }: PageProps) {
     <>
       <div className="admin-subheader">
         <div className="orc-area-heading">
-          <BackToMapLink orcamentoId={orcamento.id} label={t("backToMap")} />
           <ModuleTitle slug={mod.slug} />
+        </div>
+        <div className="admin-page-actions">
+          <BackToMapLink orcamentoId={orcamento.id} label={t("backToMap")} />
         </div>
       </div>
       <div className="admin-content">
