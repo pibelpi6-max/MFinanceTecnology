@@ -113,11 +113,16 @@ export async function updateOrcamento(input: OrcamentoInput & { id: string }): P
   }
 }
 
-/** Move o orçamento para outro ano (arrastar e soltar na linha do tempo). */
-export async function moveOrcamentoAno(input: { id: string; year: number }): Promise<ActionResult> {
+/**
+ * Arrastar e soltar na linha do tempo: coloca o orçamento `id` no ano `year`
+ * na posição definida por `orderedIds` (a lista completa de ids do ano de
+ * destino, já com `id` incluído) e renumera a ordem.
+ */
+export async function reorderOrcamentos(input: { id: string; year: number; orderedIds: string[] }): Promise<ActionResult> {
   try {
     const tenant = await requireAdmin();
     if (!Number.isInteger(input.year)) return { error: "Ano inválido." };
+    if (!input.orderedIds.includes(input.id)) return { error: "Ordem inválida." };
     const supabase = await createClient();
 
     const { data: orc, error: fetchError } = await supabase
@@ -128,27 +133,35 @@ export async function moveOrcamentoAno(input: { id: string; year: number }): Pro
       .maybeSingle();
     if (fetchError) return { error: fetchError.message };
     if (!orc) return { error: "Orçamento não encontrado." };
-    if (orc.year === input.year) return { success: true, id: orc.id };
 
-    if (orc.oficial) {
-      const { count, error: officialError } = await supabase
-        .from("orcamentos")
-        .select("id", { count: "exact", head: true })
-        .eq("tenant_id", tenant.tenantId)
-        .eq("year", input.year)
-        .eq("oficial", true);
-      if (officialError) return { error: officialError.message };
-      if ((count ?? 0) > 0) {
-        return { error: `Já existe um orçamento oficial em ${input.year}. Remova a estrela dele antes de mover este.` };
+    if (orc.year !== input.year) {
+      if (orc.oficial) {
+        const { count, error: officialError } = await supabase
+          .from("orcamentos")
+          .select("id", { count: "exact", head: true })
+          .eq("tenant_id", tenant.tenantId)
+          .eq("year", input.year)
+          .eq("oficial", true);
+        if (officialError) return { error: officialError.message };
+        if ((count ?? 0) > 0) {
+          return { error: `Já existe um orçamento oficial em ${input.year}. Remova a estrela dele antes de mover este.` };
+        }
       }
+      const { error } = await supabase
+        .from("orcamentos")
+        .update({ year: input.year, updated_at: new Date().toISOString() })
+        .eq("id", input.id)
+        .eq("tenant_id", tenant.tenantId);
+      if (error) return { error: error.code === "23505" ? DUPLICATE_LABEL_ERROR : error.message };
     }
 
-    const { error } = await supabase
-      .from("orcamentos")
-      .update({ year: input.year, updated_at: new Date().toISOString() })
-      .eq("id", input.id)
-      .eq("tenant_id", tenant.tenantId);
-    if (error) return { error: error.code === "23505" ? DUPLICATE_LABEL_ERROR : error.message };
+    const results = await Promise.all(
+      input.orderedIds.map((id, index) =>
+        supabase.from("orcamentos").update({ sort_order: index }).eq("id", id).eq("tenant_id", tenant.tenantId)
+      )
+    );
+    const failed = results.find((r) => r.error);
+    if (failed?.error) return { error: failed.error.message };
 
     afterMutation();
     return { success: true, id: input.id };

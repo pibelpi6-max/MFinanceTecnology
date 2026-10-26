@@ -9,7 +9,7 @@ import { setOrcamentoAtual } from "@/lib/orcamentos/_actions";
 import { ORCAMENTO_TIPOS, type ConjuntoEstrutura, type Orcamento, type OrcamentoTipo } from "@/lib/orcamentos/types";
 import { OficialStar, StatusPill, TipoLabel } from "./OrcamentoMeta";
 import { OrcamentoFormModal } from "./OrcamentoFormModal";
-import { deleteOrcamento, duplicateOrcamento, moveOrcamentoAno } from "./_actions";
+import { deleteOrcamento, duplicateOrcamento, reorderOrcamentos } from "./_actions";
 
 interface OrcamentosClientProps {
   tenantId: string;
@@ -20,6 +20,17 @@ interface OrcamentosClientProps {
   currentId: string | null;
   title: string;
   subtitle: string;
+}
+
+function byOrder(a: Orcamento, b: Orcamento) {
+  return a.sort_order - b.sort_order || a.created_at.localeCompare(b.created_at);
+}
+
+/** Onde o card arrastado vai cair: antes/depois do card `id`, ou no fim da coluna (id = null). */
+interface DropTarget {
+  year: number;
+  id: string | null;
+  side: "before" | "after";
 }
 
 export function OrcamentosClient({
@@ -45,7 +56,7 @@ export function OrcamentosClient({
   const [busyId, setBusyId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
-  const [dropYear, setDropYear] = useState<number | null>(null);
+  const [drop, setDrop] = useState<DropTarget | null>(null);
 
   const counts = useMemo(() => {
     const c: Record<string, number> = {};
@@ -63,7 +74,7 @@ export function OrcamentosClient({
         year,
         items: orcamentos
           .filter((o) => o.year === year && (filter === "all" || o.tipo === filter))
-          .sort((a, b) => Number(b.oficial) - Number(a.oficial) || a.created_at.localeCompare(b.created_at)),
+          .sort(byOrder),
       }));
   }, [orcamentos, filter, currentYear]);
 
@@ -92,16 +103,49 @@ export function OrcamentosClient({
     router.refresh();
   }
 
+  function cardDragOver(year: number, o: Orcamento, vertical: boolean, e: React.DragEvent) {
+    if (!draggingId) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const rect = e.currentTarget.getBoundingClientRect();
+    const before = vertical ? e.clientY < rect.top + rect.height / 2 : e.clientX < rect.left + rect.width / 2;
+    setDrop((prev) =>
+      prev && prev.year === year && prev.id === o.id && prev.side === (before ? "before" : "after")
+        ? prev
+        : { year, id: o.id, side: before ? "before" : "after" }
+    );
+  }
+
   async function handleDrop(year: number, e: React.DragEvent) {
     e.preventDefault();
     const id = e.dataTransfer.getData("text/plain") || draggingId;
-    setDropYear(null);
+    const target = drop;
+    setDrop(null);
     setDraggingId(null);
     const moved = orcamentos.find((o) => o.id === id);
-    if (!moved || moved.year === year) return;
+    if (!moved) return;
+
+    // Ordem completa do ano de destino (sem filtro), sem o card arrastado.
+    const rest = orcamentos
+      .filter((o) => o.year === year && o.id !== moved.id)
+      .sort(byOrder)
+      .map((o) => o.id);
+    let index = rest.length;
+    if (target && target.year === year && target.id) {
+      const at = rest.indexOf(target.id);
+      if (at >= 0) index = target.side === "before" ? at : at + 1;
+    }
+    const orderedIds = [...rest.slice(0, index), moved.id, ...rest.slice(index)];
+
+    const current = orcamentos
+      .filter((o) => o.year === year)
+      .sort(byOrder)
+      .map((o) => o.id);
+    if (moved.year === year && current.join() === orderedIds.join()) return;
+
     setActionError(null);
     setBusyId(moved.id);
-    const result = await moveOrcamentoAno({ id: moved.id, year });
+    const result = await reorderOrcamentos({ id: moved.id, year, orderedIds });
     setBusyId(null);
     if (result.error) {
       setActionError(result.error);
@@ -172,17 +216,17 @@ export function OrcamentosClient({
             {columns.map(({ year, items }) => (
               <section
                 key={year}
-                className={`orc-year-col ${items.length > 2 ? "is-wide" : "is-narrow"}${year === currentYear ? " is-now" : ""}${dropYear === year ? " is-drop" : ""}`}
+                className={`orc-year-col ${items.length > 2 ? "is-wide" : "is-narrow"}${year === currentYear ? " is-now" : ""}${drop?.year === year ? " is-drop" : ""}`}
                 onDragOver={
                   isAdmin && draggingId
                     ? (e) => {
                         e.preventDefault();
-                        setDropYear(year);
+                        setDrop((prev) => (prev && prev.year === year ? prev : { year, id: null, side: "after" }));
                       }
                     : undefined
                 }
                 onDragLeave={(e) => {
-                  if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDropYear(null);
+                  if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDrop(null);
                 }}
                 onDrop={isAdmin ? (e) => handleDrop(year, e) : undefined}
               >
@@ -207,7 +251,7 @@ export function OrcamentosClient({
                       <a
                         key={o.id}
                         href={`/admin/orcamentos/${o.id}`}
-                        className={`orc-card${o.id === currentId ? " is-current" : ""}${busyId === o.id ? " is-busy" : ""}${draggingId === o.id ? " is-dragging" : ""}`}
+                        className={`orc-card${o.id === currentId ? " is-current" : ""}${busyId === o.id ? " is-busy" : ""}${draggingId === o.id ? " is-dragging" : ""}${drop?.id === o.id && drop.year === year && draggingId !== o.id ? ` is-drop-${drop.side}` : ""}`}
                         onClick={(e) => open(o, e)}
                         draggable={isAdmin}
                         onDragStart={(e) => {
@@ -217,8 +261,9 @@ export function OrcamentosClient({
                         }}
                         onDragEnd={() => {
                           setDraggingId(null);
-                          setDropYear(null);
+                          setDrop(null);
                         }}
+                        onDragOver={isAdmin ? (e) => cardDragOver(year, o, items.length <= 2, e) : undefined}
                       >
                         <div className="orc-card-top">
                           <h3 className="orc-card-title" title={o.label}>
