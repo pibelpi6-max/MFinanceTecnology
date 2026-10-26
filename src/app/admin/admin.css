@@ -1184,3 +1184,5 @@ a.orc-module:hover { border-color: #3E6FE0; box-shadow: 0 6px 16px rgba(62,111,2
 .orc-module-empty strong { font-size: 18px; color: #1c2033; }
 .orc-module-empty p { margin: 0; font-size: 14px; line-height: 1.5; }
 .orc-module-empty span { font-size: 12.5px; color: #8a90a8; }
+.orc-module-title { display: flex; align-items: center; gap: 10px; }
+.orc-module-title-icon { display: inline-flex; width: 36px; height: 36px; align-items: center; justify-content: center; border-radius: 10px; background: #e9efff; color: #3E6FE0; }
