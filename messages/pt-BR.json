@@ -470,7 +470,7 @@
     "status_aprovado": "Aprovado",
     "status_ativo": "Ativo",
     "status_encerrado": "Encerrado",
-    "official": "Orçamento oficial do ano",
+    "official": "Orçamento oficial",
     "packagesCount": "{count, plural, =0 {Sem pacotes} one {1 pacote} other {# pacotes}}",
     "duplicate": "Duplicar",
     "delete": "Excluir",

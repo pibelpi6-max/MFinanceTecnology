@@ -470,7 +470,7 @@
     "status_aprovado": "Approved",
     "status_ativo": "Active",
     "status_encerrado": "Closed",
-    "official": "Official budget of the year",
+    "official": "Official budget",
     "packagesCount": "{count, plural, =0 {No packages} one {1 package} other {# packages}}",
     "duplicate": "Duplicate",
     "delete": "Delete",
