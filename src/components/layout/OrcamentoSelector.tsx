@@ -1,62 +1,35 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { setOrcamentoAtual } from "@/lib/orcamentos/_actions";
 import type { Orcamento } from "@/lib/orcamentos/types";
 
 interface OrcamentoSelectorProps {
-  tenantId: string;
   orcamentos: Orcamento[];
   currentOrcamentoId: string | null;
 }
 
-const NONE_VALUE = "__none__";
-
 /**
- * Seletor global e persistente de qual Orçamento (revisão) está em uso
- * — decidido com a usuária em 14/10 (ver migration
- * 0015_religar_orcamento.sql): um seletor único, visível de qualquer
- * tela do admin, em vez de um dropdown independente em Matriz/Pacotes/
- * Comparativo. A escolha persiste por usuário (user_preferences), não
- * por aba/sessão.
+ * Indicador do Orçamento em uso, no topo de qualquer tela do admin. A
+ * troca de orçamento acontece em Orçamentos (linha do tempo) — aqui só
+ * mostramos qual está ativo e levamos de volta à área dele.
  */
-export function OrcamentoSelector({ tenantId, orcamentos, currentOrcamentoId }: OrcamentoSelectorProps) {
-  const router = useRouter();
-  const t = useTranslations("settings.orcamentos");
-  const [optimisticId, setOptimisticId] = useState<string | null | undefined>(undefined);
-  const [isPending, startTransition] = useTransition();
-
-  const displayId = optimisticId !== undefined ? optimisticId : currentOrcamentoId;
-
-  function handleChange(value: string) {
-    const nextId = value === NONE_VALUE ? null : value;
-    setOptimisticId(nextId);
-    startTransition(async () => {
-      await setOrcamentoAtual(tenantId, nextId);
-      router.refresh();
-    });
-  }
-
-  if (orcamentos.length === 0) return null;
-
-  const sorted = [...orcamentos].sort((a, b) => b.year - a.year || a.label.localeCompare(b.label));
+export function OrcamentoSelector({ orcamentos, currentOrcamentoId }: OrcamentoSelectorProps) {
+  const t = useTranslations("orcamentos");
+  const current = orcamentos.find((o) => o.id === currentOrcamentoId) ?? null;
 
   return (
-    <select
-      className="year-select orcamento-selector"
-      value={displayId ?? NONE_VALUE}
-      onChange={(e) => handleChange(e.target.value)}
-      disabled={isPending}
-      title={t("selectorTitle")}
+    <Link
+      href={current ? `/admin/orcamentos/${current.id}` : "/admin/orcamentos"}
+      className="orcamento-chip"
+      title={t("chipTitle")}
     >
-      <option value={NONE_VALUE}>{t("selectorNone")}</option>
-      {sorted.map((orc) => (
-        <option key={orc.id} value={orc.id}>
-          {orc.year} · {orc.label}
-        </option>
-      ))}
-    </select>
+      {current?.oficial && (
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="#F5B301" aria-hidden="true">
+          <path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3 6.1 20.6l1.3-6.6L2.5 9.4l6.6-.8L12 2.5z" />
+        </svg>
+      )}
+      <span className="orcamento-chip-label">{current ? `${current.year} · ${current.label}` : t("chipNone")}</span>
+    </Link>
   );
 }

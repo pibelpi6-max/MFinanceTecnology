@@ -157,7 +157,13 @@
 }
 .year-select:focus { outline: none; border-color: #3E6FE0; box-shadow: 0 0 0 3px rgba(62,111,224,.15); }
 
-.orcamento-selector { max-width: 200px; }
+.orcamento-chip {
+  display: inline-flex; align-items: center; gap: 6px; max-width: 260px;
+  border: 1px solid rgba(0,0,0,.1); border-radius: 8px; padding: 6px 10px; background: #fff;
+  font-size: 13px; font-weight: 600; color: var(--text-primary); text-decoration: none;
+}
+.orcamento-chip:hover { border-color: #3E6FE0; color: #3E6FE0; }
+.orcamento-chip-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ── Matriz orçamentária ──────────────────────────── */
 .matrix-filters { display: flex; align-items: center; gap: 8px; }
@@ -1019,3 +1025,91 @@ body.import-dragging-body, body.import-dragging-body * { cursor: grabbing !impor
 .import-moved-close { margin-left: 8px; border: 0; background: none; color: #2f58b8; font-size: 15px; line-height: 1; cursor: pointer; padding: 0 4px; border-radius: 4px; }
 .import-moved-close:hover { background: rgba(62,111,224,.12); }
 .import-step-review .import-tree-scroll { padding-bottom: 12px; }
+
+/* ── Orçamentos: linha do tempo e área do orçamento ───────────── */
+.orc-subtitle { margin: 4px 4px 14px; font-size: 13px; color: var(--text-secondary, #6b7088); }
+.orc-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 4px 18px; }
+.orc-chip {
+  border: 1px solid rgba(0,0,0,.1); background: #fff; border-radius: 999px; padding: 5px 12px;
+  font-size: 12.5px; font-weight: 600; color: #4a4f6a; cursor: pointer;
+}
+.orc-chip:hover { border-color: #3E6FE0; color: #3E6FE0; }
+.orc-chip.is-active { background: #3E6FE0; border-color: #3E6FE0; color: #fff; }
+.orc-chip-count { margin-left: 4px; opacity: .7; font-weight: 500; }
+.orc-error { margin: 0 4px 14px; padding: 8px 12px; border-radius: 8px; background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; font-size: 12.5px; }
+.orc-empty { margin: 40px 4px; text-align: center; color: #6b7088; font-size: 14px; }
+
+.orc-year { margin: 0 4px 26px; }
+.orc-year-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.orc-year-label { font-size: 15px; font-weight: 700; color: #2a2f4a; }
+.orc-year-line { flex: 1; height: 1px; background: rgba(0,0,0,.08); }
+.orc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+
+.orc-card {
+  position: relative; display: flex; flex-direction: column; height: 150px; padding: 14px 16px;
+  background: #fff; border: 1px solid rgba(0,0,0,.08); border-radius: 12px; text-decoration: none; color: inherit;
+  transition: border-color .15s, box-shadow .15s, transform .15s;
+}
+.orc-card:hover { border-color: #3E6FE0; box-shadow: 0 6px 16px rgba(62,111,224,.14); transform: translateY(-1px); }
+.orc-card.is-current { border-color: #3E6FE0; box-shadow: 0 0 0 2px rgba(62,111,224,.18); }
+.orc-card.is-busy { opacity: .55; pointer-events: none; }
+.orc-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.orc-card-title {
+  margin: 0; font-size: 14.5px; font-weight: 700; line-height: 1.3; color: #1f2440; min-width: 0;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word;
+}
+.orc-card-tipo { margin-top: 8px; }
+.orc-card-foot { margin-top: auto; font-size: 12px; color: #6b7088; }
+
+.orc-star { display: inline-block; vertical-align: -2px; margin-right: 5px; color: #F5B301; line-height: 0; }
+
+.orc-tipo, .orc-status {
+  display: inline-block; border-radius: 999px; padding: 2px 9px; font-size: 11.5px; font-weight: 600; white-space: nowrap; flex-shrink: 0;
+}
+.orc-tipo-orcamento { background: #dfe8ff; color: #2a4fb8; }
+.orc-tipo-revisao { background: #ece3ff; color: #5b3fb0; }
+.orc-tipo-forecast { background: #d9f1f5; color: #0b6b7a; }
+.orc-tipo-cenario { background: #ffe9d6; color: #a3500a; }
+.orc-tipo-teste { background: #eceef5; color: #4a4f6a; }
+.orc-status-rascunho { background: #fff3d6; color: #9a6a00; }
+.orc-status-em_elaboracao { background: #e9efff; color: #2f5bd0; }
+.orc-status-aprovado, .orc-status-ativo { background: #dcf5ea; color: #0b7a53; }
+.orc-status-encerrado { background: #eceef5; color: #6b7088; }
+
+.orc-acts { position: absolute; right: 10px; bottom: 10px; display: flex; gap: 4px; opacity: 0; transition: opacity .15s; }
+.orc-card:hover .orc-acts, .orc-card:focus-within .orc-acts { opacity: 1; }
+.orc-act {
+  display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px;
+  border: 0; border-radius: 8px; background: #f2f4fa; color: #4a4f6a; cursor: pointer;
+}
+.orc-act:hover { background: #e3e9fb; color: #3E6FE0; }
+.orc-act--danger:hover { background: #fde8e8; color: #dc2626; }
+
+.orc-area-heading { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.orc-area-title { max-width: 520px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.orc-back { display: inline-flex; align-items: center; gap: 2px; font-size: 12.5px; font-weight: 600; color: #6b7088; text-decoration: none; white-space: nowrap; }
+.orc-back:hover { color: #3E6FE0; }
+.orc-area-actions { display: flex; gap: 8px; }
+
+.orc-area { display: flex; gap: 18px; align-items: flex-start; margin: 0 4px; }
+.orc-context { width: 240px; flex-shrink: 0; background: #fff; border: 1px solid rgba(0,0,0,.08); border-radius: 12px; padding: 16px; }
+.orc-context-label { margin: 0 0 10px; font-size: 12px; font-weight: 700; color: #6b7088; }
+.orc-context dl { margin: 0; }
+.orc-context dt { font-size: 11.5px; color: #8a8fa6; margin-top: 10px; }
+.orc-context dd { margin: 2px 0 0; font-size: 14px; font-weight: 600; color: #1f2440; }
+.orc-context-desc { margin: 14px 0 0; padding-top: 12px; border-top: 1px solid rgba(0,0,0,.07); font-size: 12.5px; line-height: 1.5; color: #4a4f6a; white-space: pre-wrap; word-break: break-word; }
+.orc-modules-wrap { flex: 1; min-width: 0; }
+.orc-modules-title { margin: 0 0 12px; font-size: 14px; font-weight: 700; color: #2a2f4a; }
+.orc-modules { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; }
+.orc-module {
+  position: relative; display: flex; flex-direction: column; gap: 4px; padding: 16px; background: #fff;
+  border: 1px solid rgba(0,0,0,.08); border-radius: 12px; text-decoration: none; color: inherit;
+  transition: border-color .15s, box-shadow .15s, transform .15s;
+}
+a.orc-module:hover { border-color: #3E6FE0; box-shadow: 0 6px 16px rgba(62,111,224,.14); transform: translateY(-1px); }
+.orc-module.is-disabled { opacity: .6; }
+.orc-module-icon { display: inline-flex; width: 36px; height: 36px; align-items: center; justify-content: center; border-radius: 10px; background: #e9efff; color: #3E6FE0; margin-bottom: 6px; }
+.orc-module-name { font-size: 14px; font-weight: 700; color: #1f2440; }
+.orc-module-desc { font-size: 12.5px; line-height: 1.4; color: #6b7088; }
+.orc-module-soon { position: absolute; top: 12px; right: 12px; font-size: 11px; font-weight: 600; color: #6b7088; background: #eceef5; border-radius: 999px; padding: 2px 8px; }
+@media (max-width: 900px) { .orc-area { flex-direction: column; } .orc-context { width: 100%; } }

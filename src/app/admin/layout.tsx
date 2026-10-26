@@ -48,7 +48,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         initialCollapsed={collapsedPref?.collapsed ?? false}
       />
       <div className="admin-main">
-        <AdminHeader tenantId={tenant.tenantId} orcamentos={orcamentos} currentOrcamentoId={currentOrcamentoId} />
+        <AdminHeader orcamentos={orcamentos} currentOrcamentoId={currentOrcamentoId} />
         <main className="admin-page-content">{children}</main>
       </div>
     </div>

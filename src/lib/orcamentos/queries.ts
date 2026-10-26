@@ -2,7 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getUserPreference } from "@/app/_actions/userPreferences";
 import type { ConjuntoEstrutura, ConjuntoEstruturaItem, Orcamento } from "./types";
 
-const ORCAMENTO_ATUAL_COLUMNS = "id, tenant_id, year, label, status, conjunto_estrutura_id, created_at, updated_at";
+export const ORCAMENTO_COLUMNS =
+  "id, tenant_id, year, label, status, tipo, oficial, description, conjunto_estrutura_id, created_at, updated_at";
 
 function orcamentoAtualKey(tenantId: string) {
   return `orcamento_atual:${tenantId}`;
@@ -24,7 +25,7 @@ export async function getOrcamentoById(tenantId: string, id: string): Promise<Or
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("orcamentos")
-    .select(ORCAMENTO_ATUAL_COLUMNS)
+    .select(ORCAMENTO_COLUMNS)
     .eq("tenant_id", tenantId)
     .eq("id", id)
     .maybeSingle();
@@ -134,10 +135,26 @@ export async function getOrcamentosByTenant(tenantId: string): Promise<Orcamento
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("orcamentos")
-    .select("id, tenant_id, year, label, status, conjunto_estrutura_id, created_at, updated_at")
+    .select(ORCAMENTO_COLUMNS)
     .eq("tenant_id", tenantId)
     .order("year", { ascending: false })
     .order("created_at", { ascending: false });
   if (error) throw new Error(error.message);
   return data ?? [];
+}
+
+/** Quantos pacotes cada Orçamento tem — chave = orcamento_id. */
+export async function getPackageCountsByOrcamento(tenantId: string): Promise<Record<string, number>> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("budget_packages")
+    .select("orcamento_id")
+    .eq("tenant_id", tenantId)
+    .not("orcamento_id", "is", null);
+  if (error) throw new Error(error.message);
+  const counts: Record<string, number> = {};
+  (data ?? []).forEach((row) => {
+    if (row.orcamento_id) counts[row.orcamento_id] = (counts[row.orcamento_id] ?? 0) + 1;
+  });
+  return counts;
 }

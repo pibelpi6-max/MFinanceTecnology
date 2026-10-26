@@ -14,7 +14,14 @@ export interface ConjuntoEstruturaItem {
   structure_id: string;
 }
 
-export type OrcamentoStatus = "rascunho" | "ativo" | "encerrado";
+export type OrcamentoStatus = "rascunho" | "em_elaboracao" | "aprovado" | "ativo" | "encerrado";
+
+export type OrcamentoTipo = "orcamento" | "revisao" | "forecast" | "cenario" | "teste";
+
+export const ORCAMENTO_TIPOS: OrcamentoTipo[] = ["orcamento", "revisao", "forecast", "cenario", "teste"];
+export const ORCAMENTO_STATUSES: OrcamentoStatus[] = ["rascunho", "em_elaboracao", "aprovado", "ativo", "encerrado"];
+/** Limite do nome do orçamento (o texto longo vai na descrição). */
+export const ORCAMENTO_LABEL_MAX = 60;
 
 export interface Orcamento {
   id: string;
@@ -22,6 +29,10 @@ export interface Orcamento {
   year: number;
   label: string;
   status: OrcamentoStatus;
+  tipo: OrcamentoTipo;
+  /** Orçamento oficial do ano (no máximo um por ano). */
+  oficial: boolean;
+  description: string | null;
   conjunto_estrutura_id: string | null;
   created_at: string;
   updated_at: string;
