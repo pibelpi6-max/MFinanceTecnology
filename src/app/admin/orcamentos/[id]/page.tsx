@@ -28,7 +28,6 @@ export default async function OrcamentoAreaPage({ params }: PageProps) {
   return (
     <OrcamentoAreaClient
       tenantId={tenant.tenantId}
-      isAdmin={tenant.role === "admin"}
       orcamento={orcamento}
       conjuntos={conjuntos}
       packageCount={packageCounts[orcamento.id] ?? 0}

@@ -49,7 +49,7 @@ export function OrcamentosClient({
   const [, startTransition] = useTransition();
 
   const [filter, setFilter] = useState<OrcamentoTipo | "all">("all");
-  const [formOpen, setFormOpen] = useState(false);
+  const [formState, setFormState] = useState<{ editing: Orcamento | null } | null>(null);
   const [deleting, setDeleting] = useState<Orcamento | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -178,7 +178,7 @@ export function OrcamentosClient({
         </div>
         {isAdmin && (
           <div className="admin-page-actions">
-            <Button size="sm" variant="accent-blue" className="px-3" onClick={() => setFormOpen(true)}>
+            <Button size="sm" variant="accent-blue" className="px-3" onClick={() => setFormState({ editing: null })}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4}>
                 <path strokeLinecap="round" d="M12 5v14M5 12h14" />
               </svg>
@@ -301,6 +301,21 @@ export function OrcamentosClient({
                               <button
                                 type="button"
                                 className="orc-act"
+                                title={t("edit")}
+                                aria-label={t("edit")}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setFormState({ editing: o });
+                                }}
+                              >
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M16.86 4.49a1.75 1.75 0 1 1 2.47 2.47L7.5 18.79l-3.3.82.82-3.3Z" />
+                                </svg>
+                              </button>
+                              <button
+                                type="button"
+                                className="orc-act"
                                 title={t("duplicate")}
                                 aria-label={t("duplicate")}
                                 disabled={busyId !== null}
@@ -341,13 +356,13 @@ export function OrcamentosClient({
 
       {isAdmin && (
         <OrcamentoFormModal
-          open={formOpen}
-          onClose={() => setFormOpen(false)}
+          open={formState !== null}
+          onClose={() => setFormState(null)}
           conjuntos={conjuntos}
-          editing={null}
+          editing={formState?.editing ?? null}
           defaultYear={new Date().getFullYear()}
           onSaved={() => {
-            setFormOpen(false);
+            setFormState(null);
             router.refresh();
           }}
         />
