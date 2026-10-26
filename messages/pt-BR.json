@@ -160,6 +160,10 @@
       "goToPackages": "Ver em Pacotes"
     },
     "importButton": "Importar",
+    "packageAll": "Consolidado",
+    "packageNone": "Sem pacote",
+    "consolidatedHint": "Visão consolidada (soma de todos os pacotes) — somente leitura. Selecione um pacote para lançar.",
+    "packageLockedHint": "Este pacote está submetido ou aprovado — somente leitura.",
     "noOrcamentoHint": "Selecione um Orçamento no topo da tela para lançar valores — os dados mostrados abaixo são lançamentos legados (sem Orçamento), somente leitura."
   },
   "packages": {

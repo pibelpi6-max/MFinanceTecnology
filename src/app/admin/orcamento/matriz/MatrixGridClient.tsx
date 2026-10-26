@@ -20,6 +20,10 @@ interface MatrixGridClientProps {
   initialEntries: MatrixEntry[];
   /** Orçamento selecionado no seletor global (AdminHeader) — null = bucket legado, somente leitura. */
   orcamentoId: string | null;
+  /** Pacote em edição (null = lançamentos sem pacote ou consolidado). */
+  packageId: string | null;
+  /** false no consolidado ou com o Pacote submetido/aprovado — grade somente leitura. */
+  editable: boolean;
   /** Mensagem de aviso quando orcamentoId é null — grid fica travado pra edição. */
   readOnlyHint?: string | null;
 }
@@ -62,12 +66,14 @@ export function MatrixGridClient({
   costCenters,
   initialEntries,
   orcamentoId,
+  packageId,
+  editable,
   readOnlyHint,
 }: MatrixGridClientProps) {
   const router = useRouter();
   const t = useTranslations("budget");
   const tc = useTranslations("common");
-  const readOnly = !orcamentoId;
+  const readOnly = !orcamentoId || !editable;
 
   const [values, setValues] = useState<ValuesMap>(() => buildInitialValues(initialEntries));
   const [dirty, setDirty] = useState<Set<string>>(new Set());
@@ -125,7 +131,7 @@ export function MatrixGridClient({
     if (entries.length === 0) return;
 
     startTransition(async () => {
-      const result = await saveMatrixEntries({ year, month, entityNodeId, orcamentoId, extraDimensions, entries });
+      const result = await saveMatrixEntries({ year, month, entityNodeId, orcamentoId, packageId, extraDimensions, entries });
       if (result.error) {
         setError(result.error);
         return;

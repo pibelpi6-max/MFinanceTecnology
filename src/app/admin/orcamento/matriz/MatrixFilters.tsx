@@ -18,11 +18,25 @@ interface MatrixFiltersProps {
   entities: { id: string; name: string }[];
   /** Eixos extras ativos (dimensões marcadas no módulo da Matriz — ver Parâmetros). */
   extraSelections: ExtraDimensionSelection[];
+  /** "all" (consolidado), "none" (sem pacote) ou o id de um Pacote. */
+  packageValue: string;
+  packageOptions: { id: string; name: string }[];
+  /** Nome (customizável por tenant) do termo "Pacote". */
+  packageLabel: string;
 }
 
 const MONTH_KEYS = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
 
-export function MatrixFilters({ year, month, entityNodeId, entities, extraSelections }: MatrixFiltersProps) {
+export function MatrixFilters({
+  year,
+  month,
+  entityNodeId,
+  entities,
+  extraSelections,
+  packageValue,
+  packageOptions,
+  packageLabel,
+}: MatrixFiltersProps) {
   const router = useRouter();
   const t = useTranslations("budget");
   const currentYear = new Date().getFullYear();
@@ -37,6 +51,7 @@ export function MatrixFilters({ year, month, entityNodeId, entities, extraSelect
       entidade: entityNodeId,
     };
     for (const sel of extraSelections) current[sel.code] = sel.nodeId;
+    current.pacote = packageValue;
 
     const merged = { ...current };
     for (const [key, value] of Object.entries(overrides)) merged[key] = String(value);
@@ -78,6 +93,22 @@ export function MatrixFilters({ year, month, entityNodeId, entities, extraSelect
               ))}
             </select>
           )
+      )}
+      {packageOptions.length > 0 && (
+        <select
+          className="year-select"
+          value={packageValue}
+          onChange={(e) => update({ pacote: e.target.value })}
+          title={packageLabel}
+        >
+          <option value="all">{t("packageAll")}</option>
+          <option value="none">{t("packageNone")}</option>
+          {packageOptions.map((o) => (
+            <option key={o.id} value={o.id}>
+              {o.name}
+            </option>
+          ))}
+        </select>
       )}
       <select
         className="year-select"
