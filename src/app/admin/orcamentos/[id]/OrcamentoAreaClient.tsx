@@ -57,12 +57,6 @@ export function OrcamentoAreaClient({ tenantId, orcamento, isCurrent }: Props) {
     <>
       <div className="admin-subheader">
         <div className="orc-area-heading">
-          <Link href="/admin/orcamentos" className="orc-back">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-            {t("back")}
-          </Link>
           <h1 className="admin-page-title orc-area-title" title={orcamento.label}>
             {orcamento.oficial && <OficialStar title={t("official")} />}
             {orcamento.label}
