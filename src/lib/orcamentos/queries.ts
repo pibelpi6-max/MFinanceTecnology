@@ -3,7 +3,7 @@ import { getUserPreference } from "@/app/_actions/userPreferences";
 import type { ConjuntoEstrutura, ConjuntoEstruturaItem, Orcamento } from "./types";
 
 export const ORCAMENTO_COLUMNS =
-  "id, tenant_id, year, label, status, tipo, oficial, description, conjunto_estrutura_id, created_at, updated_at";
+  "id, tenant_id, year, label, status, tipo, oficial, description, sort_order, conjunto_estrutura_id, created_at, updated_at";
 
 function orcamentoAtualKey(tenantId: string) {
   return `orcamento_atual:${tenantId}`;

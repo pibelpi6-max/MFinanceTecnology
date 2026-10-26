@@ -33,6 +33,8 @@ export interface Orcamento {
   /** Orçamento oficial do ano (no máximo um por ano). */
   oficial: boolean;
   description: string | null;
+  /** Ordem manual dentro do ano (menor = primeiro). */
+  sort_order: number;
   conjunto_estrutura_id: string | null;
   created_at: string;
   updated_at: string;
