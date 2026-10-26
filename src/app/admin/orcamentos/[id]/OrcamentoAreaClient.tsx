@@ -9,7 +9,7 @@ import { setOrcamentoAtual } from "@/lib/orcamentos/_actions";
 import type { ConjuntoEstrutura, Orcamento } from "@/lib/orcamentos/types";
 import { OficialStar, StatusPill, TipoLabel } from "../OrcamentoMeta";
 import { OrcamentoFormModal } from "../OrcamentoFormModal";
-import { duplicateOrcamento, setOrcamentoOficial } from "../_actions";
+import { duplicateOrcamento } from "../_actions";
 
 interface Props {
   tenantId: string;
@@ -63,15 +63,6 @@ export function OrcamentoAreaClient({ tenantId, isAdmin, orcamento, conjuntos, p
     { key: "versoes", icon: "M6 3v12m0 0a3 3 0 1 0 3 3 3 3 0 0 0-3-3Zm12-6a3 3 0 1 0-3-3 3 3 0 0 0 3 3Zm0 0v1a4 4 0 0 1-4 4H9" },
   ];
 
-  async function toggleOficial() {
-    setBusy(true);
-    setError(null);
-    const result = await setOrcamentoOficial({ id: orcamento.id, oficial: !orcamento.oficial });
-    setBusy(false);
-    if (result.error) return setError(result.error);
-    router.refresh();
-  }
-
   async function handleDuplicate() {
     setBusy(true);
     setError(null);
@@ -103,9 +94,6 @@ export function OrcamentoAreaClient({ tenantId, isAdmin, orcamento, conjuntos, p
           <div className="admin-page-actions orc-area-actions">
             <Button size="sm" variant="secondary" onClick={() => setEditOpen(true)} disabled={busy}>
               {t("edit")}
-            </Button>
-            <Button size="sm" variant="secondary" onClick={toggleOficial} disabled={busy}>
-              {orcamento.oficial ? t("unmarkOfficial") : t("markOfficial")}
             </Button>
             <Button size="sm" variant="accent-blue" className="px-3" onClick={handleDuplicate} isLoading={busy} loadingText={t("duplicating")}>
               {t("duplicate")}
