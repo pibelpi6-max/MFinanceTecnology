@@ -505,6 +505,8 @@
     "noneInYear": "Ningún presupuesto",
     "noneInYearHint": "en {year} todavía",
     "dragHint": "Arrastre para reordenar o mover de año",
-    "officialHint": "Solo puede haber uno oficial por año. Al marcarlo, el oficial actual de {year} deja de serlo."
+    "officialHint": "Solo puede haber uno oficial por año. Al marcarlo, el oficial actual de {year} deja de serlo.",
+    "zoneFeeds": "Alimentan el P&G",
+    "zoneConsumes": "Consumen del P&G"
   }
 }

@@ -505,6 +505,8 @@
     "noneInYear": "Nenhum orçamento",
     "noneInYearHint": "em {year} ainda",
     "dragHint": "Arraste para reordenar ou mover de ano",
-    "officialHint": "Só pode haver um oficial por ano. Ao marcar, o oficial atual de {year} deixa de ser."
+    "officialHint": "Só pode haver um oficial por ano. Ao marcar, o oficial atual de {year} deixa de ser.",
+    "zoneFeeds": "Alimentam a DRE",
+    "zoneConsumes": "Consomem da DRE"
   }
 }
