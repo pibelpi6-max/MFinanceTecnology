@@ -113,6 +113,50 @@ export async function updateOrcamento(input: OrcamentoInput & { id: string }): P
   }
 }
 
+/** Move o orçamento para outro ano (arrastar e soltar na linha do tempo). */
+export async function moveOrcamentoAno(input: { id: string; year: number }): Promise<ActionResult> {
+  try {
+    const tenant = await requireAdmin();
+    if (!Number.isInteger(input.year)) return { error: "Ano inválido." };
+    const supabase = await createClient();
+
+    const { data: orc, error: fetchError } = await supabase
+      .from("orcamentos")
+      .select("id, year, label, oficial")
+      .eq("id", input.id)
+      .eq("tenant_id", tenant.tenantId)
+      .maybeSingle();
+    if (fetchError) return { error: fetchError.message };
+    if (!orc) return { error: "Orçamento não encontrado." };
+    if (orc.year === input.year) return { success: true, id: orc.id };
+
+    if (orc.oficial) {
+      const { count, error: officialError } = await supabase
+        .from("orcamentos")
+        .select("id", { count: "exact", head: true })
+        .eq("tenant_id", tenant.tenantId)
+        .eq("year", input.year)
+        .eq("oficial", true);
+      if (officialError) return { error: officialError.message };
+      if ((count ?? 0) > 0) {
+        return { error: `Já existe um orçamento oficial em ${input.year}. Remova a estrela dele antes de mover este.` };
+      }
+    }
+
+    const { error } = await supabase
+      .from("orcamentos")
+      .update({ year: input.year, updated_at: new Date().toISOString() })
+      .eq("id", input.id)
+      .eq("tenant_id", tenant.tenantId);
+    if (error) return { error: error.code === "23505" ? DUPLICATE_LABEL_ERROR : error.message };
+
+    afterMutation();
+    return { success: true, id: input.id };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Erro inesperado" };
+  }
+}
+
 /** Marca (ou desmarca) o orçamento oficial do ano — no máximo um por ano. */
 export async function setOrcamentoOficial(input: { id: string; oficial: boolean }): Promise<ActionResult> {
   try {
