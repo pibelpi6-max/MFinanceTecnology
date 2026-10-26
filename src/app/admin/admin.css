@@ -1158,5 +1158,13 @@ a.orc-module:hover { border-color: #3E6FE0; box-shadow: 0 6px 16px rgba(62,111,2
 
 .dre-map { display: block; width: 100%; max-width: 1500px; height: auto; margin: 0 auto; font-family: inherit; }
 .dre-node { cursor: default; outline: none; }
-.dre-node.is-active { cursor: pointer; }
-.dre-node.is-active:hover rect, .dre-node.is-active:focus rect { fill: #2a55b0; }
+.dre-node .dre-card { filter: drop-shadow(0 2px 6px rgba(28, 32, 51, .06)); transition: filter .15s; }
+.dre-node.is-active { cursor: pointer; transition: transform .15s; }
+.dre-node.is-active:hover, .dre-node.is-active:focus-visible { transform: translateY(-3px); }
+.dre-node.is-active:hover .dre-card, .dre-node.is-active:focus-visible .dre-card { filter: drop-shadow(0 8px 14px rgba(62, 111, 224, .22)); }
+.dre-flow { animation: dre-flow 1s linear infinite; }
+@keyframes dre-flow { to { stroke-dashoffset: -16; } }
+@media (prefers-reduced-motion: reduce) {
+  .dre-flow { animation: none; }
+  .dre-dots { display: none; }
+}
