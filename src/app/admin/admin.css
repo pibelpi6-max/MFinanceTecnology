@@ -1434,3 +1434,14 @@ select.rec-kind option:checked { background: #fff; color: #1C2033; }
 .rec-edit .rec-chip { display: inline-flex; align-items: center; line-height: 1; height: 32px; }
 .rec-edit-apply { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-top: 14px; border-top: 1px solid #e6e8f0; font-size: 13px; color: #5b6178; }
 .rec-edit-apply .rec-chip:disabled { opacity: .5; cursor: default; }
+
+/* Edição expandida: coluna de dados branca e compacta; seletor Produto/Serviço com transição */
+.rec-edit-main { width: 250px; padding: 16px 20px; gap: 12px; background: #fff; border-right: 1px solid #e6e8f0; }
+.rec-edit-main label, .rec-edit-field { font-size: 12px; font-weight: 400; color: #6b7088; gap: 4px; }
+.rec-edit input { height: 34px; font-size: 13px; padding: 0 10px; border-radius: 8px; }
+.rec-edit .rec-seg { position: relative; padding: 2px; border-radius: 9px; background: #eef0f6; }
+.rec-edit .rec-seg button { position: relative; z-index: 1; height: 26px; font-size: 12.5px; border-radius: 7px; background: transparent; box-shadow: none; transition: color .2s ease; }
+.rec-edit .rec-seg button.on { background: transparent; box-shadow: none; color: #1c2033; font-weight: 600; }
+.rec-seg-thumb { position: absolute; top: 2px; left: 2px; bottom: 2px; width: calc(50% - 2px); border-radius: 7px; background: #fff; box-shadow: 0 1px 3px rgba(28, 32, 51, .15); transition: transform .22s cubic-bezier(.4, 0, .2, 1); }
+.rec-seg[data-on="servico"] .rec-seg-thumb { transform: translateX(100%); }
+@media (prefers-reduced-motion: reduce) { .rec-seg-thumb, .rec-edit .rec-seg button { transition: none; } }

@@ -130,7 +130,8 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
           {isItem && (
             <div className="rec-edit-field">
               {t("kindLabel")}
-              <div className="rec-seg" role="group" aria-label={t("kindLabel")}>
+              <div className="rec-seg" data-on={editKind} role="group" aria-label={t("kindLabel")}>
+                <span className="rec-seg-thumb" aria-hidden />
                 <button type="button" className={editKind === "produto" ? "on" : ""} onClick={() => setEditKind("produto")}>{t("kindProduct")}</button>
                 <button type="button" className={editKind === "servico" ? "on" : ""} onClick={() => setEditKind("servico")}>{t("kindService")}</button>
               </div>
