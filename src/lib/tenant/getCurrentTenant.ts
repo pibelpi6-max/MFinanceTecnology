@@ -1,4 +1,6 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
+import { getAuthUser } from "@/lib/supabase/getAuthUser";
 
 export interface CurrentTenant {
   tenantId: string;
@@ -8,11 +10,10 @@ export interface CurrentTenant {
   userEmail: string | null;
 }
 
-export async function getCurrentTenant(): Promise<CurrentTenant | null> {
+// cache(): layout e página pedem o tenant na mesma requisição — resolve uma vez só.
+export const getCurrentTenant = cache(async (): Promise<CurrentTenant | null> => {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getAuthUser();
   if (!user) return null;
 
   const { data, error } = await supabase
@@ -49,4 +50,4 @@ export async function getCurrentTenant(): Promise<CurrentTenant | null> {
     userId: user.id,
     userEmail: user.email ?? null,
   };
-}
+});

@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { getTranslations } from "next-intl/server";
 
@@ -7,7 +8,7 @@ export const CUSTOMIZABLE_LABEL_KEYS = [
 ] as const;
 export type LabelKey = (typeof CUSTOMIZABLE_LABEL_KEYS)[number];
 
-export async function getTenantLabels(
+export const getTenantLabels = cache(async function getTenantLabels(
   tenantId: string,
   locale: string
 ): Promise<Record<LabelKey, string>> {
@@ -29,4 +30,4 @@ export async function getTenantLabels(
     if (value) labels[key] = value;
   }
   return labels;
-}
+});
