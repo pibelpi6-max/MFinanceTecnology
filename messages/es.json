@@ -641,7 +641,8 @@
     "stEmpty": "sin nombre",
     "kindLabel": "Tipo",
     "kindProduct": "Producto",
-    "kindService": "Servicio"
+    "kindService": "Servicio",
+    "dedApplyAll": "Aplicar estas deducciones a todos los productos y servicios"
   },
   "erpCodes": {
     "title": "Códigos del ERP",
