@@ -10,7 +10,7 @@ import {
 } from "@/lib/receita/calc";
 import { applyAssumption, saveCurrencyRates, saveDeductions, saveRevenueEntries } from "./_actions";
 import { ReceitaCharts } from "./ReceitaCharts";
-import { ReceitaGrid, type GridChange, type GridRow } from "./ReceitaGrid";
+import { ReceitaGrid, type GridChange, type GridCol, type GridRow } from "./ReceitaGrid";
 
 export interface ProductRow {
   id: string;
@@ -36,6 +36,7 @@ interface Props {
 type Tab = "unified" | "summary" | "deductions" | "fx" | "assumptions";
 type Metric = "gross" | "deductions" | "net" | "volume" | "price";
 
+const TOTAL_KEY = "__total";
 const MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 const num = (s: string | undefined) => {
   const raw = s ?? "";
@@ -59,6 +60,8 @@ export function ReceitaClient(p: Props) {
 
   const readOnly = p.entityId === "all" && p.entities.length > 0;
   const entityKey = p.entities.length === 0 ? null : p.entityId === "all" ? null : p.entityId;
+
+  const monthLabelsAll = MONTHS.map((m) => new Intl.DateTimeFormat(locale, { month: "short" }).format(new Date(2000, m - 1, 1)));
 
   const money = useMemo(
     () => new Intl.NumberFormat(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
@@ -217,107 +220,128 @@ export function ReceitaClient(p: Props) {
     return l ? fmtInput(field === "v" ? l.volume : l.unitPrice) : "";
   };
 
-  const [secClosed, setSecClosed] = useState<Set<string>>(new Set());
-  const [labelOpen, setLabelOpen] = useState<Set<string>>(new Set());
-  const flip = (set: Set<string>, k: string) => { const n = new Set(set); if (n.has(k)) n.delete(k); else n.add(k); return n; };
+  // ---- Visão unificada: linhas = produtos; colunas = medida × período ----
+  type Measure = "pr" | "v" | "gross" | "ded" | "net";
+  type Period = "month" | "quarter" | "semester" | "year";
+  const [shown, setShown] = useState<Set<Measure>>(new Set<Measure>(["pr", "v", "gross", "ded", "net"]));
+  const [period, setPeriod] = useState<Period>("month");
+
+  const leavesUnder = useMemo(() => {
+    const memo = new Map<string, string[]>();
+    const walk = (id: string): string[] => {
+      const kids = childrenOf.get(id) ?? [];
+      const own = kids.length === 0 ? [id] : kids.flatMap((k) => walk(k.id));
+      memo.set(id, own);
+      return own;
+    };
+    for (const r of childrenOf.get(null) ?? []) walk(r.id);
+    memo.set(TOTAL_KEY, p.products.filter((r) => r.isLeaf).map((r) => r.id));
+    return memo;
+  }, [childrenOf, p.products]);
 
   const unifiedRows: GridRow[] = useMemo(() => {
-    const rows: GridRow[] = [];
-    const sumM = (f: (m: number) => number) => MONTHS.reduce((s, m) => s + f(m), 0);
-    const gross = (pid: string, m: number) => aggregated[pid]?.[m]?.gross ?? 0;
-    const roots = childrenOf.get(null) ?? [];
-    const rootSum = (pick: (r: MonthResult | undefined, m: number) => number) => (m: number) =>
-      roots.reduce((s, r) => s + pick(aggregated[r.id]?.[m], m), 0);
-    const blank = () => "";
-
-    const section = (id: string, label: string, cell: (m: number) => string, total: string) => {
-      rows.push({
-        key: `sec:${id}`, kind: "section", depth: 0, label, cell, total, strong: true,
-        toggle: { open: !secClosed.has(id), onToggle: () => setSecClosed((s) => flip(s, id)) },
-      });
-      return !secClosed.has(id);
-    };
-    const tree = (id: string, mk: (r: ProductRow) => Partial<GridRow> & Pick<GridRow, "cell" | "total">) => {
-      for (const r of visibleRows) {
-        rows.push({
-          key: `${id}:${r.id}`, kind: "row", depth: r.depth + 1, label: r.name,
-          toggle: r.isLeaf ? undefined : { open: !collapsed.has(r.id), onToggle: () => toggleProduct(r.id) },
-          ...mk(r),
-        });
-      }
-    };
-    const money2 = (n: number) => money.format(n);
-
-    // Preço unitário (editável nos produtos folha)
-    if (section("price", t("secPrice"), blank, "")) {
-      tree("pr", (r) => {
-        if (!r.isLeaf) return { cell: blank, total: "" };
-        const nz = MONTHS.map((m) => num(getInput(r.id, m, "pr"))).filter((x) => x > 0);
-        return {
-          editable: { pid: r.id, field: "pr" },
-          currency: { value: currencyOf(r.id), options: p.currencies, onChange: (c) => { setSaved(false); setCurrencyEdits((s) => ({ ...s, [r.id]: c })); } },
-          cell: (m) => getInput(r.id, m, "pr"),
-          total: nz.length ? money2(nz.reduce((a, b) => a + b, 0) / nz.length) : "",
-        };
-      });
-    }
-    // Volume
-    if (section("vol", t("secVolume"), (m) => qty.format(rootSum((x) => x?.volume ?? 0)(m)), qty.format(sumM(rootSum((x) => x?.volume ?? 0))))) {
-      tree("v", (r) => {
-        const total = qty.format(sumM((m) => aggregated[r.id]?.[m]?.volume ?? 0));
-        if (!r.isLeaf) return { cell: (m) => qty.format(aggregated[r.id]?.[m]?.volume ?? 0), total };
-        return { editable: { pid: r.id, field: "v" }, cell: (m) => getInput(r.id, m, "v"), total };
-      });
-    }
-    // Receita bruta
-    const grossAt = (m: number) => toDisplay(rootSum((x) => x?.gross ?? 0)(m), m);
-    if (section("gross", t("kpiGross"), (m) => money2(grossAt(m)), money2(sumM(grossAt)))) {
-      tree("g", (r) => ({
-        cell: (m) => money2(toDisplay(gross(r.id, m), m)),
-        total: money2(sumM((m) => toDisplay(gross(r.id, m), m))),
-      }));
-    }
-    // Deduções, abertas por tipo
-    const dedAt = (m: number) => toDisplay(rootSum((x) => x?.deductions ?? 0)(m), m);
-    if (section("ded", t("kpiDeductions"), (m) => money2(dedAt(m)), money2(sumM(dedAt)))) {
-      const labelsList = Array.from(new Set(p.deductions.map((d) => d.label)));
-      if (labelsList.length === 0) {
-        rows.push({ key: "ded:none", kind: "note", depth: 1, label: t("noDeductionsHint"), cell: blank, total: "" });
-      }
-      for (const lb of labelsList) {
-        const pct = (pid: string) => p.deductions.filter((d) => d.productId === pid && d.label === lb).reduce((s, d) => s + d.pct, 0);
-        const pids = leaves.map((l) => l.id).filter((pid) => pct(pid) > 0);
-        const val = (pid: string, m: number) => toDisplay((gross(pid, m) * pct(pid)) / 100, m);
-        const open = labelOpen.has(lb);
-        rows.push({
-          key: `ded:${lb}`, kind: "row", depth: 1, label: lb,
-          toggle: { open, onToggle: () => setLabelOpen((s) => flip(s, lb)) },
-          cell: (m) => money2(pids.reduce((s, pid) => s + val(pid, m), 0)),
-          total: money2(sumM((m) => pids.reduce((s, pid) => s + val(pid, m), 0))),
-        });
-        if (open) {
-          for (const pid of pids) {
-            const prod = p.products.find((x) => x.id === pid);
-            rows.push({
-              key: `ded:${lb}:${pid}`, kind: "row", depth: 2, label: `${prod?.name ?? ""} · ${String(pct(pid)).replace(".", ",")}%`,
-              cell: (m) => money2(val(pid, m)),
-              total: money2(sumM((m) => val(pid, m))),
-            });
-          }
-        }
-      }
-    }
-    // Receita líquida
-    const netAt = (m: number) => toDisplay(rootSum((x) => x?.net ?? 0)(m), m);
-    if (section("net", t("kpiNet"), (m) => money2(netAt(m)), money2(sumM(netAt)))) {
-      tree("n", (r) => ({
-        cell: (m) => money2(toDisplay(aggregated[r.id]?.[m]?.net ?? 0, m)),
-        total: money2(sumM((m) => toDisplay(aggregated[r.id]?.[m]?.net ?? 0, m))),
-      }));
-    }
+    const rows: GridRow[] = visibleRows.map((r) => ({
+      key: r.id,
+      depth: r.depth,
+      label: r.name,
+      toggle: r.isLeaf ? undefined : { open: !collapsed.has(r.id), onToggle: () => toggleProduct(r.id) },
+      pid: r.isLeaf ? r.id : undefined,
+      currency: r.isLeaf
+        ? { value: currencyOf(r.id), options: p.currencies, onChange: (c: string) => { setSaved(false); setCurrencyEdits((s) => ({ ...s, [r.id]: c })); } }
+        : undefined,
+    }));
+    rows.push({ key: TOTAL_KEY, depth: 0, label: t("total"), strong: true });
     return rows;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [aggregated, childrenOf, visibleRows, collapsed, secClosed, labelOpen, edits, currencyEdits, baseLines, p.deductions, p.currencies, p.products, p.displayCurrency, p.rates, money, qty, leaves]);
+  }, [visibleRows, collapsed, currencyEdits, baseLines, p.currencies]);
+
+  const unifiedCols: GridCol[] = useMemo(() => {
+    const periods: { label: string; months: number[]; month?: number }[] =
+      period === "month"
+        ? MONTHS.map((m, i) => ({ label: monthLabelsAll[i], months: [m], month: m }))
+        : period === "quarter"
+          ? [0, 1, 2, 3].map((i) => ({ label: `${t("quarterPrefix")}${i + 1}`, months: MONTHS.slice(i * 3, i * 3 + 3) }))
+          : period === "semester"
+            ? [0, 1].map((i) => ({ label: `${t("semesterPrefix")}${i + 1}`, months: MONTHS.slice(i * 6, i * 6 + 6) }))
+            : [];
+    const money2 = (n: number) => money.format(n);
+    const agg = (key: string) => (key === TOTAL_KEY ? totals : aggregated[key]);
+    const sum = (months: number[], f: (m: number) => number) => months.reduce((s, m) => s + f(m), 0);
+    const avgInput = (pid: string, months: number[]) => {
+      const nz = months.map((m) => num(getInput(pid, m, "pr"))).filter((x) => x > 0);
+      return nz.length ? money2(nz.reduce((a, b) => a + b, 0) / nz.length) : "";
+    };
+
+    type Def = {
+      key: string; label: string; measure: Measure;
+      text: (row: GridRow, months: number[], month?: number) => string;
+    };
+    const defs: Def[] = [];
+    if (shown.has("pr")) {
+      defs.push({
+        key: "pr", label: t("secPrice"), measure: "pr",
+        text: (row, months, month) => {
+          if (!row.pid) return "";
+          return month ? getInput(row.pid, month, "pr") : avgInput(row.pid, months);
+        },
+      });
+    }
+    if (shown.has("v")) {
+      defs.push({
+        key: "v", label: t("secVolume"), measure: "v",
+        text: (row, months, month) => {
+          if (row.pid && month) return getInput(row.pid, month, "v");
+          return qty.format(sum(months, (m) => agg(row.key)?.[m]?.volume ?? 0));
+        },
+      });
+    }
+    if (shown.has("gross")) {
+      defs.push({
+        key: "gross", label: t("kpiGross"), measure: "gross",
+        text: (row, months) => money2(sum(months, (m) => toDisplay(agg(row.key)?.[m]?.gross ?? 0, m))),
+      });
+    }
+    if (shown.has("ded")) {
+      const labelsList = Array.from(new Set(p.deductions.map((d) => d.label)));
+      for (const lb of labelsList) {
+        const pct = (pid: string) => p.deductions.filter((d) => d.productId === pid && d.label === lb).reduce((s, d) => s + d.pct, 0);
+        defs.push({
+          key: `ded:${lb}`, label: lb, measure: "ded",
+          text: (row, months) => {
+            const ids = leavesUnder.get(row.key) ?? [];
+            return money2(sum(months, (m) => ids.reduce((s, pid) => s + toDisplay(((byProduct[pid]?.[m]?.gross ?? 0) * pct(pid)) / 100, m), 0)));
+          },
+        });
+      }
+    }
+    if (shown.has("net")) {
+      defs.push({
+        key: "net", label: t("kpiNet"), measure: "net",
+        text: (row, months) => money2(sum(months, (m) => toDisplay(agg(row.key)?.[m]?.net ?? 0, m))),
+      });
+    }
+
+    const cols: GridCol[] = [];
+    for (const d of defs) {
+      for (const pd of periods) {
+        cols.push({
+          key: `${d.key}:${pd.label}`, groupKey: d.key, groupLabel: d.label, label: pd.label,
+          editable: pd.month && (d.measure === "pr" || d.measure === "v") ? { field: d.measure === "pr" ? "pr" : "v", month: pd.month } : undefined,
+          cell: (row) => d.text(row, pd.months, pd.month),
+        });
+      }
+      cols.push({
+        key: `${d.key}:total`, groupKey: d.key, groupLabel: d.label, label: t("total"), isTotal: true,
+        cell: (row) => d.text(row, MONTHS),
+      });
+    }
+    return cols;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shown, period, aggregated, totals, byProduct, leavesUnder, edits, baseLines, p.deductions, p.displayCurrency, p.rates, money, qty]);
+
+  const hasDeductions = p.deductions.length > 0;
+  const toggleShown = (m: Measure) =>
+    setShown((s) => { const n = new Set(s); if (n.has(m)) n.delete(m); else n.add(m); return n; });
 
   function save() {
     setError(null);
@@ -343,7 +367,7 @@ export function ReceitaClient(p: Props) {
     { id: "fx", label: t("tabFx") },
     { id: "assumptions", label: t("tabAssumptions") },
   ];
-  const monthLabels = MONTHS.map((m) => new Intl.DateTimeFormat(locale, { month: "short" }).format(new Date(2000, m - 1, 1)));
+  const monthLabels = monthLabelsAll;
   const grand = sumMonths(totals);
 
   return (
@@ -396,11 +420,31 @@ export function ReceitaClient(p: Props) {
               {saved && !dirty && <span className="rec-saved">{t("saved")}</span>}
             </div>
           </div>
+          <div className="rec-gridbar">
+            <div>
+              <span className="rec-gridbar-lbl">{t("showColumns")}</span>
+              <div className="rec-metrics">
+                {([["pr", t("secPrice")], ["v", t("secVolume")], ["gross", t("kpiGross")], ["ded", t("kpiDeductions")], ["net", t("kpiNet")]] as [Measure, string][]).map(([m, label]) => (
+                  <button key={m} className={shown.has(m) ? "active" : ""} onClick={() => toggleShown(m)}>{label}</button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <span className="rec-gridbar-lbl">{t("period")}</span>
+              <div className="rec-metrics">
+                {([["month", t("periodMonth")], ["quarter", t("periodQuarter")], ["semester", t("periodSemester")], ["year", t("periodYear")]] as [Period, string][]).map(([k, label]) => (
+                  <button key={k} className={period === k ? "active" : ""} onClick={() => setPeriod(k)}>{label}</button>
+                ))}
+              </div>
+            </div>
+          </div>
+          {period !== "month" && !readOnly && <p className="rec-hint">{t("periodEditHint")}</p>}
+          {shown.has("ded") && !hasDeductions && <p className="rec-hint">{t("noDeductionsHint")}</p>}
           <ReceitaGrid
             rows={unifiedRows}
-            monthLabels={monthLabels}
+            cols={unifiedCols}
             readOnly={readOnly}
-            labels={{ item: t("product"), currency: t("currency"), total: t("total") }}
+            labels={{ item: t("product"), currency: t("currency") }}
             onApply={applyChanges}
           />
         </>
