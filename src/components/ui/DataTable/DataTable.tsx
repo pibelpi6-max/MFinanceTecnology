@@ -117,6 +117,7 @@ export function DataTable<T extends {
   canDelete,
   renderExpanded,
   expandedRowId,
+  onRowClick,
   onNew,
   newLabel,
   extraActions,
@@ -1557,8 +1558,17 @@ export function DataTable<T extends {
                     <tr
                       key={item.id}
                       ref={expandRender?.id === item.id ? expandedRowRef : undefined}
+                      onClick={
+                        onRowClick
+                          ? (e) => {
+                              if ((e.target as HTMLElement).closest("button, select, input, textarea, a, label")) return;
+                              onRowClick(item);
+                            }
+                          : undefined
+                      }
                       className={[
                         "group transition-colors",
+                        onRowClick ? "cursor-pointer" : "",
                         isDragging ? "" : "hover:bg-[rgba(92,184,138,0.08)]",
                       ].join(" ")}
                       style={{

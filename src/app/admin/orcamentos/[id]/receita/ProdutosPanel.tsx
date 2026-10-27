@@ -58,6 +58,8 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
   const [editDeds, setEditDeds] = useState<DedDraft[]>([]);
   const [applyProducts, setApplyProducts] = useState(false);
   const [applyServices, setApplyServices] = useState(false);
+  const [snapshot, setSnapshot] = useState("");
+  const [switchTo, setSwitchTo] = useState<ProductRow | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<ProductRow | null>(null);
@@ -100,7 +102,96 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
     setEditDeds(deductions.filter((d) => d.productId === r.id).map((d) => ({ label: d.label, pct: fmtPct(d.pct) })));
     setApplyProducts(false);
     setApplyServices(false);
+    setSnapshot(JSON.stringify([r.code, r.name, r.kind, deductions.filter((d) => d.productId === r.id).map((d) => ({ label: d.label, pct: fmtPct(d.pct) })), false, false]));
   }
+
+  const dirty = editing !== null && JSON.stringify([editCode, editName, editKind, editDeds, applyProducts, applyServices]) !== snapshot;
+
+  function openOrClose(r: ProductRow) {
+    if (editing && dirty) { setSwitchTo(r); return; }
+    if (editing?.id === r.id) setEditing(null);
+    else startEdit(r);
+  }
+
+  function confirmSwitch() {
+    const target = switchTo;
+    setSwitchTo(null);
+    if (!target) return;
+    if (editing?.id === target.id) setEditing(null);
+    else startEdit(target);
+  }
+
+  const editor = (row: ProductRow) => {
+    const onKey = (e: React.KeyboardEvent) => { if (e.key === "Enter") saveEdit(row); if (e.key === "Escape") openOrClose(row); };
+    const isItem = row.isLeaf && row.depth > 0;
+    const total = editDeds.reduce((s, d) => s + parsePct(d.pct), 0);
+    const presets = [...PRESETS, ...deductionLabels.filter((l) => !PRESETS.some((p) => p.toLowerCase() === l.toLowerCase()))]
+      .filter((x) => !editDeds.some((d) => d.label.toLowerCase() === x.toLowerCase()));
+    return (
+      <div className="rec-edit">
+        <div className="rec-edit-main">
+          <label>
+            {t("importColCode")}
+            <input value={editCode} onChange={(e) => setEditCode(e.target.value)} onKeyDown={onKey} />
+          </label>
+          <label>
+            {t("product")}
+            <input autoFocus value={editName} onChange={(e) => setEditName(e.target.value)} onKeyDown={onKey} />
+          </label>
+          {isItem && (
+            <div className="rec-edit-field">
+              {t("kindLabel")}
+              <div className="rec-seg" role="group" aria-label={t("kindLabel")}>
+                <button type="button" className={editKind === "produto" ? "on" : ""} onClick={() => setEditKind("produto")}>{t("kindProduct")}</button>
+                <button type="button" className={editKind === "servico" ? "on" : ""} onClick={() => setEditKind("servico")}>{t("kindService")}</button>
+              </div>
+              <span className="rec-edit-hint">{t("kindServiceHint")}</span>
+            </div>
+          )}
+        </div>
+        {isItem && (
+          <div className="rec-edit-deds">
+            <div className="rec-edit-deds-head">
+              <strong>{t("dedSectionTitle")}</strong>
+              <span>{t("totalDeductions")} <b>{fmtPct(total)}%</b></span>
+            </div>
+            {editDeds.length > 0 && (
+              <div className="rec-edit-table">
+                <div className="rec-edit-row rec-edit-row-head"><span>{t("dedColName")}</span><span>{t("dedColPct")}</span><span /></div>
+                {editDeds.map((it, i) => (
+                  <div className="rec-edit-row" key={i}>
+                    <input value={it.label} placeholder={t("deductionName")} onChange={(e) => setEditDeds((x) => x.map((y, j) => (j === i ? { ...y, label: e.target.value } : y)))} />
+                    <span className="rec-edit-pct">
+                      <input inputMode="decimal" value={it.pct} placeholder="0" onChange={(e) => /^\d*[.,]?\d*$/.test(e.target.value) && setEditDeds((x) => x.map((y, j) => (j === i ? { ...y, pct: e.target.value } : y)))} />
+                      %
+                    </span>
+                    <button type="button" className="rec-edit-x" aria-label={t("remove")} title={t("remove")} onClick={() => setEditDeds((x) => x.filter((_, j) => j !== i))}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden><path d="M6 6l12 12M18 6 6 18" /></svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="rec-presets">
+              <span className="rec-edit-hint">{t("dedAdd")}</span>
+              {presets.map((x) => (
+                <button type="button" key={x} className="rec-chip" onClick={() => setEditDeds((d) => [...d, { label: x, pct: defaultPct(x) }])}>+ {x}</button>
+              ))}
+              <button type="button" className="rec-chip rec-chip-new" onClick={() => setEditDeds((d) => [...d, { label: "", pct: "" }])}>+ {t("other")}</button>
+            </div>
+            <div className="rec-edit-apply">
+              <label><input type="checkbox" checked={applyProducts} onChange={(e) => setApplyProducts(e.target.checked)} /> {t("dedApplyProducts")}</label>
+              <label><input type="checkbox" checked={applyServices} onChange={(e) => setApplyServices(e.target.checked)} /> {t("dedApplyServices")}</label>
+            </div>
+          </div>
+        )}
+        <div className="rec-edit-foot">
+          <Button variant="ghost" size="sm" onClick={() => openOrClose(row)}>{t("prodCancel")}</Button>
+          <Button variant="primary" size="sm" onClick={() => saveEdit(row)} disabled={pending || !editName.trim() || !editCode.trim()} isLoading={pending}>{t("save")}</Button>
+        </div>
+      </div>
+    );
+  };
 
   function saveEdit(row: ProductRow) {
     const name = editName.trim();
@@ -239,7 +330,10 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
         onNew={() => setAdding(true)}
         newLabel={t("prodAddButton")}
         onImport={() => setImportOpen(true)}
-        onEdit={startEdit}
+        onEdit={openOrClose}
+        onRowClick={openOrClose}
+        expandedRowId={editing?.id ?? null}
+        renderExpanded={editor}
         onDelete={(r) => setDeleting(r)}
         canDelete={(r) => r.isLeaf && r.depth > 0}
         editLabel={t("prodRename")}
@@ -273,66 +367,6 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
         </div>
       </Modal>
 
-      <Modal
-        open={editing !== null}
-        onClose={() => setEditing(null)}
-        title={t("prodRename")}
-        size="md"
-        footer={
-          <>
-            <Button variant="ghost" size="sm" onClick={() => setEditing(null)}>{t("prodCancel")}</Button>
-            <Button variant="primary" size="sm" onClick={() => editing && saveEdit(editing)} disabled={pending} isLoading={pending}>{t("save")}</Button>
-          </>
-        }
-      >
-        {editing && (
-          <div className="rec-prod-form">
-            <label>
-              {t("importColCode")}
-              <input value={editCode} onChange={(e) => setEditCode(e.target.value)} />
-            </label>
-            <label>
-              {t("product")}
-              <input value={editName} onChange={(e) => setEditName(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") saveEdit(editing); }} />
-            </label>
-            {editing.isLeaf && editing.depth > 0 && (
-              <label>
-                {t("kindLabel")}
-                {kindSelect(editKind, setEditKind)}
-              </label>
-            )}
-            {editing.isLeaf && editing.depth > 0 && (
-              <div className="rec-prod-deds">
-                <div className="rec-prod-deds-title">{t("tabDeductions")}</div>
-                {editDeds.map((it, i) => (
-                  <div className="rec-ded-row" key={i}>
-                    <input value={it.label} placeholder={t("deductionName")} onChange={(e) => setEditDeds((x) => x.map((y, j) => (j === i ? { ...y, label: e.target.value } : y)))} />
-                    <input inputMode="decimal" value={it.pct} placeholder="%" onChange={(e) => /^\d*[.,]?\d*$/.test(e.target.value) && setEditDeds((x) => x.map((y, j) => (j === i ? { ...y, pct: e.target.value } : y)))} />
-                    <span>%</span>
-                    <button type="button" className="rec-link" onClick={() => setEditDeds((x) => x.filter((_, j) => j !== i))}>{t("remove")}</button>
-                  </div>
-                ))}
-                <div className="rec-presets">
-                  {[...PRESETS, ...deductionLabels.filter((l) => !PRESETS.some((p) => p.toLowerCase() === l.toLowerCase()))].filter((x) => !editDeds.some((d) => d.label.toLowerCase() === x.toLowerCase())).map((x) => (
-                    <button type="button" key={x} className="rec-chip" onClick={() => setEditDeds((d) => [...d, { label: x, pct: defaultPct(x) }])}>+ {x}</button>
-                  ))}
-                  <button type="button" className="rec-chip" onClick={() => setEditDeds((d) => [...d, { label: "", pct: "" }])}>+ {t("other")}</button>
-                </div>
-                <div className="rec-ded-total">{t("totalDeductions")}: <strong>{fmtPct(editDeds.reduce((s, d) => s + parsePct(d.pct), 0))}%</strong></div>
-                <label className="rec-prod-deds-all">
-                  <input type="checkbox" checked={applyProducts} onChange={(e) => setApplyProducts(e.target.checked)} />
-                  {t("dedApplyProducts")}
-                </label>
-                <label className="rec-prod-deds-all">
-                  <input type="checkbox" checked={applyServices} onChange={(e) => setApplyServices(e.target.checked)} />
-                  {t("dedApplyServices")}
-                </label>
-              </div>
-            )}
-          </div>
-        )}
-      </Modal>
-
       {importOpen && (
         <ImportProdutosModal
           open
@@ -343,6 +377,16 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
           onDone={(msg) => { setImportOpen(false); setNotice(msg); onChanged(); }}
         />
       )}
+
+      <ConfirmModal
+        open={switchTo !== null}
+        onClose={() => setSwitchTo(null)}
+        title={t("editDiscardTitle")}
+        body={t("editDiscardBody")}
+        cancelLabel={t("editKeep")}
+        confirmLabel={t("editDiscard")}
+        onConfirm={confirmSwitch}
+      />
 
       <ConfirmModal
         open={deleting !== null}

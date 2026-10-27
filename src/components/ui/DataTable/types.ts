@@ -130,6 +130,11 @@ export interface DataTableProps<T extends { id: string }> {
    * Ex: `(school) => school.status === "inactive"`
    */
   isDimmedRow?: (item: T) => boolean;
+  /**
+   * OPCIONAL: chamado ao clicar na linha (fora de botões, campos e links).
+   * Quando definido, a linha ganha cursor de ponteiro.
+   */
+  onRowClick?: (item: T) => void;
   renderExpanded?: (item: T) => React.ReactNode;
   expandedRowId?: string | null;
   /**
