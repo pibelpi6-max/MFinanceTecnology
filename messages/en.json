@@ -595,7 +595,21 @@
     "exitFullscreen": "Exit full screen",
     "calcGross": "= Price × Volume",
     "calcDeduction": "= Gross × %",
-    "calcNet": "= Gross − Deductions"
+    "calcNet": "= Gross − Deductions",
+    "tabParams": "Parameters",
+    "tabAnalysis": "Analysis",
+    "paramProducts": "Products",
+    "analysisHint": "Calculated view (read-only): Gross revenue = Price × Volume; Net revenue = Gross − Deductions.",
+    "prodAddLabel": "Add products",
+    "prodAddPlaceholder": "Names separated by commas or one per line",
+    "prodInside": "Inside",
+    "prodAddButton": "Add",
+    "prodRename": "Rename",
+    "prodDelete": "Delete",
+    "prodCancel": "Cancel",
+    "prodDeleteTitle": "Delete product",
+    "prodDeleteBody": "Delete <b>{name}</b>? Its entries will no longer appear.",
+    "prodHint": "Double-click a name to rename. An item with products inside becomes a group and Revenue sums the group's products."
   },
   "erpCodes": {
     "title": "ERP codes",

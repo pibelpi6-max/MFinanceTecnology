@@ -42,6 +42,8 @@ interface Props {
   rows: GridRow[];
   cols: GridCol[];
   readOnly: boolean;
+  /** Esconde a coluna Moeda (telas de análise). */
+  showCurrency?: boolean;
   labels: { item: string; currency: string };
   onApply: (changes: GridChange[]) => void;
 }
@@ -57,7 +59,7 @@ export function cleanPasted(raw: string): string | null {
   return NUM_RE.test(s) ? s : null;
 }
 
-export function ReceitaGrid({ rows, cols, readOnly, labels, onApply }: Props) {
+export function ReceitaGrid({ rows, cols, readOnly, showCurrency = true, labels, onApply }: Props) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [anchor, setAnchor] = useState<Pos | null>(null);
   const [focus, setFocus] = useState<Pos | null>(null);
@@ -300,7 +302,7 @@ export function ReceitaGrid({ rows, cols, readOnly, labels, onApply }: Props) {
         <thead>
           <tr>
             <th className="rec-g-label" rowSpan={2}>{labels.item}</th>
-            <th className="rec-g-cur" rowSpan={2}>{labels.currency}</th>
+            {showCurrency && <th className="rec-g-cur" rowSpan={2}>{labels.currency}</th>}
             {groups.map((g) => (
               <th key={g.key} colSpan={g.span} className={`rec-g-grp rec-g-grp-${g.idx % 2}`}>{g.label}{g.hint && <small className="rec-g-hint">{g.hint}</small>}</th>
             ))}
@@ -323,6 +325,7 @@ export function ReceitaGrid({ rows, cols, readOnly, labels, onApply }: Props) {
                 ) : <span className="rec-toggle-gap" />}
                 {row.label}
               </td>
+              {showCurrency && (
               <td className="rec-g-cur">
                 {row.currency && (
                   <select value={row.currency.value} disabled={readOnly} onChange={(e) => row.currency!.onChange(e.target.value)}>
@@ -330,6 +333,7 @@ export function ReceitaGrid({ rows, cols, readOnly, labels, onApply }: Props) {
                   </select>
                 )}
               </td>
+              )}
               {cols.map((col, c) => {
                 const isEditing = editing?.r === r && editing.c === c;
                 const selected = inRect(r, c, rect);
