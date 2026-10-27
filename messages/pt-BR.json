@@ -27,7 +27,7 @@
   "nav": {
     "orcamentos": "Orçamentos",
     "dashboard": "Dashboard",
-    "dimensoes": "Dimensões",
+    "dimensoes": "Hierarquias",
     "matriz": "Matriz Orçamentária",
     "realizado": "Despesas Realizadas",
     "comparativo": "Orçado x Realizado",
@@ -97,7 +97,7 @@
     "generic": "Não foi possível entrar. Tente novamente."
   },
   "dimensions": {
-    "title": "Dimensões",
+    "title": "Hierarquias",
     "year": "Ano",
     "new": "Novo item",
     "addItem": "item",
@@ -137,7 +137,7 @@
     "discard": "Descartar",
     "savedSuccess": "Alterações salvas.",
     "unsavedChanges": "{count} célula(s) não salva(s)",
-    "missingSetup": "Cadastre pelo menos uma Entidade, um Centro de Custo e uma Conta em Dimensões antes de lançar o orçamento.",
+    "missingSetup": "Cadastre pelo menos uma Entidade, um Centro de Custo e uma Conta em Hierarquias antes de lançar o orçamento.",
     "months": {
       "jan": "Jan",
       "fev": "Fev",
@@ -203,7 +203,7 @@
   },
   "actuals": {
     "title": "Despesas Realizadas",
-    "missingSetup": "Cadastre pelo menos uma Entidade, um Centro de Custo e uma Conta em Dimensões antes de lançar despesas.",
+    "missingSetup": "Cadastre pelo menos uma Entidade, um Centro de Custo e uma Conta em Hierarquias antes de lançar despesas.",
     "account": "Conta",
     "costCenter": "Centro de Custo",
     "description": "Descrição",
@@ -246,32 +246,32 @@
       "adminOnly": "Apenas administradores podem alterar."
     },
     "dimensions": {
-      "title": "Dimensões",
-      "intro": "Nome, descrição e dimensões personalizadas da empresa.",
+      "title": "Hierarquias",
+      "intro": "Nome, descrição e hierarquias personalizadas da empresa.",
       "name": "Nome",
       "code": "Código",
       "fieldDescription": "Descrição",
       "system": "Padrão do sistema",
       "custom": "Personalizada",
-      "customUsage": "Dimensões personalizadas",
+      "customUsage": "Hierarquias personalizadas",
       "noDescription": "Sem descrição.",
-      "new": "Nova dimensão",
+      "new": "Nova hierarquia",
       "edit": "Editar",
       "codeHint": "Usado internamente; só letras minúsculas, números e _.",
-      "codeLockedHint": "Código de uma dimensão padrão do sistema; não pode ser alterado.",
-      "limitReached": "Limite de 10 dimensões personalizadas atingido.",
+      "codeLockedHint": "Código de uma hierarquia padrão do sistema; não pode ser alterado.",
+      "limitReached": "Limite de 10 hierarquias personalizadas atingido.",
       "adminOnly": "Apenas administradores podem editar.",
-      "deleteConfirmTitle": "Excluir dimensão",
+      "deleteConfirmTitle": "Excluir hierarquia",
       "deleteConfirmBody": "Deseja excluir <b>{name}</b> permanentemente?",
       "useInMatriz": "Usar na Matriz Orçamentária",
-      "useInMatrizHint": "Se marcado, esta dimensão aparece como um filtro extra na Matriz Orçamentária.",
+      "useInMatrizHint": "Se marcado, esta hierarquia aparece como um filtro extra na Matriz Orçamentária.",
       "useInMatrizColumn": "Utilizado em:",
       "useInMatrizYes": "Matriz Orçamentária",
       "useInMatrizNo": "Nenhum lugar",
       "structure": "Estrutura",
       "structures": "Estruturas",
-      "structureItems": "Itens desta dimensão",
-      "structuresOfDimension": "Estruturas desta dimensão",
+      "structureItems": "Itens desta hierarquia",
+      "structuresOfDimension": "Estruturas desta hierarquia",
       "newStructure": "Nova estrutura",
       "renameStructure": "Renomear estrutura",
       "duplicateStructure": "Duplicar estrutura",
@@ -291,15 +291,15 @@
     },
     "conjuntos": {
       "title": "Conjuntos de Estrutura",
-      "intro": "Agrupe 1 Estrutura de cada dimensão para usar num Orçamento.",
+      "intro": "Agrupe 1 Estrutura de cada hierarquia para usar num Orçamento.",
       "new": "Novo conjunto",
       "edit": "Editar conjunto",
       "name": "Nome do conjunto",
-      "pickStructures": "Escolha 1 estrutura por dimensão",
+      "pickStructures": "Escolha 1 estrutura por hierarquia",
       "noneSelected": "Nenhuma",
-      "noStructuresAvailable": "Nenhuma dimensão tem estruturas cadastradas ainda.",
+      "noStructuresAvailable": "Nenhuma hierarquia tem estruturas cadastradas ainda.",
       "empty": "Nenhum conjunto cadastrado.",
-      "itemCount": "{count} dimensão(ões)",
+      "itemCount": "{count} hierarquia(ões)",
       "deleteConfirmTitle": "Excluir conjunto",
       "deleteConfirmBody": "Deseja excluir o conjunto <b>{name}</b> permanentemente?"
     }
@@ -515,8 +515,8 @@
     "exitFullscreen": "Sair da tela cheia"
   },
   "receita": {
-    "noProductsTitle": "Cadastre a dimensão Produto",
-    "noProductsBody": "A Receita é lançada por Produto. Crie em Parâmetros uma dimensão com o código “produto” e cadastre seus itens (pode ter hierarquia).",
+    "noProductsTitle": "Cadastre a hierarquia Produto",
+    "noProductsBody": "A Receita é lançada por Produto. Crie em Parâmetros uma hierarquia com o código “produto” e cadastre seus itens (pode ter níveis).",
     "goToParams": "Ir para Parâmetros",
     "entity": "Entidade",
     "allEntities": "Todas (consolidado)",
@@ -576,6 +576,6 @@
     "setupLabel": "Um produto por linha",
     "setupPlaceholder": "Produto A\nProduto B\nServiço de consultoria",
     "setupButton": "Cadastrar {count, plural, =0 {produtos} one {# produto} other {# produtos}}",
-    "setupHint": "Depois você pode reorganizar em grupos em Parâmetros > Dimensões."
+    "setupHint": "Depois você pode reorganizar em grupos em Parâmetros > Hierarquias."
   }
 }

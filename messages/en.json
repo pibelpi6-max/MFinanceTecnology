@@ -27,7 +27,7 @@
   "nav": {
     "orcamentos": "Budgets",
     "dashboard": "Dashboard",
-    "dimensoes": "Dimensions",
+    "dimensoes": "Hierarchies",
     "matriz": "Budget Matrix",
     "realizado": "Actual Expenses",
     "comparativo": "Budget vs. Actual",
@@ -97,7 +97,7 @@
     "generic": "Couldn't sign in. Please try again."
   },
   "dimensions": {
-    "title": "Dimensions",
+    "title": "Hierarchies",
     "year": "Year",
     "new": "New item",
     "addItem": "item",
@@ -137,7 +137,7 @@
     "discard": "Discard",
     "savedSuccess": "Changes saved.",
     "unsavedChanges": "{count} unsaved cell(s)",
-    "missingSetup": "Set up at least one Entity, Cost Center and Account in Dimensions before entering the budget.",
+    "missingSetup": "Set up at least one Entity, Cost Center and Account in Hierarchies before entering the budget.",
     "months": {
       "jan": "Jan",
       "fev": "Feb",
@@ -203,7 +203,7 @@
   },
   "actuals": {
     "title": "Actual Expenses",
-    "missingSetup": "Set up at least one Entity, Cost Center and Account in Dimensions before logging expenses.",
+    "missingSetup": "Set up at least one Entity, Cost Center and Account in Hierarchies before logging expenses.",
     "account": "Account",
     "costCenter": "Cost Center",
     "description": "Description",
@@ -246,32 +246,32 @@
       "adminOnly": "Only admins can change this."
     },
     "dimensions": {
-      "title": "Dimensions",
-      "intro": "Name, description and custom dimensions for your company.",
+      "title": "Hierarchies",
+      "intro": "Name, description and custom hierarchies for your company.",
       "name": "Name",
       "code": "Code",
       "fieldDescription": "Description",
       "system": "System default",
       "custom": "Custom",
-      "customUsage": "Custom dimensions",
+      "customUsage": "Custom hierarchies",
       "noDescription": "No description.",
-      "new": "New dimension",
+      "new": "New hierarchy",
       "edit": "Edit",
       "codeHint": "Used internally; lowercase letters, numbers and _ only.",
-      "codeLockedHint": "Code of a system-default dimension; cannot be changed.",
-      "limitReached": "Limit of 10 custom dimensions reached.",
+      "codeLockedHint": "Code of a system-default hierarchy; cannot be changed.",
+      "limitReached": "Limit of 10 custom hierarchies reached.",
       "adminOnly": "Only admins can edit this.",
-      "deleteConfirmTitle": "Delete dimension",
+      "deleteConfirmTitle": "Delete hierarchy",
       "deleteConfirmBody": "Delete <b>{name}</b> permanently?",
       "useInMatriz": "Use in Budget Matrix",
-      "useInMatrizHint": "When checked, this dimension shows up as an extra filter in the Budget Matrix.",
+      "useInMatrizHint": "When checked, this hierarchy shows up as an extra filter in the Budget Matrix.",
       "useInMatrizColumn": "Used in:",
       "useInMatrizYes": "Budget Matrix",
       "useInMatrizNo": "Nowhere",
       "structure": "Structure",
       "structures": "Structures",
-      "structureItems": "Items in this dimension",
-      "structuresOfDimension": "Structures in this dimension",
+      "structureItems": "Items in this hierarchy",
+      "structuresOfDimension": "Structures in this hierarchy",
       "newStructure": "New structure",
       "renameStructure": "Rename structure",
       "duplicateStructure": "Duplicate structure",
@@ -291,15 +291,15 @@
     },
     "conjuntos": {
       "title": "Structure Sets",
-      "intro": "Group 1 Structure per dimension to use in a Budget.",
+      "intro": "Group 1 Structure per hierarchy to use in a Budget.",
       "new": "New set",
       "edit": "Edit set",
       "name": "Set name",
-      "pickStructures": "Pick 1 structure per dimension",
+      "pickStructures": "Pick 1 structure per hierarchy",
       "noneSelected": "None",
-      "noStructuresAvailable": "No dimension has structures yet.",
+      "noStructuresAvailable": "No hierarchy has structures yet.",
       "empty": "No sets yet.",
-      "itemCount": "{count} dimension(s)",
+      "itemCount": "{count} hierarchy(s)",
       "deleteConfirmTitle": "Delete set",
       "deleteConfirmBody": "Delete set <b>{name}</b> permanently?"
     }
@@ -515,8 +515,8 @@
     "exitFullscreen": "Exit full screen"
   },
   "receita": {
-    "noProductsTitle": "Create the Product dimension",
-    "noProductsBody": "Revenue is entered by Product. In Settings, create a dimension with code “produto” and add its items (hierarchy allowed).",
+    "noProductsTitle": "Create the Product hierarchy",
+    "noProductsBody": "Revenue is entered by Product. In Settings, create a hierarchy with code “produto” and add its items (levels allowed).",
     "goToParams": "Go to Settings",
     "entity": "Entity",
     "allEntities": "All (consolidated)",
@@ -576,6 +576,6 @@
     "setupLabel": "One product per line",
     "setupPlaceholder": "Product A\nProduct B\nConsulting service",
     "setupButton": "Add {count, plural, =0 {products} one {# product} other {# products}}",
-    "setupHint": "You can group them later in Settings > Dimensions."
+    "setupHint": "You can group them later in Settings > Hierarchies."
   }
 }

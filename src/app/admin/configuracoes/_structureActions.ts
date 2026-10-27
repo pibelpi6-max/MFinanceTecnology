@@ -58,7 +58,7 @@ export async function createDimensionStructure(input: {
       .select("id")
       .single();
     if (error) {
-      if (error.code === "23505") return { error: "Já existe uma estrutura com esse nome nesta dimensão." };
+      if (error.code === "23505") return { error: "Já existe uma estrutura com esse nome nesta hierarquia." };
       return { error: error.message };
     }
 
@@ -82,7 +82,7 @@ export async function renameDimensionStructure(input: { id: string; name: string
       .eq("id", input.id)
       .eq("tenant_id", tenant.tenantId);
     if (error) {
-      if (error.code === "23505") return { error: "Já existe uma estrutura com esse nome nesta dimensão." };
+      if (error.code === "23505") return { error: "Já existe uma estrutura com esse nome nesta hierarquia." };
       return { error: error.message };
     }
 
@@ -165,7 +165,7 @@ export async function duplicateDimensionStructure(input: {
       .single();
     if (insertStructureError) {
       if (insertStructureError.code === "23505") {
-        return { error: "Já existe uma estrutura com esse nome nesta dimensão." };
+        return { error: "Já existe uma estrutura com esse nome nesta hierarquia." };
       }
       return { error: insertStructureError.message };
     }

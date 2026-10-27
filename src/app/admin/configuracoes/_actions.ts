@@ -77,7 +77,7 @@ export async function createDimensionType(input: {
       .not("code", "in", `(${PROTECTED_DIMENSION_CODES.join(",")})`);
     if (countError) return { error: countError.message };
     if ((count ?? 0) >= 10) {
-      return { error: "Limite de 10 dimensões personalizadas por empresa atingido." };
+      return { error: "Limite de 10 hierarquias personalizadas por empresa atingido." };
     }
 
     const { data: last } = await supabase
@@ -102,7 +102,7 @@ export async function createDimensionType(input: {
       .select("id")
       .single();
     if (error) {
-      if (error.code === "23505") return { error: "Já existe uma dimensão com esse código." };
+      if (error.code === "23505") return { error: "Já existe uma hierarquia com esse código." };
       return { error: error.message };
     }
 
@@ -145,7 +145,7 @@ export async function updateDimensionType(input: {
       .eq("tenant_id", tenant.tenantId)
       .maybeSingle();
     if (currentError) return { error: currentError.message };
-    if (!current) return { error: "Dimensão não encontrada." };
+    if (!current) return { error: "Hierarquia não encontrada." };
 
     const updatePayload: { name: string; description: string | null; code?: string; use_in_matriz?: boolean } = {
       name,
@@ -170,7 +170,7 @@ export async function updateDimensionType(input: {
       .eq("id", input.id)
       .eq("tenant_id", tenant.tenantId);
     if (error) {
-      if (error.code === "23505") return { error: "Já existe uma dimensão com esse código." };
+      if (error.code === "23505") return { error: "Já existe uma hierarquia com esse código." };
       return { error: error.message };
     }
 
@@ -193,9 +193,9 @@ export async function deleteDimensionType(input: { id: string }): Promise<Action
       .eq("tenant_id", tenant.tenantId)
       .maybeSingle();
     if (typeError) return { error: typeError.message };
-    if (!type) return { error: "Dimensão não encontrada." };
+    if (!type) return { error: "Hierarquia não encontrada." };
     if (type.is_system || isProtectedDimensionCode(type.code)) {
-      return { error: "Dimensões padrão do sistema não podem ser excluídas." };
+      return { error: "Hierarquias padrão do sistema não podem ser excluídas." };
     }
 
     const { count, error: countError } = await supabase
@@ -204,7 +204,7 @@ export async function deleteDimensionType(input: { id: string }): Promise<Action
       .eq("dimension_type_id", input.id);
     if (countError) return { error: countError.message };
     if ((count ?? 0) > 0) {
-      return { error: "Esta dimensão tem itens cadastrados. Exclua os itens antes de remover o tipo." };
+      return { error: "Esta hierarquia tem itens cadastrados. Exclua os itens antes de remover o tipo." };
     }
 
     const { error } = await supabase

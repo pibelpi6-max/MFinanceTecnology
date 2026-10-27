@@ -85,7 +85,7 @@ export async function createDimensionNode(input: {
 
     const structureId = await resolveStructureId(supabase, tenantId, input.dimensionTypeId, input.structureId);
     if (!structureId) {
-      return { error: "Esta dimensão não tem uma estrutura ativa. Ative uma estrutura em Parâmetros antes de adicionar itens." };
+      return { error: "Esta hierarquia não tem uma estrutura ativa. Ative uma estrutura em Parâmetros antes de adicionar itens." };
     }
 
     if (!input.parentNodeId && (await countRootNodes(supabase, structureId, input.year)) >= 1) {
@@ -231,7 +231,7 @@ export async function importDimensionNodes(input: {
     return {
       successCount: 0,
       errorCount: input.rows.length,
-      errors: [{ rowIndex: 0, message: "Esta dimensão não tem uma estrutura ativa. Ative uma estrutura em Parâmetros antes de importar." }],
+      errors: [{ rowIndex: 0, message: "Esta hierarquia não tem uma estrutura ativa. Ative uma estrutura em Parâmetros antes de importar." }],
     };
   }
 
