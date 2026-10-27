@@ -1445,16 +1445,3 @@ select.rec-kind option:checked { background: #fff; color: #1C2033; }
 .rec-seg-thumb { position: absolute; top: 2px; left: 2px; bottom: 2px; width: calc(50% - 2px); border-radius: 7px; background: #fff; box-shadow: 0 1px 3px rgba(28, 32, 51, .15); transition: transform .22s cubic-bezier(.4, 0, .2, 1); }
 .rec-seg[data-on="servico"] .rec-seg-thumb { transform: translateX(100%); }
 @media (prefers-reduced-motion: reduce) { .rec-seg-thumb, .rec-edit .rec-seg button { transition: none; } }
-
-/* Parâmetros: sub-abas em menu vertical à esquerda */
-.rec-params { display: flex; align-items: flex-start; gap: 24px; margin-top: 8px; }
-.rec-params .rec-subtabs { display: flex; flex-direction: column; gap: 4px; width: 220px; flex-shrink: 0; margin: 0; padding: 0; border: 0; }
-.rec-params .rec-subtabs button { display: flex; align-items: center; gap: 10px; width: 100%; justify-content: flex-start; text-align: left; padding: 10px 14px; border: 0; border-radius: 10px; background: transparent; color: #3a4060; font-size: 14px; cursor: pointer; transition: background .15s ease, color .15s ease; }
-.rec-params .rec-subtabs button:hover { background: #f1f4fb; }
-.rec-params .rec-subtabs button.active { background: #e9efff; color: #3E6FE0; font-weight: 600; }
-.rec-params-body { flex: 1 1 0; min-width: 0; }
-@media (max-width: 820px) {
-  .rec-params { flex-direction: column; }
-  .rec-params .rec-subtabs { flex-direction: row; flex-wrap: wrap; width: 100%; }
-  .rec-params .rec-subtabs button { width: auto; }
-}
