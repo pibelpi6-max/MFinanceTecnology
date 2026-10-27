@@ -56,8 +56,7 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
   const [editCode, setEditCode] = useState("");
   const [editKind, setEditKind] = useState<Kind>("produto");
   const [editDeds, setEditDeds] = useState<DedDraft[]>([]);
-  const [applyProducts, setApplyProducts] = useState(false);
-  const [applyServices, setApplyServices] = useState(false);
+  const [copyTo, setCopyTo] = useState<Kind | null>(null);
   const [snapshot, setSnapshot] = useState("");
   const [switchTo, setSwitchTo] = useState<ProductRow | null>(null);
   const [importOpen, setImportOpen] = useState(false);
@@ -100,12 +99,10 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
     setEditCode(r.code);
     setEditKind(r.kind);
     setEditDeds(deductions.filter((d) => d.productId === r.id).map((d) => ({ label: d.label, pct: fmtPct(d.pct) })));
-    setApplyProducts(false);
-    setApplyServices(false);
-    setSnapshot(JSON.stringify([r.code, r.name, r.kind, deductions.filter((d) => d.productId === r.id).map((d) => ({ label: d.label, pct: fmtPct(d.pct) })), false, false]));
+    setSnapshot(JSON.stringify([r.code, r.name, r.kind, deductions.filter((d) => d.productId === r.id).map((d) => ({ label: d.label, pct: fmtPct(d.pct) }))]));
   }
 
-  const dirty = editing !== null && JSON.stringify([editCode, editName, editKind, editDeds, applyProducts, applyServices]) !== snapshot;
+  const dirty = editing !== null && JSON.stringify([editCode, editName, editKind, editDeds]) !== snapshot;
 
   function openOrClose(r: ProductRow) {
     if (editing && dirty) { setSwitchTo(r); return; }
@@ -130,6 +127,16 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
     return (
       <div className="rec-edit">
         <div className="rec-edit-main">
+          {isItem && (
+            <div className="rec-edit-field">
+              {t("kindLabel")}
+              <div className="rec-seg" role="group" aria-label={t("kindLabel")}>
+                <button type="button" className={editKind === "produto" ? "on" : ""} onClick={() => setEditKind("produto")}>{t("kindProduct")}</button>
+                <button type="button" className={editKind === "servico" ? "on" : ""} onClick={() => setEditKind("servico")}>{t("kindService")}</button>
+              </div>
+              {editKind === "servico" && <span className="rec-edit-hint">{t("kindServiceHint")}</span>}
+            </div>
+          )}
           <label>
             {t("importColCode")}
             <input value={editCode} onChange={(e) => setEditCode(e.target.value)} onKeyDown={onKey} />
@@ -138,16 +145,6 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
             {t("product")}
             <input autoFocus value={editName} onChange={(e) => setEditName(e.target.value)} onKeyDown={onKey} />
           </label>
-          {isItem && (
-            <div className="rec-edit-field">
-              {t("kindLabel")}
-              <div className="rec-seg" role="group" aria-label={t("kindLabel")}>
-                <button type="button" className={editKind === "produto" ? "on" : ""} onClick={() => setEditKind("produto")}>{t("kindProduct")}</button>
-                <button type="button" className={editKind === "servico" ? "on" : ""} onClick={() => setEditKind("servico")}>{t("kindService")}</button>
-              </div>
-              <span className="rec-edit-hint">{t("kindServiceHint")}</span>
-            </div>
-          )}
         </div>
         {isItem && (
           <div className="rec-edit-deds">
@@ -180,8 +177,9 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
               <button type="button" className="rec-chip rec-chip-new" onClick={() => setEditDeds((d) => [...d, { label: "", pct: "" }])}>+ {t("other")}</button>
             </div>
             <div className="rec-edit-apply">
-              <label><input type="checkbox" checked={applyProducts} onChange={(e) => setApplyProducts(e.target.checked)} /> {t("dedApplyProducts")}</label>
-              <label><input type="checkbox" checked={applyServices} onChange={(e) => setApplyServices(e.target.checked)} /> {t("dedApplyServices")}</label>
+              <span>{t("dedCopyTitle")}</span>
+              <button type="button" className="rec-chip" disabled={pending || countOf("produto") === 0} onClick={() => setCopyTo("produto")}>{t("dedCopyProducts", { n: countOf("produto") })}</button>
+              <button type="button" className="rec-chip" disabled={pending || countOf("servico") === 0} onClick={() => setCopyTo("servico")}>{t("dedCopyServices", { n: countOf("servico") })}</button>
             </div>
           </div>
         )}
@@ -210,16 +208,27 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
       }
       if (row.isLeaf && row.depth > 0) {
         const items = editDeds.filter((d) => d.label.trim()).map((d) => ({ label: d.label.trim(), pct: parsePct(d.pct) }));
-        const bulk = applyProducts || applyServices;
-        const targetIds = products
-          .filter((x) => x.isLeaf && x.depth > 0 && x.id !== row.id && ((applyProducts && x.kind === "produto") || (applyServices && x.kind === "servico")))
-          .map((x) => x.id);
-        const d = bulk
-          ? await saveDeductionsBulk({ orcamentoId, productIds: [row.id, ...targetIds], items })
-          : await saveDeductions({ orcamentoId, productId: row.id, items: items.map((i) => ({ code: i.label, ...i })) });
+        const d = await saveDeductions({ orcamentoId, productId: row.id, items: items.map((i) => ({ code: i.label, ...i })) });
         if (d.error) { onError(d.error); return; }
       }
       setEditing(null);
+      onChanged();
+    });
+  }
+
+  const countOf = (k: Kind) => products.filter((x) => x.isLeaf && x.depth > 0 && x.kind === k).length;
+
+  function confirmCopy() {
+    const kind = copyTo;
+    if (!kind) return;
+    const ids = products.filter((x) => x.isLeaf && x.depth > 0 && x.kind === kind).map((x) => x.id);
+    const items = editDeds.filter((d) => d.label.trim()).map((d) => ({ label: d.label.trim(), pct: parsePct(d.pct) }));
+    onError(null);
+    start(async () => {
+      const r = await saveDeductionsBulk({ orcamentoId, productIds: ids, items });
+      setCopyTo(null);
+      if (r.error) { onError(r.error); return; }
+      setNotice(t("dedCopyDone", { n: ids.length }));
       onChanged();
     });
   }
@@ -377,6 +386,17 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
           onDone={(msg) => { setImportOpen(false); setNotice(msg); onChanged(); }}
         />
       )}
+
+      <ConfirmModal
+        open={copyTo !== null}
+        onClose={() => setCopyTo(null)}
+        title={t("dedCopyConfirmTitle")}
+        body={copyTo ? t("dedCopyConfirmBody", { n: copyTo ? countOf(copyTo) : 0, kind: copyTo === "servico" ? t("kindService").toLowerCase() : t("kindProduct").toLowerCase() }) : ""}
+        cancelLabel={t("prodCancel")}
+        confirmLabel={t("dedCopyConfirm")}
+        loading={pending}
+        onConfirm={confirmCopy}
+      />
 
       <ConfirmModal
         open={switchTo !== null}

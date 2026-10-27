@@ -642,8 +642,6 @@
     "kindLabel": "Type",
     "kindProduct": "Product",
     "kindService": "Service",
-    "dedApplyProducts": "Apply to all products",
-    "dedApplyServices": "Apply to all services",
     "kindServiceHint": "Services have no bill of materials (Costs).",
     "dedSectionTitle": "Revenue deductions",
     "dedColName": "Deduction",
@@ -652,7 +650,14 @@
     "editDiscardTitle": "Discard changes?",
     "editDiscardBody": "You changed this item without saving. If you continue, the changes will be lost.",
     "editDiscard": "Discard",
-    "editKeep": "Keep editing"
+    "editKeep": "Keep editing",
+    "dedCopyTitle": "Copy these deductions to:",
+    "dedCopyProducts": "All products ({n})",
+    "dedCopyServices": "All services ({n})",
+    "dedCopyConfirmTitle": "Replace deductions?",
+    "dedCopyConfirmBody": "The deductions of {n} items of type {kind} will be replaced by these. This applies immediately, no need to save.",
+    "dedCopyConfirm": "Apply",
+    "dedCopyDone": "Deductions applied to {n} items."
   },
   "erpCodes": {
     "title": "ERP codes",
