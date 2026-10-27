@@ -135,6 +135,50 @@ export async function saveDeductions(input: {
   }
 }
 
+export async function saveDeductionsBulk(input: {
+  orcamentoId: string;
+  productIds: string[];
+  items: { label: string; pct: number }[];
+}): Promise<Result> {
+  try {
+    const tenant = await getCurrentTenant();
+    if (!tenant) return { error: "Não autenticado" };
+    if (!(await assertOrcamento(tenant.tenantId, input.orcamentoId))) return { error: "Orçamento não encontrado" };
+    for (const i of input.items) {
+      if (!i.label.trim()) return { error: "Informe o nome de cada dedução" };
+      if (!Number.isFinite(i.pct) || i.pct < 0 || i.pct > 100) return { error: "Percentual deve estar entre 0 e 100" };
+    }
+    if (input.productIds.length === 0) return { success: true };
+    const supabase = await createClient();
+    const { error: delErr } = await supabase
+      .from("revenue_deductions")
+      .delete()
+      .eq("tenant_id", tenant.tenantId)
+      .eq("orcamento_id", input.orcamentoId)
+      .in("product_node_id", input.productIds);
+    if (delErr) return { error: delErr.message };
+    const rows = input.productIds.flatMap((pid) =>
+      input.items.map((i, idx) => ({
+        tenant_id: tenant.tenantId,
+        orcamento_id: input.orcamentoId,
+        product_node_id: pid,
+        code: `${idx}_${i.label.trim().toLowerCase().replace(/[^a-z0-9]+/g, "_")}`.slice(0, 60),
+        label: i.label.trim(),
+        pct: i.pct,
+        sort_order: idx,
+      })),
+    );
+    for (let n = 0; n < rows.length; n += 500) {
+      const { error } = await supabase.from("revenue_deductions").insert(rows.slice(n, n + 500));
+      if (error) return { error: error.message };
+    }
+    refresh(input.orcamentoId);
+    return { success: true };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Erro ao salvar" };
+  }
+}
+
 export async function saveCurrencyRates(input: {
   orcamentoId: string;
   currency: string;

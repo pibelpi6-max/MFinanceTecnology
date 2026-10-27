@@ -407,6 +407,7 @@ export function ReceitaClient(p: Props) {
               productTypeId={p.productTypeId}
               year={p.year}
               products={p.products}
+              deductions={p.deductions}
               initialPrefs={p.productPrefs}
               onChanged={() => router.refresh()}
               onError={setError}
