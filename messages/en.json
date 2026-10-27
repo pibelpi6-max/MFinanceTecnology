@@ -642,7 +642,8 @@
     "kindLabel": "Type",
     "kindProduct": "Product",
     "kindService": "Service",
-    "dedApplyAll": "Apply these deductions to all products and services"
+    "dedApplyProducts": "Apply to all products",
+    "dedApplyServices": "Apply to all services"
   },
   "erpCodes": {
     "title": "ERP codes",
