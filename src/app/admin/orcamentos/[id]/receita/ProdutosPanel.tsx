@@ -143,12 +143,22 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, used
               </>
             ) : (
               <>
+                <span className="rec-prod-code">{r.code}</span>
                 <span className={`rec-prod-name${r.isLeaf ? "" : " is-group"}`} onDoubleClick={() => { setEditing(r.id); setEditName(r.name); setEditCode(r.code); }}>
                   {r.name}
                 </span>
-                <span className="rec-prod-code">{r.code}</span>
+                <button
+                  type="button"
+                  className="rec-prod-pencil"
+                  title={t("prodRename")}
+                  aria-label={t("prodRename")}
+                  onClick={() => { setEditing(r.id); setEditName(r.name); setEditCode(r.code); }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    <path d="M16.86 4.49a1.75 1.75 0 1 1 2.47 2.47L7.5 18.79l-3.3.82.82-3.3Z" />
+                  </svg>
+                </button>
                 <span className="rec-prod-actions">
-                  <button type="button" onClick={() => { setEditing(r.id); setEditName(r.name); setEditCode(r.code); }}>{t("prodRename")}</button>
                   {r.isLeaf && r.depth > 0 && <button type="button" onClick={() => setDeleting(r)}>{t("prodDelete")}</button>}
                 </span>
               </>

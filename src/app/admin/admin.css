@@ -1354,3 +1354,7 @@ button.rec-imp-pill { cursor: pointer; }
 .rec-imp-table input.is-auto { font-style: italic; color: #3E6FE0; }
 .rec-imp-was { display: block; color: #9aa0b8; font-size: 11px; }
 .rec-prod-code-input { width: 90px; }
+
+.rec-prod-code { min-width: 52px; font-variant-numeric: tabular-nums; }
+.rec-prod-pencil { background: none; border: 0; padding: 2px; color: #8a90a8; cursor: pointer; display: inline-flex; border-radius: 6px; }
+.rec-prod-pencil:hover { color: #3E6FE0; background: #eef2fd; }
