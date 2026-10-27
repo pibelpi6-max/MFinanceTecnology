@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentTenant } from "@/lib/tenant/getCurrentTenant";
 import { createDimensionType } from "@/app/admin/configuracoes/_actions";
-import { createDimensionNode } from "@/app/admin/dimensoes/_actions";
+import { createDimensionNode, updateDimensionNode } from "@/app/admin/dimensoes/_actions";
 import { applyPriceAdjust, applyVolumeGrowth, type RevenueLine } from "@/lib/receita/calc";
 
 interface Result {
@@ -307,5 +307,122 @@ export async function setupProdutos(input: { orcamentoId: string; names: string[
     return { success: true };
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Erro ao cadastrar produtos" };
+  }
+}
+
+
+export interface ImportProdutosInput {
+  orcamentoId: string;
+  productTypeId: string;
+  /** Item raiz ("Produtos") e seu nível (1). Grupos novos entram abaixo dele. */
+  rootId: string;
+  rootLevel: number;
+  groups: { code: string; name: string }[];
+  creates: { code: string; name: string; parentId: string | null; parentLevel: number; groupCode?: string }[];
+  updates: { id: string; versionId: string; validFromYear: number; name: string; parentId: string | null }[];
+}
+
+const IMPORT_LIMIT = 5000;
+const CHUNK = 400;
+
+/**
+ * Importação em lote de produtos (já higienizados e classificados na tela):
+ * cria grupos e produtos com poucas idas ao banco (inserts em bloco) e
+ * renomeia os que casaram por código. Se algo falhar ao criar, desfaz os
+ * itens criados nesta chamada.
+ */
+export async function importProdutos(input: ImportProdutosInput): Promise<{ created: number; updated: number; error?: string }> {
+  try {
+    const tenant = await getCurrentTenant();
+    if (!tenant) return { created: 0, updated: 0, error: "Não autenticado" };
+    const orc = await assertOrcamento(tenant.tenantId, input.orcamentoId);
+    if (!orc) return { created: 0, updated: 0, error: "Orçamento não encontrado" };
+    if (input.groups.length + input.creates.length + input.updates.length > IMPORT_LIMIT) {
+      return { created: 0, updated: 0, error: `Limite de ${IMPORT_LIMIT} linhas por importação.` };
+    }
+    const supabase = await createClient();
+
+    const { data: structure } = await supabase
+      .from("dimension_structures")
+      .select("id")
+      .eq("tenant_id", tenant.tenantId)
+      .eq("dimension_type_id", input.productTypeId)
+      .eq("is_active", true)
+      .maybeSingle();
+    if (!structure) return { created: 0, updated: 0, error: "A hierarquia Produto não tem uma estrutura ativa." };
+
+    const level = (parentLevel: number) => parentLevel + 1;
+    if (input.creates.some((c) => level(c.groupCode ? input.rootLevel + 1 : c.parentLevel) > 10)) {
+      return { created: 0, updated: 0, error: "Profundidade máxima de 10 níveis atingida." };
+    }
+
+    const all = [...input.groups, ...input.creates].map((r) => ({ code: r.code, name: r.name }));
+    const idByCode = new Map<string, string>();
+    const createdIds: string[] = [];
+    const rollback = async () => {
+      for (let i = 0; i < createdIds.length; i += CHUNK) {
+        await supabase.from("dimension_nodes").delete().in("id", createdIds.slice(i, i + CHUNK));
+      }
+    };
+
+    for (let i = 0; i < all.length; i += CHUNK) {
+      const part = all.slice(i, i + CHUNK).map((r) => ({
+        tenant_id: tenant.tenantId,
+        dimension_type_id: input.productTypeId,
+        structure_id: structure.id,
+        code: r.code,
+      }));
+      const { data, error } = await supabase.from("dimension_nodes").insert(part).select("id, code");
+      if (error) {
+        await rollback();
+        return {
+          created: 0, updated: 0,
+          error: error.code === "23505" ? "Há códigos repetidos ou já usados por outro item. Ajuste os códigos e tente de novo." : error.message,
+        };
+      }
+      for (const row of data ?? []) { idByCode.set(row.code, row.id); createdIds.push(row.id); }
+    }
+
+    const versions = [
+      ...input.groups.map((g) => ({ code: g.code, name: g.name, parent: input.rootId, level: level(input.rootLevel) })),
+      ...input.creates.map((c) => ({
+        code: c.code, name: c.name,
+        parent: c.groupCode ? (idByCode.get(c.groupCode) ?? null) : c.parentId,
+        level: c.groupCode ? level(input.rootLevel + 1) : level(c.parentLevel),
+      })),
+    ];
+    for (let i = 0; i < versions.length; i += CHUNK) {
+      const part = versions.slice(i, i + CHUNK).map((v) => ({
+        dimension_node_id: idByCode.get(v.code)!,
+        parent_node_id: v.parent,
+        name: v.name,
+        level: v.level,
+        valid_from_year: orc.year,
+        valid_until_year: null,
+      }));
+      const { error } = await supabase.from("dimension_node_versions").insert(part);
+      if (error) {
+        await rollback();
+        return { created: 0, updated: 0, error: error.message };
+      }
+    }
+
+    let updated = 0;
+    for (let i = 0; i < input.updates.length; i += 20) {
+      const results = await Promise.all(
+        input.updates.slice(i, i + 20).map((u) =>
+          updateDimensionNode({ nodeId: u.id, versionId: u.versionId, currentValidFromYear: u.validFromYear, name: u.name, parentNodeId: u.parentId, year: orc.year })
+        )
+      );
+      updated += results.filter((r) => r.success).length;
+      const failed = results.find((r) => r.error);
+      if (failed) return { created: createdIds.length, updated, error: failed.error };
+    }
+
+    refresh(input.orcamentoId);
+    revalidatePath("/admin/configuracoes");
+    return { created: input.creates.length + input.groups.length, updated };
+  } catch (e) {
+    return { created: 0, updated: 0, error: e instanceof Error ? e.message : "Erro ao importar produtos" };
   }
 }

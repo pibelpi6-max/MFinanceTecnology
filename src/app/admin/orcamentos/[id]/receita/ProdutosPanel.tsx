@@ -6,9 +6,11 @@ import { Button } from "@/components/ui/Button";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { parseProductNames } from "@/lib/receita/parseProductNames";
 import { cancelDimensionNode, createDimensionNode, updateDimensionNode } from "../../../dimensoes/_actions";
+import { ImportProdutosModal } from "./ImportProdutosModal";
 import type { ProductRow } from "./ReceitaClient";
 
 interface Props {
+  orcamentoId: string;
   productTypeId: string;
   year: number;
   products: ProductRow[];
@@ -19,7 +21,7 @@ interface Props {
 }
 
 /** Cadastro de produtos dentro da Receita: incluir (vários de uma vez), renomear e excluir. */
-export function ProdutosPanel({ productTypeId, year, products, usedIds, onChanged, onError }: Props) {
+export function ProdutosPanel({ orcamentoId, productTypeId, year, products, usedIds, onChanged, onError }: Props) {
   const t = useTranslations("receita");
   const [pending, start] = useTransition();
 
@@ -30,6 +32,9 @@ export function ProdutosPanel({ productTypeId, year, products, usedIds, onChange
 
   const [editing, setEditing] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
+  const [editCode, setEditCode] = useState("");
+  const [importOpen, setImportOpen] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<ProductRow | null>(null);
 
   function nextCodes(n: number): string[] {
@@ -55,12 +60,13 @@ export function ProdutosPanel({ productTypeId, year, products, usedIds, onChange
 
   function saveRename(row: ProductRow) {
     const name = editName.trim();
-    if (!name) return;
+    const code = editCode.trim();
+    if (!name || !code) return;
     onError(null);
     start(async () => {
       const r = await updateDimensionNode({
         nodeId: row.id, versionId: row.versionId, currentValidFromYear: row.validFromYear,
-        name, parentNodeId: row.parentId, year,
+        name, code: code !== row.code ? code : undefined, parentNodeId: row.parentId, year,
       });
       if (r.error) { onError(r.error); return; }
       setEditing(null);
@@ -103,14 +109,26 @@ export function ProdutosPanel({ productTypeId, year, products, usedIds, onChange
         <Button variant="primary" size="sm" onClick={add} disabled={pending || parseProductNames(text).length === 0} isLoading={pending}>
           {t("prodAddButton")}
         </Button>
+        <Button variant="ghost" size="sm" onClick={() => setImportOpen(true)}>{t("importOpen")}</Button>
       </div>
       <p className="rec-hint">{t("prodHint")}</p>
+      {notice && <p className="rec-saved">{notice}</p>}
 
       <div className="rec-prod-list">
         {products.map((r) => (
           <div key={r.id} className="rec-prod-row" style={{ paddingLeft: 10 + r.depth * 20 }}>
             {editing === r.id ? (
               <>
+                <input
+                  className="rec-prod-code-input"
+                  value={editCode}
+                  onChange={(e) => setEditCode(e.target.value)}
+                  placeholder={t("importColCode")}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") saveRename(r);
+                    if (e.key === "Escape") setEditing(null);
+                  }}
+                />
                 <input
                   autoFocus
                   value={editName}
@@ -125,12 +143,12 @@ export function ProdutosPanel({ productTypeId, year, products, usedIds, onChange
               </>
             ) : (
               <>
-                <span className={`rec-prod-name${r.isLeaf ? "" : " is-group"}`} onDoubleClick={() => { setEditing(r.id); setEditName(r.name); }}>
+                <span className={`rec-prod-name${r.isLeaf ? "" : " is-group"}`} onDoubleClick={() => { setEditing(r.id); setEditName(r.name); setEditCode(r.code); }}>
                   {r.name}
                 </span>
                 <span className="rec-prod-code">{r.code}</span>
                 <span className="rec-prod-actions">
-                  <button type="button" onClick={() => { setEditing(r.id); setEditName(r.name); }}>{t("prodRename")}</button>
+                  <button type="button" onClick={() => { setEditing(r.id); setEditName(r.name); setEditCode(r.code); }}>{t("prodRename")}</button>
                   {r.isLeaf && r.depth > 0 && <button type="button" onClick={() => setDeleting(r)}>{t("prodDelete")}</button>}
                 </span>
               </>
@@ -138,6 +156,18 @@ export function ProdutosPanel({ productTypeId, year, products, usedIds, onChange
           </div>
         ))}
       </div>
+
+      {importOpen && (
+        <ImportProdutosModal
+          open
+          onClose={() => setImportOpen(false)}
+          orcamentoId={orcamentoId}
+          productTypeId={productTypeId}
+          products={products}
+          usedIds={usedIds}
+          onDone={(msg) => { setImportOpen(false); setNotice(msg); onChanged(); }}
+        />
+      )}
 
       <ConfirmModal
         open={deleting !== null}
