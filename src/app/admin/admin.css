@@ -1320,3 +1320,9 @@ a.orc-module:hover { border-color: #3E6FE0; box-shadow: 0 6px 16px rgba(62,111,2
 .rec-prod-actions button { background: none; border: 0; color: #3E6FE0; cursor: pointer; font-size: 12.5px; padding: 0; }
 
 .rec-tabs button { display: inline-flex; align-items: center; gap: 7px; }
+
+/* Receita: painel encostado no título, sem moldura azul ao redor */
+.admin-content--flush { padding: 0; background: #fff; }
+.orc-panel--flush { border: 0; border-radius: 0; padding: 0; }
+.orc-panel--flush .rec-wrap { padding: 10px 24px 20px; }
+.orc-panel--flush .rec-setup { margin: 16px 24px; }
