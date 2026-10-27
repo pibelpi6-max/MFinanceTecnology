@@ -656,7 +656,10 @@
     "dedCopyConfirmTitle": "Replace deductions?",
     "dedCopyConfirmBody": "The deductions of {n} items of type {kind} will be replaced by these. This applies immediately, no need to save.",
     "dedCopyConfirm": "Apply",
-    "dedCopyDone": "Deductions applied to {n} items."
+    "dedCopyDone": "Deductions applied to {n} items.",
+    "dedDefaultsHint": "Register the company's default deductions with their percentage. When editing a product or service, they appear as pre-filled shortcuts.",
+    "fxRepeatNext": "Repeat in the following months",
+    "fxNewCurrency": "New currency"
   },
   "erpCodes": {
     "title": "ERP codes",

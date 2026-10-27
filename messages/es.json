@@ -656,7 +656,10 @@
     "dedCopyConfirmTitle": "¿Reemplazar las deducciones?",
     "dedCopyConfirmBody": "Las deducciones de {n} elementos de tipo {kind} serán reemplazadas por estas. Se aplica de inmediato, sin necesidad de guardar.",
     "dedCopyConfirm": "Aplicar",
-    "dedCopyDone": "Deducciones aplicadas a {n} elementos."
+    "dedCopyDone": "Deducciones aplicadas a {n} elementos.",
+    "dedDefaultsHint": "Registre las deducciones estándar de la empresa con su porcentaje. Al editar un producto o servicio, aparecen como atajos ya completados.",
+    "fxRepeatNext": "Repetir en los meses siguientes",
+    "fxNewCurrency": "Nueva moneda"
   },
   "erpCodes": {
     "title": "Códigos del ERP",

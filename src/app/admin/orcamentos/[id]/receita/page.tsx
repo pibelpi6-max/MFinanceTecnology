@@ -5,7 +5,7 @@ import { getOrcamentoById } from "@/lib/orcamentos/queries";
 import { getDimensionTypeByCode, getDimensionTree } from "@/lib/dimensions/queries";
 import { DIMENSION_CODES } from "@/lib/dimensions/constants";
 import { buildDimensionHierarchy } from "@/lib/dimensions/hierarchy";
-import { getDeductionLabels, getItemKinds, getReceitaData } from "@/lib/receita/queries";
+import { getDeductionDefaults, getDeductionLabels, getItemKinds, getReceitaData } from "@/lib/receita/queries";
 import { BackToMapLink } from "@/components/orcamentos/BackToMapLink";
 import { ModuleTitle } from "@/components/orcamentos/ModuleTitle";
 import { getUserPreference } from "@/app/_actions/userPreferences";
@@ -62,7 +62,11 @@ export default async function ReceitaPage({ params, searchParams }: PageProps) {
     );
   }
 
-  const [kinds, deductionLabels] = await Promise.all([getItemKinds(tenant.tenantId), getDeductionLabels(tenant.tenantId)]);
+  const [kinds, deductionLabels, deductionDefaults] = await Promise.all([
+    getItemKinds(tenant.tenantId),
+    getDeductionLabels(tenant.tenantId),
+    getDeductionDefaults(tenant.tenantId),
+  ]);
   const hierarchy = buildDimensionHierarchy(productNodes);
   const products: ProductRow[] = hierarchy.rows.map((r) => ({
     id: r.item.id,
@@ -97,6 +101,7 @@ export default async function ReceitaPage({ params, searchParams }: PageProps) {
             productTypeId={produtoType!.id}
             productPrefs={productPrefs ?? undefined}
             deductionLabels={deductionLabels}
+            deductionDefaults={deductionDefaults}
             products={products}
             entities={entities}
             entityId={entityId}

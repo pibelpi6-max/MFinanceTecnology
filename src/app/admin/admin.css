@@ -1452,3 +1452,14 @@ select.rec-kind option:checked { background: #fff; color: #1C2033; }
 .rec-edit .rec-seg[data-on="servico"] .rec-seg-thumb { background: #fff1e0; }
 .rec-edit .rec-seg[data-on="produto"] button.on { color: #3E6FE0; }
 .rec-edit .rec-seg[data-on="servico"] button.on { color: #a45a00; }
+
+/* Câmbio: botão de repetir em cada mês e seletor de moedas */
+.rec-fx-cell { position: relative; display: block; }
+.rec-fx-cell input { width: 100%; box-sizing: border-box; padding-right: 32px; }
+.rec-fx-repeat { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); width: 26px; height: 26px; border: 0; border-radius: 6px; background: transparent; color: #6b7088; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+.rec-fx-repeat:hover:not(:disabled) { background: #e9efff; color: #3E6FE0; }
+.rec-fx-repeat:disabled { opacity: .35; cursor: default; }
+.rec-chip-on { background: #e9efff; border-color: #3E6FE0; color: #3E6FE0; }
+.rec-chip-new { border-style: dashed; border-color: #3E6FE0; color: #2f5bd0; }
+.rec-fx-head { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px; }
+.rec-fx-head .rec-presets { align-items: center; padding-bottom: 4px; }

@@ -179,6 +179,40 @@ export async function saveDeductionsBulk(input: {
   }
 }
 
+export async function saveDeductionDefaults(input: {
+  orcamentoId: string;
+  items: { label: string; pct: number }[];
+}): Promise<Result> {
+  try {
+    const tenant = await getCurrentTenant();
+    if (!tenant) return { error: "Não autenticado" };
+    const seen = new Set<string>();
+    const items: { label: string; pct: number }[] = [];
+    for (const i of input.items) {
+      const label = i.label.trim();
+      if (!label) continue;
+      if (!Number.isFinite(i.pct) || i.pct < 0 || i.pct > 100) return { error: "Percentual deve estar entre 0 e 100" };
+      if (seen.has(label.toLowerCase())) return { error: `A dedução ${label} está repetida` };
+      seen.add(label.toLowerCase());
+      items.push({ label, pct: i.pct });
+    }
+    const supabase = await createClient();
+    const hint = "Rode a migration 0023 (deduções padrão) no Supabase antes de salvar.";
+    const del = await supabase.from("revenue_deduction_defaults").delete().eq("tenant_id", tenant.tenantId);
+    if (del.error) return { error: /does not exist|schema cache|permission/i.test(del.error.message) ? hint : del.error.message };
+    if (items.length > 0) {
+      const ins = await supabase.from("revenue_deduction_defaults").insert(
+        items.map((i, idx) => ({ tenant_id: tenant.tenantId, label: i.label, pct: i.pct, sort_order: idx })),
+      );
+      if (ins.error) return { error: ins.error.message };
+    }
+    refresh(input.orcamentoId);
+    return { success: true };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Erro ao salvar" };
+  }
+}
+
 export async function saveCurrencyRates(input: {
   orcamentoId: string;
   currency: string;
