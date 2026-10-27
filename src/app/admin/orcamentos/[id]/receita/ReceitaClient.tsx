@@ -400,6 +400,7 @@ export function ReceitaClient(p: Props) {
           </div>
           {paramTab === "products" && (
             <ProdutosPanel
+              orcamentoId={p.orcamentoId}
               productTypeId={p.productTypeId}
               year={p.year}
               products={p.products}
