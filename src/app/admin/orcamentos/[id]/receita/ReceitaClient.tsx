@@ -64,7 +64,7 @@ export function ReceitaClient(p: Props) {
   const search = useSearchParams();
   const [pending, startTransition] = useTransition();
   const [tab, setTab] = useState<Tab>("entry");
-  const [paramTab, setParamTab] = useState<ParamTab>("products");
+  const [paramTab, setParamTab] = useState<ParamTab>("fx");
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -399,7 +399,7 @@ export function ReceitaClient(p: Props) {
       {tab === "params" && (
         <>
           <div className="rec-metrics rec-subtabs">
-            {([["products", t("paramProducts")], ["deductions", t("tabDeductions")], ["fx", t("tabFx")]] as [ParamTab, string][]).map(([k, label]) => (
+            {([["fx", t("tabFx")], ["deductions", t("tabDeductions")], ["products", t("paramProducts")]] as [ParamTab, string][]).map(([k, label]) => (
               <button key={k} className={paramTab === k ? "active" : ""} onClick={() => setParamTab(k)}>
                 <ParamIcon id={k} />
                 {label}
