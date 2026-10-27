@@ -17,6 +17,7 @@ import { DimensionTypeFormModal } from "./DimensionTypeFormModal";
 import { StructureFormModal } from "./StructureFormModal";
 import { ImportStructureModal } from "./ImportStructureModal";
 import { ConjuntoFormModal } from "./ConjuntoFormModal";
+import { ErpCodesModal } from "./ErpCodesModal";
 import { deleteDimensionType, updateFiscalYearStartMonth } from "./_actions";
 import { setDimensionStructureActive, deleteDimensionStructure, duplicateDimensionStructure } from "./_structureActions";
 import { deleteConjunto } from "./_conjuntoActions";
@@ -131,6 +132,8 @@ interface ConfiguracoesClientProps {
   fiscalYearStartMonth: number;
   isAdmin: boolean;
   conjuntos: ConjuntoEstruturaWithItems[];
+  /** Códigos do ERP por item (só itens do último nível têm). */
+  erpCodesByNode: Record<string, string[]>;
 }
 
 const MONTH_KEYS = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
@@ -144,6 +147,7 @@ export function ConfiguracoesClient({
   fiscalYearStartMonth,
   isAdmin,
   conjuntos,
+  erpCodesByNode,
 }: ConfiguracoesClientProps) {
   const router = useRouter();
   const t = useTranslations("settings");
@@ -151,6 +155,8 @@ export function ConfiguracoesClient({
   const tm = useTranslations("budget");
   const tc = useTranslations("common");
   const tConjunto = useTranslations("settings.conjuntos");
+  const tErp = useTranslations("erpCodes");
+  const [erpCodesNode, setErpCodesNode] = useState<DimensionNodeRow | null>(null);
 
   const [conjuntoModal, setConjuntoModal] = useState<{ editing: ConjuntoEstruturaWithItems | null } | null>(null);
   const [conjuntoDeleting, setConjuntoDeleting] = useState<ConjuntoEstruturaWithItems | null>(null);
@@ -586,6 +592,15 @@ export function ConfiguracoesClient({
           onAddChild={() => handleInlineAddNode(d, s, node.id)}
           addDisabled={addingNodeKey === addKeyFor(node.id) || depth >= 9}
           addLabel={td("addItem")}
+          onCodes={hasChildren ? undefined : () => setErpCodesNode(node)}
+          codesLabel={tErp("open")}
+          trailingName={
+            !hasChildren && (erpCodesByNode[node.id]?.length ?? 0) > 0 ? (
+              <span className="settings-item-code-badge" title={(erpCodesByNode[node.id] ?? []).join(", ")}>
+                {tErp("badge", { count: erpCodesByNode[node.id].length })}
+              </span>
+            ) : undefined
+          }
           onEdit={() => startInlineEditNode(node)}
           editLabel={td("edit")}
           onDelete={() => setNodeDeleting({ type: d, node })}
@@ -1155,6 +1170,21 @@ export function ConfiguracoesClient({
           year={year}
           nodes={nodesByStructure[importModal.source.id] ?? []}
           onImported={() => router.refresh()}
+        />
+      )}
+
+      {erpCodesNode && (
+        <ErpCodesModal
+          open
+          onClose={() => setErpCodesNode(null)}
+          nodeId={erpCodesNode.id}
+          nodeName={erpCodesNode.name}
+          initialCodes={erpCodesByNode[erpCodesNode.id] ?? []}
+          year={year}
+          onSaved={() => {
+            setErpCodesNode(null);
+            router.refresh();
+          }}
         />
       )}
 

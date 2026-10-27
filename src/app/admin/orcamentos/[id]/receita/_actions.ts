@@ -272,7 +272,7 @@ export async function setupProdutos(input: { orcamentoId: string; names: string[
       const r = await createDimensionType({ code: "produto", name: "Produto", description: "Produtos e serviços vendidos" });
       if (r.error) return { error: r.error };
       typeId = await findType();
-      if (!typeId) return { error: "Não foi possível criar a dimensão Produto." };
+      if (!typeId) return { error: "Não foi possível criar a hierarquia Produto." };
     }
 
     const { count } = await supabase
@@ -280,7 +280,7 @@ export async function setupProdutos(input: { orcamentoId: string; names: string[
       .select("id", { count: "exact", head: true })
       .eq("tenant_id", tenant.tenantId)
       .eq("dimension_type_id", typeId);
-    if ((count ?? 0) > 0) return { error: "A dimensão Produto já tem itens. Gerencie-os em Parâmetros." };
+    if ((count ?? 0) > 0) return { error: "A hierarquia Produto já tem itens. Gerencie-os em Parâmetros." };
 
     const root = await createDimensionNode({ dimensionTypeId: typeId, code: "PROD", name: "Produtos", parentNodeId: null, year: orc.year });
     if (root.error) return { error: root.error };

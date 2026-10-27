@@ -39,6 +39,9 @@ function resolveNodeRef(
   const byCode = options.find((o) => o.code && normalizeMatch(o.code) === normalizeMatch(trimmed));
   if (byCode) return { value: byCode.value, error: null };
 
+  const byAltCode = options.find((o) => o.altCodes?.some((c) => normalizeMatch(c) === normalizeMatch(trimmed)));
+  if (byAltCode) return { value: byAltCode.value, error: null };
+
   const byName = options.find((o) => normalizeMatch(o.label) === normalizeMatch(trimmed));
   if (byName) return { value: byName.value, error: null };
 

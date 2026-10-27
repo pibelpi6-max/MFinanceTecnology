@@ -11,6 +11,8 @@ interface NodeOption {
   id: string;
   code: string;
   name: string;
+  /** códigos do ERP relacionados ao item */
+  erpCodes?: string[];
 }
 
 interface ImportMatrizClientProps {
@@ -42,7 +44,7 @@ export function ImportMatrizClient({
           type: "node-ref",
           required: true,
           aliases: [DIMENSION_CODES.ENTIDADE, "unidade"],
-          options: entityNodes.map((n) => ({ value: n.id, label: n.name, code: n.code })),
+          options: entityNodes.map((n) => ({ value: n.id, label: n.name, code: n.code, altCodes: n.erpCodes })),
         },
         {
           key: DIMENSION_CODES.CENTRO_CUSTO,
@@ -50,7 +52,7 @@ export function ImportMatrizClient({
           type: "node-ref",
           required: true,
           aliases: ["centro de custo", "centro custo", "cost center", "cc"],
-          options: costCenterNodes.map((n) => ({ value: n.id, label: n.name, code: n.code })),
+          options: costCenterNodes.map((n) => ({ value: n.id, label: n.name, code: n.code, altCodes: n.erpCodes })),
         },
         {
           key: DIMENSION_CODES.CONTA,
@@ -58,7 +60,7 @@ export function ImportMatrizClient({
           type: "node-ref",
           required: true,
           aliases: [DIMENSION_CODES.CONTA, "account"],
-          options: accountNodes.map((n) => ({ value: n.id, label: n.name, code: n.code })),
+          options: accountNodes.map((n) => ({ value: n.id, label: n.name, code: n.code, altCodes: n.erpCodes })),
         },
         {
           key: "ano",

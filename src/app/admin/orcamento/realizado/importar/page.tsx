@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getCurrentTenant } from "@/lib/tenant/getCurrentTenant";
 import { getDimensionTypeByCode, getDimensionTree } from "@/lib/dimensions/queries";
+import { getErpCodesByNode } from "@/lib/dimensions/erpCodesQueries";
 import { DIMENSION_CODES } from "@/lib/dimensions/constants";
 import { getOrcamentoContext } from "@/lib/orcamentos/queries";
 import { ImportRealizadoClient } from "./ImportRealizadoClient";
@@ -31,6 +32,8 @@ export default async function ImportarRealizadoPage({ searchParams }: PageProps)
     entidadeType ? getDimensionTree(tenant.tenantId, entidadeType.id, year, conjuntoEstruturaId) : Promise.resolve([]),
   ]);
 
+  const erpCodes = await getErpCodesByNode(tenant.tenantId);
+
   const t = await getTranslations("import");
   const tActuals = await getTranslations("actuals");
 
@@ -47,9 +50,9 @@ export default async function ImportarRealizadoPage({ searchParams }: PageProps)
         <div className="admin-table-card">
           <ImportRealizadoClient
             referenceYear={year}
-            accountNodes={accountNodes.map((n) => ({ id: n.id, code: n.code, name: n.name }))}
-            costCenterNodes={costCenterNodes.map((n) => ({ id: n.id, code: n.code, name: n.name }))}
-            entityNodes={entityNodes.map((n) => ({ id: n.id, code: n.code, name: n.name }))}
+            accountNodes={accountNodes.map((n) => ({ id: n.id, code: n.code, name: n.name, erpCodes: erpCodes[n.id] }))}
+            costCenterNodes={costCenterNodes.map((n) => ({ id: n.id, code: n.code, name: n.name, erpCodes: erpCodes[n.id] }))}
+            entityNodes={entityNodes.map((n) => ({ id: n.id, code: n.code, name: n.name, erpCodes: erpCodes[n.id] }))}
           />
         </div>
       </div>

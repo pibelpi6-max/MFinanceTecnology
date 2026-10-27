@@ -1274,3 +1274,6 @@ a.orc-module:hover { border-color: #3E6FE0; box-shadow: 0 6px 16px rgba(62,111,2
 .rec-g-section .rec-g-label { background: #EEF2FC; }
 .rec-g-section .rec-g-cell { cursor: default; }
 .rec-g-note td { padding: 8px 10px 8px 38px; color: #6b7088; font-size: 12.5px; }
+
+/* Selo com a quantidade de códigos do ERP ao lado do nome do item. */
+.settings-item-code-badge { margin-left: 6px; padding: 0 6px; border-radius: 999px; font-size: 10.5px; line-height: 16px; color: #3E6FE0; background: rgba(62,111,224,.10); white-space: nowrap; cursor: default; }
