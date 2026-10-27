@@ -1382,3 +1382,6 @@ select.rec-kind-servico { background: #fff1e0; color: #a45a00; }
 .rec-prod-form { display: flex; flex-direction: column; gap: 14px; }
 .rec-prod-form label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: #5b6478; }
 .rec-prod-form input, .rec-prod-form textarea, .rec-prod-form select { border: 1px solid #d5daea; border-radius: 8px; padding: 8px 10px; font-size: 14px; color: #1f2937; }
+/* Lista aberta do seletor de Tipo: fundo branco e texto azul/escuro, sem herdar a cor do selo */
+select.rec-kind option { background: #fff; color: #1C2033; }
+select.rec-kind option:checked { background: #E9EFFF; color: #3E6FE0; }
