@@ -8,6 +8,8 @@ import { buildDimensionHierarchy } from "@/lib/dimensions/hierarchy";
 import { getItemKinds, getReceitaData } from "@/lib/receita/queries";
 import { BackToMapLink } from "@/components/orcamentos/BackToMapLink";
 import { ModuleTitle } from "@/components/orcamentos/ModuleTitle";
+import { getUserPreference } from "@/app/_actions/userPreferences";
+import type { TablePrefs } from "@/components/ui/DataTable/types";
 import { ReceitaSetup } from "./ReceitaSetup";
 import { ReceitaClient, type ProductRow } from "./ReceitaClient";
 
@@ -22,6 +24,7 @@ export default async function ReceitaPage({ params, searchParams }: PageProps) {
   const orcamento = await getOrcamentoById(tenant.tenantId, params.id).catch(() => null);
   if (!orcamento) notFound();
 
+  const productPrefs = await getUserPreference<TablePrefs>("receita_produtos_cols").catch(() => null);
   const t = await getTranslations("receita");
   const tOrc = await getTranslations("orcamentos");
 
@@ -92,6 +95,7 @@ export default async function ReceitaPage({ params, searchParams }: PageProps) {
             orcamentoId={orcamento.id}
             year={orcamento.year}
             productTypeId={produtoType!.id}
+            productPrefs={productPrefs ?? undefined}
             products={products}
             entities={entities}
             entityId={entityId}
