@@ -1445,3 +1445,10 @@ select.rec-kind option:checked { background: #fff; color: #1C2033; }
 .rec-seg-thumb { position: absolute; top: 2px; left: 2px; bottom: 2px; width: calc(50% - 2px); border-radius: 7px; background: #fff; box-shadow: 0 1px 3px rgba(28, 32, 51, .15); transition: transform .22s cubic-bezier(.4, 0, .2, 1); }
 .rec-seg[data-on="servico"] .rec-seg-thumb { transform: translateX(100%); }
 @media (prefers-reduced-motion: reduce) { .rec-seg-thumb, .rec-edit .rec-seg button { transition: none; } }
+
+/* Seletor Produto/Serviço com as mesmas cores dos selos da tabela */
+.rec-edit .rec-seg-thumb { transition: transform .22s cubic-bezier(.4, 0, .2, 1), background-color .22s ease; box-shadow: none; }
+.rec-edit .rec-seg[data-on="produto"] .rec-seg-thumb { background: #e9efff; }
+.rec-edit .rec-seg[data-on="servico"] .rec-seg-thumb { background: #fff1e0; }
+.rec-edit .rec-seg[data-on="produto"] button.on { color: #3E6FE0; }
+.rec-edit .rec-seg[data-on="servico"] button.on { color: #a45a00; }
