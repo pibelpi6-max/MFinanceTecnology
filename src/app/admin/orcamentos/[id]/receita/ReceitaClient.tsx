@@ -399,7 +399,10 @@ export function ReceitaClient(p: Props) {
         <>
           <div className="rec-metrics rec-subtabs">
             {([["products", t("paramProducts")], ["deductions", t("tabDeductions")], ["fx", t("tabFx")]] as [ParamTab, string][]).map(([k, label]) => (
-              <button key={k} className={paramTab === k ? "active" : ""} onClick={() => setParamTab(k)}>{label}</button>
+              <button key={k} className={paramTab === k ? "active" : ""} onClick={() => setParamTab(k)}>
+                <ParamIcon id={k} />
+                {label}
+              </button>
             ))}
           </div>
           {paramTab === "products" && (
@@ -553,6 +556,18 @@ function TabIcon({ id }: { id: Tab }) {
       return (<svg {...common}><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 10h18M9 4v16" /></svg>);
     default: // gráfico
       return (<svg {...common}><path d="M4 20V4M4 20h16" /><path d="m8 15 4-4 3 3 5-6" /></svg>);
+  }
+}
+
+function ParamIcon({ id }: { id: ParamTab }) {
+  const common = { width: 15, height: 15, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true };
+  switch (id) {
+    case "products": // caixa
+      return (<svg {...common}><path d="M21 8 12 3 3 8v8l9 5 9-5Z" /><path d="m3 8 9 5 9-5M12 13v8" /></svg>);
+    case "deductions": // percentual
+      return (<svg {...common}><path d="M19 5 5 19" /><circle cx="7" cy="7" r="2.5" /><circle cx="17" cy="17" r="2.5" /></svg>);
+    default: // câmbio
+      return (<svg {...common}><path d="M4 8h14l-4-4M20 16H6l4 4" /></svg>);
   }
 }
 

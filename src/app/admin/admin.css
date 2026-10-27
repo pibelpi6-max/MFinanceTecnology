@@ -1395,3 +1395,4 @@ select.rec-kind-servico { background: #fff1e0; color: #a45a00; }
 /* Lista aberta do seletor de Tipo: fundo branco e texto azul/escuro, sem herdar a cor do selo */
 select.rec-kind option { background: #fff; color: #1C2033; }
 select.rec-kind option:checked { background: #fff; color: #1C2033; }
+.rec-subtabs button { display: inline-flex; align-items: center; gap: 7px; }
