@@ -570,6 +570,12 @@
     "allProducts": "All products",
     "apply": "Apply",
     "applying": "Applying…",
-    "applied": "Assumption applied"
+    "applied": "Assumption applied",
+    "setupTitle": "Add your products",
+    "setupBody": "Revenue is entered per product. List the products or services you sell and the system sets everything up.",
+    "setupLabel": "One product per line",
+    "setupPlaceholder": "Product A\nProduct B\nConsulting service",
+    "setupButton": "Add {count, plural, =0 {products} one {# product} other {# products}}",
+    "setupHint": "You can group them later in Settings > Dimensions."
   }
 }

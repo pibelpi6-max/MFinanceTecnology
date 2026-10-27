@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { getCurrentTenant } from "@/lib/tenant/getCurrentTenant";
 import { getOrcamentoById } from "@/lib/orcamentos/queries";
@@ -9,6 +8,7 @@ import { buildDimensionHierarchy } from "@/lib/dimensions/hierarchy";
 import { getReceitaData } from "@/lib/receita/queries";
 import { BackToMapLink } from "@/components/orcamentos/BackToMapLink";
 import { ModuleTitle } from "@/components/orcamentos/ModuleTitle";
+import { ReceitaSetup } from "./ReceitaSetup";
 import { ReceitaClient, type ProductRow } from "./ReceitaClient";
 
 interface PageProps {
@@ -52,11 +52,7 @@ export default async function ReceitaPage({ params, searchParams }: PageProps) {
         {header}
         <div className="admin-content">
           <div className="orc-panel orc-panel--scroll">
-            <div className="orc-module-empty">
-              <strong>{t("noProductsTitle")}</strong>
-              <p>{t("noProductsBody")}</p>
-              <Link href="/admin/configuracoes" className="rec-chip">{t("goToParams")}</Link>
-            </div>
+            <ReceitaSetup orcamentoId={orcamento.id} />
           </div>
         </div>
       </>
