@@ -581,7 +581,16 @@
     "unifiedHint": "Type directly into the price and volume cells. Works like Excel: copy/paste (Ctrl+C / Ctrl+V), drag the small square to fill, Ctrl+D and Ctrl+R.",
     "secPrice": "Unit price",
     "secVolume": "Volume",
-    "noDeductionsHint": "No deductions set. Configure them in the Deductions tab."
+    "noDeductionsHint": "No deductions set. Configure them in the Deductions tab.",
+    "showColumns": "Show columns",
+    "period": "Period",
+    "periodMonth": "Month",
+    "periodQuarter": "Quarter",
+    "periodSemester": "Half-year",
+    "periodYear": "Year",
+    "quarterPrefix": "Q",
+    "semesterPrefix": "H",
+    "periodEditHint": "To enter values, switch back to Month."
   },
   "erpCodes": {
     "title": "ERP codes",

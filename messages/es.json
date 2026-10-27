@@ -581,7 +581,16 @@
     "unifiedHint": "Escriba directo en las celdas de precio y volumen. Funciona como Excel: copiar/pegar (Ctrl+C / Ctrl+V), arrastrar el cuadrito para rellenar, Ctrl+D y Ctrl+R.",
     "secPrice": "Precio unitario",
     "secVolume": "Volumen",
-    "noDeductionsHint": "Sin deducciones. Configúrelas en la pestaña Deducciones."
+    "noDeductionsHint": "Sin deducciones. Configúrelas en la pestaña Deducciones.",
+    "showColumns": "Mostrar columnas",
+    "period": "Período",
+    "periodMonth": "Mes",
+    "periodQuarter": "Trimestre",
+    "periodSemester": "Semestre",
+    "periodYear": "Año",
+    "quarterPrefix": "T",
+    "semesterPrefix": "S",
+    "periodEditHint": "Para ingresar valores, vuelva al período Mes."
   },
   "erpCodes": {
     "title": "Códigos del ERP",
