@@ -331,7 +331,6 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
 
   return (
     <div className="rec-prod">
-      <p className="rec-hint">{t("prodHint")}</p>
       {notice && <p className="rec-saved">{notice}</p>}
 
       <DataTable<ProductRow>

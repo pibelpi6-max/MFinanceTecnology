@@ -609,7 +609,6 @@
     "prodCancel": "Cancelar",
     "prodDeleteTitle": "Eliminar producto",
     "prodDeleteBody": "¿Eliminar <b>{name}</b>? Sus registros dejarán de aparecer.",
-    "prodHint": "Los servicios no se vinculan a una ficha técnica (Costos). La agrupación vendrá de la ficha técnica. Haga doble clic en el nombre (o use el lápiz) para cambiar código, nombre y tipo.",
     "importOpen": "Importar planilla",
     "importTitle": "Importar productos",
     "importIntro": "Pegue una o más columnas de Excel, o elija un archivo CSV/Excel. El sistema quita espacios de más, ignora acentos y mayúsculas para hallar duplicados y propone código para quienes no tienen. La columna Tipo (Producto/Servicio) es opcional.",

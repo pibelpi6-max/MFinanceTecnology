@@ -609,7 +609,6 @@
     "prodCancel": "Cancel",
     "prodDeleteTitle": "Delete product",
     "prodDeleteBody": "Delete <b>{name}</b>? Its entries will no longer appear.",
-    "prodHint": "Services are not linked to a bill of materials (Costs). Grouping will come from the bill of materials. Double-click a name (or use the pencil) to change code, name and type.",
     "importOpen": "Import spreadsheet",
     "importTitle": "Import products",
     "importIntro": "Paste one or more columns from Excel, or choose a CSV/Excel file. The system trims extra spaces, ignores accents and case to find duplicates, and suggests a code for items without one. A Type column (Product/Service) is optional.",
