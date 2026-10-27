@@ -1392,3 +1392,6 @@ select.rec-kind-servico { background: #fff1e0; color: #a45a00; }
 .rec-prod-deds-all { flex-direction: row !important; align-items: center; gap: 8px !important; font-size: 13px; }
 .rec-prod-deds-all input { width: 16px; height: 16px; padding: 0; }
 .rec-ded-names { color: #6b7088; font-size: 12px; }
+/* Lista aberta do seletor de Tipo: fundo branco e texto azul/escuro, sem herdar a cor do selo */
+select.rec-kind option { background: #fff; color: #1C2033; }
+select.rec-kind option:checked { background: #E9EFFF; color: #3E6FE0; }
