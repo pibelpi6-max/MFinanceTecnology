@@ -98,6 +98,16 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, onCh
     });
   }
 
+  function changeKind(row: ProductRow, kind: Kind) {
+    if (kind === row.kind) return;
+    onError(null);
+    start(async () => {
+      const k = await setItemKind({ orcamentoId, nodeId: row.id, kind });
+      if (k.error) { onError(k.error); return; }
+      onChanged();
+    });
+  }
+
   function confirmDelete() {
     if (!deleting) return;
     const row = deleting;
@@ -110,7 +120,6 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, onCh
     });
   }
 
-  const kindLabel = (k: Kind) => (k === "servico" ? t("kindService") : t("kindProduct"));
   const kindSelect = (value: Kind, onChange: (k: Kind) => void) => (
     <select value={value} onChange={(e) => onChange(e.target.value as Kind)}>
       <option value="produto">{t("kindProduct")}</option>
@@ -182,7 +191,18 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, onCh
                     </button>
                   </span>
                   <span className="rec-prod-col-kind">
-                    {r.isLeaf && !isRoot && <span className={`rec-kind rec-kind-${r.kind}`}>{kindLabel(r.kind)}</span>}
+                    {r.isLeaf && !isRoot && (
+                      <select
+                        className={`rec-kind rec-kind-select rec-kind-${r.kind}`}
+                        value={r.kind}
+                        disabled={pending}
+                        aria-label={t("kindLabel")}
+                        onChange={(e) => changeKind(r, e.target.value as Kind)}
+                      >
+                        <option value="produto">{t("kindProduct")}</option>
+                        <option value="servico">{t("kindService")}</option>
+                      </select>
+                    )}
                   </span>
                   <span className="rec-prod-actions">
                     {r.isLeaf && !isRoot && <button type="button" onClick={() => setDeleting(r)}>{t("prodDelete")}</button>}
