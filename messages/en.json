@@ -642,7 +642,6 @@
     "kindLabel": "Type",
     "kindProduct": "Product",
     "kindService": "Service",
-    "kindServiceHint": "Services have no bill of materials (Costs).",
     "dedSectionTitle": "Revenue deductions",
     "dedColName": "Deduction",
     "dedColPct": "Percentage",

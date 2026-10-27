@@ -135,7 +135,6 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
                 <button type="button" className={editKind === "produto" ? "on" : ""} onClick={() => setEditKind("produto")}>{t("kindProduct")}</button>
                 <button type="button" className={editKind === "servico" ? "on" : ""} onClick={() => setEditKind("servico")}>{t("kindService")}</button>
               </div>
-              {editKind === "servico" && <span className="rec-edit-hint">{t("kindServiceHint")}</span>}
             </div>
           )}
           <label>
