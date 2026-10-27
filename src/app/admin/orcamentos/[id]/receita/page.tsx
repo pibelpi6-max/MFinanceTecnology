@@ -50,8 +50,8 @@ export default async function ReceitaPage({ params, searchParams }: PageProps) {
     return (
       <>
         {header}
-        <div className="admin-content">
-          <div className="orc-panel orc-panel--scroll">
+        <div className="admin-content admin-content--flush">
+          <div className="orc-panel orc-panel--scroll orc-panel--flush">
             <ReceitaSetup orcamentoId={orcamento.id} />
           </div>
         </div>
@@ -84,8 +84,8 @@ export default async function ReceitaPage({ params, searchParams }: PageProps) {
   return (
     <>
       {header}
-      <div className="admin-content">
-        <div className="orc-panel orc-panel--scroll">
+      <div className="admin-content admin-content--flush">
+        <div className="orc-panel orc-panel--scroll orc-panel--flush">
           <ReceitaClient
             orcamentoId={orcamento.id}
             year={orcamento.year}
