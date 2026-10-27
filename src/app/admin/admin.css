@@ -1358,3 +1358,9 @@ button.rec-imp-pill { cursor: pointer; }
 .rec-prod-code { min-width: 52px; font-variant-numeric: tabular-nums; }
 .rec-prod-pencil { background: none; border: 0; padding: 2px; color: #8a90a8; cursor: pointer; display: inline-flex; border-radius: 6px; }
 .rec-prod-pencil:hover { color: #3E6FE0; background: #eef2fd; }
+
+/* Lista de produtos: cabeçalho e colunas alinhadas (código fixo, nome indentado) */
+.rec-prod-head { display: flex; align-items: center; gap: 10px; padding: 8px 10px; background: #F3F6FD; color: #3a4060; font-weight: 600; font-size: 12.5px; }
+.rec-prod-col-code { width: 110px; flex-shrink: 0; }
+.rec-prod-namecell { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.rec-prod-row { padding-left: 10px; }

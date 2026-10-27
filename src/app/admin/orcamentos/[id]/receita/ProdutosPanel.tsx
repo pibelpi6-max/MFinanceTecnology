@@ -115,56 +115,48 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, used
       {notice && <p className="rec-saved">{notice}</p>}
 
       <div className="rec-prod-list">
-        {products.map((r) => (
-          <div key={r.id} className="rec-prod-row" style={{ paddingLeft: 10 + r.depth * 20 }}>
-            {editing === r.id ? (
-              <>
-                <input
-                  className="rec-prod-code-input"
-                  value={editCode}
-                  onChange={(e) => setEditCode(e.target.value)}
-                  placeholder={t("importColCode")}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") saveRename(r);
-                    if (e.key === "Escape") setEditing(null);
-                  }}
-                />
-                <input
-                  autoFocus
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") saveRename(r);
-                    if (e.key === "Escape") setEditing(null);
-                  }}
-                />
-                <Button variant="primary" size="sm" onClick={() => saveRename(r)} disabled={pending}>{t("save")}</Button>
-                <Button variant="ghost" size="sm" onClick={() => setEditing(null)}>{t("prodCancel")}</Button>
-              </>
-            ) : (
-              <>
-                <span className="rec-prod-code">{r.code}</span>
-                <span className={`rec-prod-name${r.isLeaf ? "" : " is-group"}`} onDoubleClick={() => { setEditing(r.id); setEditName(r.name); setEditCode(r.code); }}>
-                  {r.name}
-                </span>
-                <button
-                  type="button"
-                  className="rec-prod-pencil"
-                  title={t("prodRename")}
-                  aria-label={t("prodRename")}
-                  onClick={() => { setEditing(r.id); setEditName(r.name); setEditCode(r.code); }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                    <path d="M16.86 4.49a1.75 1.75 0 1 1 2.47 2.47L7.5 18.79l-3.3.82.82-3.3Z" />
-                  </svg>
-                </button>
-                <span className="rec-prod-actions">
-                  {r.isLeaf && r.depth > 0 && <button type="button" onClick={() => setDeleting(r)}>{t("prodDelete")}</button>}
-                </span>
-              </>
-            )}
-          </div>
-        ))}
+        <div className="rec-prod-head">
+          <span className="rec-prod-col-code">{t("importColCode")}</span>
+          <span>{t("product")}</span>
+        </div>
+        {products.map((r) => {
+          const startEdit = () => { setEditing(r.id); setEditName(r.name); setEditCode(r.code); };
+          const onKey = (e: React.KeyboardEvent) => {
+            if (e.key === "Enter") saveRename(r);
+            if (e.key === "Escape") setEditing(null);
+          };
+          return (
+            <div key={r.id} className="rec-prod-row">
+              {editing === r.id ? (
+                <>
+                  <span className="rec-prod-col-code">
+                    <input className="rec-prod-code-input" value={editCode} onChange={(e) => setEditCode(e.target.value)} placeholder={t("importColCode")} onKeyDown={onKey} />
+                  </span>
+                  <span className="rec-prod-namecell" style={{ paddingLeft: r.depth * 20 }}>
+                    <input autoFocus value={editName} onChange={(e) => setEditName(e.target.value)} onKeyDown={onKey} />
+                    <Button variant="primary" size="sm" onClick={() => saveRename(r)} disabled={pending}>{t("save")}</Button>
+                    <Button variant="ghost" size="sm" onClick={() => setEditing(null)}>{t("prodCancel")}</Button>
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="rec-prod-col-code rec-prod-code">{r.code}</span>
+                  <span className="rec-prod-namecell" style={{ paddingLeft: r.depth * 20 }}>
+                    <span className={`rec-prod-name${r.isLeaf ? "" : " is-group"}`} onDoubleClick={startEdit}>{r.name}</span>
+                    <button type="button" className="rec-prod-pencil" title={t("prodRename")} aria-label={t("prodRename")} onClick={startEdit}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                        <path d="M16.86 4.49a1.75 1.75 0 1 1 2.47 2.47L7.5 18.79l-3.3.82.82-3.3Z" />
+                      </svg>
+                    </button>
+                  </span>
+                  <span className="rec-prod-actions">
+                    {r.isLeaf && r.depth > 0 && <button type="button" onClick={() => setDeleting(r)}>{t("prodDelete")}</button>}
+                  </span>
+                </>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {importOpen && (
