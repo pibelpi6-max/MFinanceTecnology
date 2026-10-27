@@ -56,7 +56,8 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
   const [editCode, setEditCode] = useState("");
   const [editKind, setEditKind] = useState<Kind>("produto");
   const [editDeds, setEditDeds] = useState<DedDraft[]>([]);
-  const [applyAll, setApplyAll] = useState(false);
+  const [applyProducts, setApplyProducts] = useState(false);
+  const [applyServices, setApplyServices] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<ProductRow | null>(null);
@@ -97,7 +98,8 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
     setEditCode(r.code);
     setEditKind(r.kind);
     setEditDeds(deductions.filter((d) => d.productId === r.id).map((d) => ({ label: d.label, pct: fmtPct(d.pct) })));
-    setApplyAll(false);
+    setApplyProducts(false);
+    setApplyServices(false);
   }
 
   function saveEdit(row: ProductRow) {
@@ -117,9 +119,12 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
       }
       if (row.isLeaf && row.depth > 0) {
         const items = editDeds.filter((d) => d.label.trim()).map((d) => ({ label: d.label.trim(), pct: parsePct(d.pct) }));
-        const leafIds = products.filter((x) => x.isLeaf && x.depth > 0).map((x) => x.id);
-        const d = applyAll
-          ? await saveDeductionsBulk({ orcamentoId, productIds: leafIds, items })
+        const bulk = applyProducts || applyServices;
+        const targetIds = products
+          .filter((x) => x.isLeaf && x.depth > 0 && x.id !== row.id && ((applyProducts && x.kind === "produto") || (applyServices && x.kind === "servico")))
+          .map((x) => x.id);
+        const d = bulk
+          ? await saveDeductionsBulk({ orcamentoId, productIds: [row.id, ...targetIds], items })
           : await saveDeductions({ orcamentoId, productId: row.id, items: items.map((i) => ({ code: i.label, ...i })) });
         if (d.error) { onError(d.error); return; }
       }
@@ -315,8 +320,12 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
                 </div>
                 <div className="rec-ded-total">{t("totalDeductions")}: <strong>{fmtPct(editDeds.reduce((s, d) => s + parsePct(d.pct), 0))}%</strong></div>
                 <label className="rec-prod-deds-all">
-                  <input type="checkbox" checked={applyAll} onChange={(e) => setApplyAll(e.target.checked)} />
-                  {t("dedApplyAll")}
+                  <input type="checkbox" checked={applyProducts} onChange={(e) => setApplyProducts(e.target.checked)} />
+                  {t("dedApplyProducts")}
+                </label>
+                <label className="rec-prod-deds-all">
+                  <input type="checkbox" checked={applyServices} onChange={(e) => setApplyServices(e.target.checked)} />
+                  {t("dedApplyServices")}
                 </label>
               </div>
             )}
