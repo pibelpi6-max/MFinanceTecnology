@@ -90,3 +90,8 @@ begin
         execute format('create policy tenant_isolation_delete on %I for delete using (tenant_id in (select auth_tenant_ids()))', t);
     end loop;
 end $$;
+
+-- Sem GRANT explícito o Supabase nega o acesso mesmo com RLS (ver 0004_grants.sql).
+grant select, insert, update, delete
+    on revenue_entries, revenue_deductions, currency_rates, revenue_assumptions
+    to authenticated;
