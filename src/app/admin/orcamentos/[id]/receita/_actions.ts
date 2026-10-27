@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentTenant } from "@/lib/tenant/getCurrentTenant";
+import { createDimensionType } from "@/app/admin/configuracoes/_actions";
+import { createDimensionNode } from "@/app/admin/dimensoes/_actions";
 import { applyPriceAdjust, applyVolumeGrowth, type RevenueLine } from "@/lib/receita/calc";
 
 interface Result {
@@ -237,5 +239,73 @@ export async function applyAssumption(input: {
     return { success: true };
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Erro ao aplicar premissa" };
+  }
+}
+
+/**
+ * Atalho de primeira vez: cria a dimensão "Produto" (se não existir) e
+ * cadastra os produtos informados, tudo de uma vez. Os produtos entram
+ * sob um item raiz "Produtos" (cada estrutura admite uma única raiz).
+ */
+export async function setupProdutos(input: { orcamentoId: string; names: string[] }): Promise<Result> {
+  try {
+    const tenant = await getCurrentTenant();
+    if (!tenant) return { error: "Não autenticado" };
+    const orc = await assertOrcamento(tenant.tenantId, input.orcamentoId);
+    if (!orc) return { error: "Orçamento não encontrado" };
+    const names = Array.from(new Set(input.names.map((n) => n.trim()).filter(Boolean))).slice(0, 200);
+    if (names.length === 0) return { error: "Informe pelo menos um produto." };
+
+    const supabase = await createClient();
+    const findType = async () => {
+      const { data } = await supabase
+        .from("dimension_types")
+        .select("id")
+        .eq("tenant_id", tenant.tenantId)
+        .eq("code", "produto")
+        .maybeSingle();
+      return data?.id as string | undefined;
+    };
+
+    let typeId = await findType();
+    if (!typeId) {
+      const r = await createDimensionType({ code: "produto", name: "Produto", description: "Produtos e serviços vendidos" });
+      if (r.error) return { error: r.error };
+      typeId = await findType();
+      if (!typeId) return { error: "Não foi possível criar a dimensão Produto." };
+    }
+
+    const { count } = await supabase
+      .from("dimension_nodes")
+      .select("id", { count: "exact", head: true })
+      .eq("tenant_id", tenant.tenantId)
+      .eq("dimension_type_id", typeId);
+    if ((count ?? 0) > 0) return { error: "A dimensão Produto já tem itens. Gerencie-os em Parâmetros." };
+
+    const root = await createDimensionNode({ dimensionTypeId: typeId, code: "PROD", name: "Produtos", parentNodeId: null, year: orc.year });
+    if (root.error) return { error: root.error };
+    const { data: rootNode } = await supabase
+      .from("dimension_nodes")
+      .select("id")
+      .eq("tenant_id", tenant.tenantId)
+      .eq("dimension_type_id", typeId)
+      .eq("code", "PROD")
+      .maybeSingle();
+    if (!rootNode) return { error: "Não foi possível criar o item raiz." };
+
+    for (let i = 0; i < names.length; i++) {
+      const r = await createDimensionNode({
+        dimensionTypeId: typeId,
+        code: `P${String(i + 1).padStart(3, "0")}`,
+        name: names[i],
+        parentNodeId: rootNode.id,
+        year: orc.year,
+      });
+      if (r.error) return { error: `Erro em "${names[i]}": ${r.error}` };
+    }
+    refresh(input.orcamentoId);
+    return { success: true };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Erro ao cadastrar produtos" };
   }
 }
