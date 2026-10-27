@@ -32,6 +32,7 @@ interface Props {
   year: number;
   productTypeId: string;
   productPrefs?: TablePrefs;
+  deductionLabels?: string[];
   products: ProductRow[];
   entities: { id: string; name: string }[];
   entityId: string; // "all" = consolidado (somente leitura)
@@ -408,6 +409,7 @@ export function ReceitaClient(p: Props) {
               year={p.year}
               products={p.products}
               deductions={p.deductions}
+              deductionLabels={p.deductionLabels ?? []}
               initialPrefs={p.productPrefs}
               onChanged={() => router.refresh()}
               onError={setError}
