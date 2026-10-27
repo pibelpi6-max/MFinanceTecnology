@@ -643,7 +643,16 @@
     "kindProduct": "Producto",
     "kindService": "Servicio",
     "dedApplyProducts": "Aplicar a todos los productos",
-    "dedApplyServices": "Aplicar a todos los servicios"
+    "dedApplyServices": "Aplicar a todos los servicios",
+    "kindServiceHint": "Los servicios no tienen ficha técnica (Costos).",
+    "dedSectionTitle": "Deducciones sobre el ingreso",
+    "dedColName": "Deducción",
+    "dedColPct": "Porcentaje",
+    "dedAdd": "Agregar:",
+    "editDiscardTitle": "¿Descartar cambios?",
+    "editDiscardBody": "Modificó este elemento sin guardar. Si continúa, los cambios se perderán.",
+    "editDiscard": "Descartar",
+    "editKeep": "Seguir editando"
   },
   "erpCodes": {
     "title": "Códigos del ERP",

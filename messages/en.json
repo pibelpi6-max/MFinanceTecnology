@@ -643,7 +643,16 @@
     "kindProduct": "Product",
     "kindService": "Service",
     "dedApplyProducts": "Apply to all products",
-    "dedApplyServices": "Apply to all services"
+    "dedApplyServices": "Apply to all services",
+    "kindServiceHint": "Services have no bill of materials (Costs).",
+    "dedSectionTitle": "Revenue deductions",
+    "dedColName": "Deduction",
+    "dedColPct": "Percentage",
+    "dedAdd": "Add:",
+    "editDiscardTitle": "Discard changes?",
+    "editDiscardBody": "You changed this item without saving. If you continue, the changes will be lost.",
+    "editDiscard": "Discard",
+    "editKeep": "Keep editing"
   },
   "erpCodes": {
     "title": "ERP codes",

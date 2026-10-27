@@ -643,7 +643,16 @@
     "kindProduct": "Produto",
     "kindService": "Serviço",
     "dedApplyProducts": "Aplicar a todos os produtos",
-    "dedApplyServices": "Aplicar a todos os serviços"
+    "dedApplyServices": "Aplicar a todos os serviços",
+    "kindServiceHint": "Serviços não têm ficha técnica (Custos).",
+    "dedSectionTitle": "Deduções sobre a receita",
+    "dedColName": "Dedução",
+    "dedColPct": "Percentual",
+    "dedAdd": "Adicionar:",
+    "editDiscardTitle": "Descartar alterações?",
+    "editDiscardBody": "Você alterou este item e não salvou. Se continuar, as alterações serão perdidas.",
+    "editDiscard": "Descartar",
+    "editKeep": "Continuar editando"
   },
   "erpCodes": {
     "title": "Códigos do ERP",
