@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { getAuthUser } from "@/lib/supabase/getAuthUser";
 
 export async function saveUserPreference(key: string, value: unknown) {
   const supabase = await createClient();
@@ -20,7 +21,7 @@ export async function saveUserPreference(key: string, value: unknown) {
 
 export async function getUserPreference<T = unknown>(key: string): Promise<T | null> {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getAuthUser();
   if (!user) return null;
 
   const { data } = await supabase

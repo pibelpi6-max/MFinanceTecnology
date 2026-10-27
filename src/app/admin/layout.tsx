@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getLocale } from "next-intl/server";
-import { createClient } from "@/lib/supabase/server";
+import { getAuthUser } from "@/lib/supabase/getAuthUser";
 import { getCurrentTenant } from "@/lib/tenant/getCurrentTenant";
 import { getUserPreference } from "@/app/_actions/userPreferences";
 import { getTenantLabels } from "@/lib/labels/getTenantLabels";
@@ -9,10 +9,7 @@ import { AdminSidebar } from "@/components/layout/AdminSidebar";
 import "./admin.css";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getAuthUser();
   if (!user) redirect("/login");
 
   const tenant = await getCurrentTenant();
