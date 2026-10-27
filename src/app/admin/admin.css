@@ -1296,4 +1296,4 @@ a.orc-module:hover { border-color: #3E6FE0; box-shadow: 0 6px 16px rgba(62,111,2
 .rec-g-hint { display: block; font-weight: 400; font-size: 10.5px; opacity: .85; line-height: 1.2; margin-top: 2px; }
 .rec-g th.rec-g-grp { line-height: 1.2; }
 .rec-full.is-full { background: #fff; padding: 16px 20px; overflow: auto; height: 100vh; box-sizing: border-box; }
-.rec-full.is-full .rec-g-wrap { max-height: calc(100vh - 190px); }
+.rec-full.is-full .rec-g-wrap { max-height: calc(100vh - 330px); min-height: 200px; }

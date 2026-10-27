@@ -384,7 +384,7 @@ export function ReceitaClient(p: Props) {
   const grand = sumMonths(totals);
 
   return (
-    <div className="rec-wrap">
+    <div ref={fullRef} className={`rec-wrap rec-full${isFull ? " is-full" : ""}`}>
       <div className="rec-filters">
         {p.entities.length > 0 && <label>
           {t("entity")}
@@ -422,7 +422,7 @@ export function ReceitaClient(p: Props) {
       {error && <div className="rec-error">{error}</div>}
 
       {tab === "unified" && (
-        <div ref={fullRef} className={`rec-full${isFull ? " is-full" : ""}`}>
+        <>
           <div className="rec-entry-bar">
             <span>{readOnly ? t("selectEntityToEdit") : t("unifiedHint")}</span>
             <div>
@@ -461,7 +461,7 @@ export function ReceitaClient(p: Props) {
             labels={{ item: t("product"), currency: t("currency") }}
             onApply={applyChanges}
           />
-        </div>
+        </>
       )}
 
       {tab === "summary" && (
