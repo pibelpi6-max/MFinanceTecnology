@@ -1191,7 +1191,7 @@ a.orc-module:hover { border-color: #3E6FE0; box-shadow: 0 6px 16px rgba(62,111,2
 .rec-wrap { display: flex; flex-direction: column; gap: 14px; padding: 18px 20px; min-width: 0; }
 .rec-filters { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; }
 .rec-filters label, .rec-field { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: #6b7088; }
-.rec-wrap select, .rec-wrap input:not([type="checkbox"]) { border: 1px solid #d5daea; border-radius: 8px; padding: 6px 10px; font-size: 13px; background: #fff; color: #1c2033; }
+.rec-wrap select, .rec-wrap input:not([type="checkbox"]):not([placeholder="Buscar"]) { border: 1px solid #d5daea; border-radius: 8px; padding: 6px 10px; font-size: 13px; background: #fff; color: #1c2033; }
 .rec-kpis { display: flex; gap: 10px; margin-left: auto; flex-wrap: wrap; }
 .rec-kpis div { background: #F3F6FD; border-radius: 10px; padding: 8px 14px; display: flex; flex-direction: column; min-width: 130px; }
 .rec-kpis span { font-size: 11px; color: #6b7088; }
