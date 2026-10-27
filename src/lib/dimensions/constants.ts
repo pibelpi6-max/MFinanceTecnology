@@ -8,11 +8,17 @@ export const DIMENSION_CODES = {
   CONTA: "conta",
   CENTRO_CUSTO: "centro_custo",
   ENTIDADE: "entidade",
+  /** Usada pelo módulo de Receita (não protegida: pode ser criada/renomeada em Parâmetros). */
+  PRODUTO: "produto",
 } as const;
 
 export type ProtectedDimensionCode = (typeof DIMENSION_CODES)[keyof typeof DIMENSION_CODES];
 
-export const PROTECTED_DIMENSION_CODES: readonly string[] = Object.values(DIMENSION_CODES);
+export const PROTECTED_DIMENSION_CODES: readonly string[] = [
+  DIMENSION_CODES.CONTA,
+  DIMENSION_CODES.CENTRO_CUSTO,
+  DIMENSION_CODES.ENTIDADE,
+];
 
 export function isProtectedDimensionCode(code: string): boolean {
   return PROTECTED_DIMENSION_CODES.includes(code);
