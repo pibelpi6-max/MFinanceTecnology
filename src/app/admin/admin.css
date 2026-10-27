@@ -1282,11 +1282,18 @@ a.orc-module:hover { border-color: #3E6FE0; box-shadow: 0 6px 16px rgba(62,111,2
 .rec-gridbar { display: flex; gap: 28px; flex-wrap: wrap; margin: 4px 0 10px; }
 .rec-gridbar-lbl { display: block; font-size: 11px; color: #6b7088; margin-bottom: 4px; }
 .rec-hint { margin: 0 0 8px; font-size: 12.5px; color: #6b7088; }
-.rec-g th.rec-g-grp { text-align: center; color: #fff; background: #3E6FE0; border-left: 2px solid #fff; padding: 0 10px; height: 28px; box-sizing: border-box; }
+.rec-g th.rec-g-grp { text-align: center; color: #fff; background: #3E6FE0; border-left: 2px solid #fff; padding: 0 10px; height: 40px; box-sizing: border-box; }
 .rec-g th.rec-g-grp-1 { background: #2f58b8; }
-.rec-g .rec-g-sub th { top: 28px; height: 28px; box-sizing: border-box; padding-top: 0; padding-bottom: 0; background: #EAF0FD; color: #3E6FE0; z-index: 3; }
+.rec-g .rec-g-sub th { top: 40px; height: 28px; box-sizing: border-box; padding-top: 0; padding-bottom: 0; background: #EAF0FD; color: #3E6FE0; z-index: 3; }
 .rec-g th.rec-g-label, .rec-g th.rec-g-cur { background: #EAF0FD; vertical-align: middle; }
 .rec-g th.rec-g-cur { position: sticky; }
 .rec-g-parent td { background: #F7F9FF; font-weight: 600; }
 .rec-g-parent .rec-g-label { background: #F7F9FF; }
 .rec-g-section td { border-top: 2px solid #cfd8f2; }
+
+/* Receita: colunas calculadas (somente leitura) e tela cheia */
+.rec-g-cell.is-calc { background: #F6F7FB; color: #4a5070; cursor: default; }
+.rec-g-hint { display: block; font-weight: 400; font-size: 10.5px; opacity: .85; line-height: 1.2; margin-top: 2px; }
+.rec-g th.rec-g-grp { line-height: 1.2; }
+.rec-full.is-full { background: #fff; padding: 16px 20px; overflow: auto; height: 100vh; box-sizing: border-box; }
+.rec-full.is-full .rec-g-wrap { max-height: calc(100vh - 190px); }

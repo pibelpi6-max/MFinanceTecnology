@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/Button";
@@ -273,7 +273,7 @@ export function ReceitaClient(p: Props) {
     };
 
     type Def = {
-      key: string; label: string; measure: Measure;
+      key: string; label: string; measure: Measure; hint?: string;
       text: (row: GridRow, months: number[], month?: number) => string;
     };
     const defs: Def[] = [];
@@ -297,7 +297,7 @@ export function ReceitaClient(p: Props) {
     }
     if (shown.has("gross")) {
       defs.push({
-        key: "gross", label: t("kpiGross"), measure: "gross",
+        key: "gross", label: t("kpiGross"), measure: "gross", hint: t("calcGross"),
         text: (row, months) => money2(sum(months, (m) => toDisplay(agg(row.key)?.[m]?.gross ?? 0, m))),
       });
     }
@@ -306,7 +306,7 @@ export function ReceitaClient(p: Props) {
       for (const lb of labelsList) {
         const pct = (pid: string) => p.deductions.filter((d) => d.productId === pid && d.label === lb).reduce((s, d) => s + d.pct, 0);
         defs.push({
-          key: `ded:${lb}`, label: lb, measure: "ded",
+          key: `ded:${lb}`, label: lb, measure: "ded", hint: t("calcDeduction"),
           text: (row, months) => {
             const ids = leavesUnder.get(row.key) ?? [];
             return money2(sum(months, (m) => ids.reduce((s, pid) => s + toDisplay(((byProduct[pid]?.[m]?.gross ?? 0) * pct(pid)) / 100, m), 0)));
@@ -316,7 +316,7 @@ export function ReceitaClient(p: Props) {
     }
     if (shown.has("net")) {
       defs.push({
-        key: "net", label: t("kpiNet"), measure: "net",
+        key: "net", label: t("kpiNet"), measure: "net", hint: t("calcNet"),
         text: (row, months) => money2(sum(months, (m) => toDisplay(agg(row.key)?.[m]?.net ?? 0, m))),
       });
     }
@@ -325,19 +325,32 @@ export function ReceitaClient(p: Props) {
     for (const d of defs) {
       for (const pd of periods) {
         cols.push({
-          key: `${d.key}:${pd.label}`, groupKey: d.key, groupLabel: d.label, label: pd.label,
+          key: `${d.key}:${pd.label}`, groupKey: d.key, groupLabel: d.label, groupHint: d.hint, calc: !!d.hint, label: pd.label,
           editable: pd.month && (d.measure === "pr" || d.measure === "v") ? { field: d.measure === "pr" ? "pr" : "v", month: pd.month } : undefined,
           cell: (row) => d.text(row, pd.months, pd.month),
         });
       }
       cols.push({
-        key: `${d.key}:total`, groupKey: d.key, groupLabel: d.label, label: t("total"), isTotal: true,
+        key: `${d.key}:total`, groupKey: d.key, groupLabel: d.label, groupHint: d.hint, calc: !!d.hint, label: t("total"), isTotal: true,
         cell: (row) => d.text(row, MONTHS),
       });
     }
     return cols;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shown, period, aggregated, totals, byProduct, leavesUnder, edits, baseLines, p.deductions, p.displayCurrency, p.rates, money, qty]);
+
+  // Tela cheia (API nativa do navegador) para a área de lançamento.
+  const fullRef = useRef<HTMLDivElement>(null);
+  const [isFull, setIsFull] = useState(false);
+  useEffect(() => {
+    const onChange = () => setIsFull(document.fullscreenElement === fullRef.current);
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
+  function toggleFull() {
+    if (document.fullscreenElement) void document.exitFullscreen();
+    else void fullRef.current?.requestFullscreen?.();
+  }
 
   const hasDeductions = p.deductions.length > 0;
   const toggleShown = (m: Measure) =>
@@ -409,10 +422,11 @@ export function ReceitaClient(p: Props) {
       {error && <div className="rec-error">{error}</div>}
 
       {tab === "unified" && (
-        <>
+        <div ref={fullRef} className={`rec-full${isFull ? " is-full" : ""}`}>
           <div className="rec-entry-bar">
             <span>{readOnly ? t("selectEntityToEdit") : t("unifiedHint")}</span>
             <div>
+              <Button variant="ghost" size="sm" onClick={toggleFull}>{isFull ? t("exitFullscreen") : t("fullscreen")}</Button>
               {dirty && <Button variant="ghost" size="sm" onClick={() => { setEdits({}); setCurrencyEdits({}); }}>{t("discard")}</Button>}
               <Button variant="primary" size="sm" onClick={save} disabled={!dirty || readOnly} isLoading={pending} loadingText={t("saving")}>
                 {t("save")}
@@ -447,7 +461,7 @@ export function ReceitaClient(p: Props) {
             labels={{ item: t("product"), currency: t("currency") }}
             onApply={applyChanges}
           />
-        </>
+        </div>
       )}
 
       {tab === "summary" && (

@@ -590,7 +590,12 @@
     "periodYear": "Year",
     "quarterPrefix": "Q",
     "semesterPrefix": "H",
-    "periodEditHint": "To enter values, switch back to Month."
+    "periodEditHint": "To enter values, switch back to Month.",
+    "fullscreen": "Full screen",
+    "exitFullscreen": "Exit full screen",
+    "calcGross": "= Price × Volume",
+    "calcDeduction": "= Gross × %",
+    "calcNet": "= Gross − Deductions"
   },
   "erpCodes": {
     "title": "ERP codes",

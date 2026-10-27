@@ -26,6 +26,9 @@ export interface GridCol {
   key: string;
   groupKey: string;
   groupLabel: string;
+  /** Fórmula exibida no cabeçalho de colunas calculadas (somente leitura). */
+  groupHint?: string;
+  calc?: boolean;
   label: string;
   isTotal?: boolean;
   /** Preço/volume de um mês específico: célula digitável nas linhas folha. */
@@ -275,11 +278,11 @@ export function ReceitaGrid({ rows, cols, readOnly, labels, onApply }: Props) {
 
   // Cabeçalho de grupos: colunas consecutivas da mesma medida.
   const groups = useMemo(() => {
-    const out: { key: string; label: string; span: number; idx: number }[] = [];
+    const out: { key: string; label: string; hint?: string; span: number; idx: number }[] = [];
     cols.forEach((c) => {
       const last = out[out.length - 1];
       if (last && last.key === c.groupKey) last.span++;
-      else out.push({ key: c.groupKey, label: c.groupLabel, span: 1, idx: out.length });
+      else out.push({ key: c.groupKey, label: c.groupLabel, hint: c.groupHint, span: 1, idx: out.length });
     });
     return out;
   }, [cols]);
@@ -299,7 +302,7 @@ export function ReceitaGrid({ rows, cols, readOnly, labels, onApply }: Props) {
             <th className="rec-g-label" rowSpan={2}>{labels.item}</th>
             <th className="rec-g-cur" rowSpan={2}>{labels.currency}</th>
             {groups.map((g) => (
-              <th key={g.key} colSpan={g.span} className={`rec-g-grp rec-g-grp-${g.idx % 2}`}>{g.label}</th>
+              <th key={g.key} colSpan={g.span} className={`rec-g-grp rec-g-grp-${g.idx % 2}`}>{g.label}{g.hint && <small className="rec-g-hint">{g.hint}</small>}</th>
             ))}
           </tr>
           <tr className="rec-g-sub">
@@ -334,6 +337,7 @@ export function ReceitaGrid({ rows, cols, readOnly, labels, onApply }: Props) {
                 const cls = [
                   "rec-g-cell",
                   col.isTotal ? "rec-g-total" : "",
+                  col.calc ? "is-calc" : "",
                   canEdit(r, c) ? "is-input" : "",
                   selected ? "sel" : "",
                   isAnchor ? "anchor" : "",
