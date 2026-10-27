@@ -59,3 +59,18 @@ export async function getReceitaData(tenantId: string, orcamentoId: string, year
   const currencies = Array.from(new Set(["BRL", ...entries.map((x) => x.currency), ...Object.keys(rates)]));
   return { entries, deductions, rates, currencies };
 }
+
+export type ItemKind = "produto" | "servico";
+
+/** Itens marcados como serviço (o resto é produto). Tolera a tabela ainda não existir. */
+export async function getItemKinds(tenantId: string): Promise<Record<string, ItemKind>> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("revenue_item_kinds")
+    .select("dimension_node_id, kind")
+    .eq("tenant_id", tenantId);
+  const out: Record<string, ItemKind> = {};
+  if (error) return out;
+  for (const r of data ?? []) out[r.dimension_node_id] = r.kind as ItemKind;
+  return out;
+}

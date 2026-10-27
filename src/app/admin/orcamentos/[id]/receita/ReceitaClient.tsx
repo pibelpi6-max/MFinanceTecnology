@@ -20,6 +20,8 @@ export interface ProductRow {
   parentId: string | null;
   isLeaf: boolean;
   code: string;
+  /** Serviço não tem vínculo com ficha técnica (Custos). */
+  kind: "produto" | "servico";
   versionId: string;
   validFromYear: number;
 }
@@ -347,7 +349,6 @@ export function ReceitaClient(p: Props) {
     else void fullRef.current?.requestFullscreen?.();
   }
 
-  const usedProductIds = useMemo(() => new Set(p.entries.map((e) => e.productId)), [p.entries]);
   const hasDeductions = p.deductions.length > 0;
   const toggleShown = (m: Measure) =>
     setShown((s) => { const n = new Set(s); if (n.has(m)) n.delete(m); else n.add(m); return n; });
@@ -404,7 +405,6 @@ export function ReceitaClient(p: Props) {
               productTypeId={p.productTypeId}
               year={p.year}
               products={p.products}
-              usedIds={usedProductIds}
               onChanged={() => router.refresh()}
               onError={setError}
             />

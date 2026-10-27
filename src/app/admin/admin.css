@@ -1364,3 +1364,11 @@ button.rec-imp-pill { cursor: pointer; }
 .rec-prod-col-code { width: 110px; flex-shrink: 0; }
 .rec-prod-namecell { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
 .rec-prod-row { padding-left: 10px; }
+
+/* Produtos e serviços: colunas e selo de tipo */
+.rec-prod-col-name { flex: 1 1 auto; min-width: 0; }
+.rec-prod-col-kind { width: 130px; flex-shrink: 0; }
+.rec-prod-col-kind select { border: 1px solid #d5daea; border-radius: 6px; padding: 3px 6px; font-size: 12.5px; }
+.rec-prod-actions.is-open { opacity: 1; }
+.rec-kind { display: inline-block; border-radius: 999px; padding: 1px 10px; font-size: 11.5px; background: #e9efff; color: #3E6FE0; }
+.rec-kind-servico { background: #fff1e0; color: #a45a00; }
