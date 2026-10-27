@@ -160,6 +160,18 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
   const depthById = new Map(products.map((r) => [r.id, r.depth]));
   const kindText = (r: ProductRow) => (r.depth === 0 || !r.isLeaf ? "" : r.kind === "servico" ? t("kindService") : t("kindProduct"));
 
+  /** Percentual mais usado para um nome de dedução já cadastrado (vem preenchido ao adicionar o atalho). */
+  const defaultPct = (label: string): string => {
+    const counts = new Map<number, number>();
+    for (const d of deductions) {
+      if (d.label.toLowerCase() === label.toLowerCase() && d.pct > 0) counts.set(d.pct, (counts.get(d.pct) ?? 0) + 1);
+    }
+    let best: number | null = null;
+    let bestN = 0;
+    counts.forEach((n, pct) => { if (n > bestN) { best = pct; bestN = n; } });
+    return best === null ? "" : fmtPct(best);
+  };
+
   const dedsOf = (id: string) => deductions.filter((d) => d.productId === id);
   const dedText = (r: ProductRow) => {
     if (!r.isLeaf || r.depth === 0) return "";
@@ -297,7 +309,7 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
                 ))}
                 <div className="rec-presets">
                   {[...PRESETS, ...deductionLabels.filter((l) => !PRESETS.some((p) => p.toLowerCase() === l.toLowerCase()))].filter((x) => !editDeds.some((d) => d.label.toLowerCase() === x.toLowerCase())).map((x) => (
-                    <button type="button" key={x} className="rec-chip" onClick={() => setEditDeds((d) => [...d, { label: x, pct: "" }])}>+ {x}</button>
+                    <button type="button" key={x} className="rec-chip" onClick={() => setEditDeds((d) => [...d, { label: x, pct: defaultPct(x) }])}>+ {x}</button>
                   ))}
                   <button type="button" className="rec-chip" onClick={() => setEditDeds((d) => [...d, { label: "", pct: "" }])}>+ {t("other")}</button>
                 </div>
