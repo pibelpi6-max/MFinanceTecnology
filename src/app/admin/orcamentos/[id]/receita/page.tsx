@@ -5,7 +5,7 @@ import { getOrcamentoById } from "@/lib/orcamentos/queries";
 import { getDimensionTypeByCode, getDimensionTree } from "@/lib/dimensions/queries";
 import { DIMENSION_CODES } from "@/lib/dimensions/constants";
 import { buildDimensionHierarchy } from "@/lib/dimensions/hierarchy";
-import { getReceitaData } from "@/lib/receita/queries";
+import { getItemKinds, getReceitaData } from "@/lib/receita/queries";
 import { BackToMapLink } from "@/components/orcamentos/BackToMapLink";
 import { ModuleTitle } from "@/components/orcamentos/ModuleTitle";
 import { ReceitaSetup } from "./ReceitaSetup";
@@ -59,6 +59,7 @@ export default async function ReceitaPage({ params, searchParams }: PageProps) {
     );
   }
 
+  const kinds = await getItemKinds(tenant.tenantId);
   const hierarchy = buildDimensionHierarchy(productNodes);
   const products: ProductRow[] = hierarchy.rows.map((r) => ({
     id: r.item.id,
@@ -66,6 +67,7 @@ export default async function ReceitaPage({ params, searchParams }: PageProps) {
     depth: r.depth,
     parentId: r.item.parentNodeId,
     isLeaf: !hierarchy.hasChildren.has(r.item.id),
+    kind: kinds[r.item.id] ?? "produto",
     code: r.item.code,
     versionId: r.item.versionId,
     validFromYear: r.item.validFromYear,

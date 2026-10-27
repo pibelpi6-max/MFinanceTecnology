@@ -318,7 +318,7 @@ export interface ImportProdutosInput {
   rootId: string;
   rootLevel: number;
   groups: { code: string; name: string }[];
-  creates: { code: string; name: string; parentId: string | null; parentLevel: number; groupCode?: string }[];
+  creates: { code: string; name: string; parentId: string | null; parentLevel: number; groupCode?: string; kind?: "produto" | "servico" }[];
   updates: { id: string; versionId: string; validFromYear: number; name: string; parentId: string | null }[];
 }
 
@@ -407,6 +407,18 @@ export async function importProdutos(input: ImportProdutosInput): Promise<{ crea
       }
     }
 
+    // Serviços: só eles ganham linha (ausência = produto).
+    const services = input.creates.filter((c) => c.kind === "servico" && idByCode.has(c.code));
+    for (let i = 0; i < services.length; i += CHUNK) {
+      const { error } = await supabase.from("revenue_item_kinds").insert(
+        services.slice(i, i + CHUNK).map((c) => ({ tenant_id: tenant.tenantId, dimension_node_id: idByCode.get(c.code)!, kind: "servico" }))
+      );
+      if (error) {
+        await rollback();
+        return { created: 0, updated: 0, error: `Não consegui gravar o tipo dos serviços (${error.message}). Rode a migração 0021.` };
+      }
+    }
+
     let updated = 0;
     for (let i = 0; i < input.updates.length; i += 20) {
       const results = await Promise.all(
@@ -424,5 +436,34 @@ export async function importProdutos(input: ImportProdutosInput): Promise<{ crea
     return { created: input.creates.length + input.groups.length, updated };
   } catch (e) {
     return { created: 0, updated: 0, error: e instanceof Error ? e.message : "Erro ao importar produtos" };
+  }
+}
+
+
+/** Define se um item é produto ou serviço. */
+export async function setItemKind(input: { orcamentoId: string; nodeId: string; kind: "produto" | "servico" }): Promise<Result> {
+  try {
+    const tenant = await getCurrentTenant();
+    if (!tenant) return { error: "Não autenticado" };
+    const orc = await assertOrcamento(tenant.tenantId, input.orcamentoId);
+    if (!orc) return { error: "Orçamento não encontrado" };
+    const supabase = await createClient();
+    if (input.kind === "produto") {
+      const { error } = await supabase
+        .from("revenue_item_kinds")
+        .delete()
+        .eq("tenant_id", tenant.tenantId)
+        .eq("dimension_node_id", input.nodeId);
+      if (error) return { error: error.message };
+    } else {
+      const { error } = await supabase
+        .from("revenue_item_kinds")
+        .upsert({ tenant_id: tenant.tenantId, dimension_node_id: input.nodeId, kind: "servico" }, { onConflict: "tenant_id,dimension_node_id" });
+      if (error) return { error: error.message };
+    }
+    refresh(input.orcamentoId);
+    return { success: true };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Erro ao salvar o tipo" };
   }
 }
