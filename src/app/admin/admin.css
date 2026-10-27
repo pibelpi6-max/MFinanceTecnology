@@ -1297,3 +1297,7 @@ a.orc-module:hover { border-color: #3E6FE0; box-shadow: 0 6px 16px rgba(62,111,2
 .rec-g th.rec-g-grp { line-height: 1.2; }
 .rec-full.is-full { background: #fff; padding: 16px 20px; overflow: auto; height: 100vh; box-sizing: border-box; }
 .rec-full.is-full .rec-g-wrap { max-height: calc(100vh - 330px); min-height: 200px; }
+
+/* Coluna de preenchimento: mantém Produto e Moeda juntos (Moeda logo antes de jan.) quando sobra largura. */
+.rec-g .rec-g-fill { width: 100%; padding: 0; background: transparent; border-right: 0; }
+.rec-g th.rec-g-fill { background: #EAF0FD; }
