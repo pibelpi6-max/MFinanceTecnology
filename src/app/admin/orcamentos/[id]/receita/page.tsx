@@ -66,6 +66,9 @@ export default async function ReceitaPage({ params, searchParams }: PageProps) {
     depth: r.depth,
     parentId: r.item.parentNodeId,
     isLeaf: !hierarchy.hasChildren.has(r.item.id),
+    code: r.item.code,
+    versionId: r.item.versionId,
+    validFromYear: r.item.validFromYear,
   }));
   const entities = buildDimensionHierarchy(entityNodes).rows.map((r) => ({ id: r.item.id, name: r.item.name }));
   const entityId =
@@ -86,6 +89,7 @@ export default async function ReceitaPage({ params, searchParams }: PageProps) {
           <ReceitaClient
             orcamentoId={orcamento.id}
             year={orcamento.year}
+            productTypeId={produtoType!.id}
             products={products}
             entities={entities}
             entityId={entityId}
