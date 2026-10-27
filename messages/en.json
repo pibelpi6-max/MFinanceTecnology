@@ -576,7 +576,12 @@
     "setupLabel": "One product per line",
     "setupPlaceholder": "Product A\nProduct B\nConsulting service",
     "setupButton": "Add {count, plural, =0 {products} one {# product} other {# products}}",
-    "setupHint": "You can group them later in Settings > Hierarchies."
+    "setupHint": "You can group them later in Settings > Hierarchies.",
+    "tabUnified": "Unified view",
+    "unifiedHint": "Type directly into the price and volume cells. Works like Excel: copy/paste (Ctrl+C / Ctrl+V), drag the small square to fill, Ctrl+D and Ctrl+R.",
+    "secPrice": "Unit price",
+    "secVolume": "Volume",
+    "noDeductionsHint": "No deductions set. Configure them in the Deductions tab."
   },
   "erpCodes": {
     "title": "ERP codes",

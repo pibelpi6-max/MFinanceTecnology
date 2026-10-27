@@ -10,6 +10,7 @@ import {
 } from "@/lib/receita/calc";
 import { applyAssumption, saveCurrencyRates, saveDeductions, saveRevenueEntries } from "./_actions";
 import { ReceitaCharts } from "./ReceitaCharts";
+import { ReceitaGrid, type GridChange, type GridRow } from "./ReceitaGrid";
 
 export interface ProductRow {
   id: string;
@@ -32,7 +33,7 @@ interface Props {
   rates: RateTable;
 }
 
-type Tab = "summary" | "entry" | "deductions" | "fx" | "assumptions";
+type Tab = "unified" | "summary" | "deductions" | "fx" | "assumptions";
 type Metric = "gross" | "deductions" | "net" | "volume" | "price";
 
 const MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
@@ -50,7 +51,7 @@ export function ReceitaClient(p: Props) {
   const pathname = usePathname();
   const search = useSearchParams();
   const [pending, startTransition] = useTransition();
-  const [tab, setTab] = useState<Tab>("summary");
+  const [tab, setTab] = useState<Tab>("unified");
   const [metric, setMetric] = useState<Metric>("gross");
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
@@ -192,11 +193,131 @@ export function ReceitaClient(p: Props) {
     router.push(`${pathname}?${sp.toString()}`);
   }
 
-  function setEdit(pid: string, month: number, field: "v" | "pr", raw: string) {
-    if (raw !== "" && !/^\d*[.,]?\d*$/.test(raw)) return;
-    setSaved(false);
-    setEdits((prev) => ({ ...prev, [pid]: { ...prev[pid], [month]: { ...prev[pid]?.[month], [field]: raw } } }));
+  function toggleProduct(id: string) {
+    setCollapsed((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   }
+
+  function applyChanges(changes: GridChange[]) {
+    setSaved(false);
+    setEdits((prev) => {
+      const next = { ...prev };
+      for (const c of changes) {
+        const byMonth = { ...(next[c.pid] ?? {}) };
+        byMonth[c.month] = { ...byMonth[c.month], [c.field]: c.value };
+        next[c.pid] = byMonth;
+      }
+      return next;
+    });
+  }
+
+  const getInput = (pid: string, month: number, field: "v" | "pr"): string => {
+    const e = edits[pid]?.[month]?.[field];
+    if (e !== undefined) return e;
+    const l = baseLines.find((x) => x.productId === pid && x.month === month);
+    return l ? fmtInput(field === "v" ? l.volume : l.unitPrice) : "";
+  };
+
+  const [secClosed, setSecClosed] = useState<Set<string>>(new Set());
+  const [labelOpen, setLabelOpen] = useState<Set<string>>(new Set());
+  const flip = (set: Set<string>, k: string) => { const n = new Set(set); if (n.has(k)) n.delete(k); else n.add(k); return n; };
+
+  const unifiedRows: GridRow[] = useMemo(() => {
+    const rows: GridRow[] = [];
+    const sumM = (f: (m: number) => number) => MONTHS.reduce((s, m) => s + f(m), 0);
+    const gross = (pid: string, m: number) => aggregated[pid]?.[m]?.gross ?? 0;
+    const roots = childrenOf.get(null) ?? [];
+    const rootSum = (pick: (r: MonthResult | undefined, m: number) => number) => (m: number) =>
+      roots.reduce((s, r) => s + pick(aggregated[r.id]?.[m], m), 0);
+    const blank = () => "";
+
+    const section = (id: string, label: string, cell: (m: number) => string, total: string) => {
+      rows.push({
+        key: `sec:${id}`, kind: "section", depth: 0, label, cell, total, strong: true,
+        toggle: { open: !secClosed.has(id), onToggle: () => setSecClosed((s) => flip(s, id)) },
+      });
+      return !secClosed.has(id);
+    };
+    const tree = (id: string, mk: (r: ProductRow) => Partial<GridRow> & Pick<GridRow, "cell" | "total">) => {
+      for (const r of visibleRows) {
+        rows.push({
+          key: `${id}:${r.id}`, kind: "row", depth: r.depth + 1, label: r.name,
+          toggle: r.isLeaf ? undefined : { open: !collapsed.has(r.id), onToggle: () => toggleProduct(r.id) },
+          ...mk(r),
+        });
+      }
+    };
+    const money2 = (n: number) => money.format(n);
+
+    // Preço unitário (editável nos produtos folha)
+    if (section("price", t("secPrice"), blank, "")) {
+      tree("pr", (r) => {
+        if (!r.isLeaf) return { cell: blank, total: "" };
+        const nz = MONTHS.map((m) => num(getInput(r.id, m, "pr"))).filter((x) => x > 0);
+        return {
+          editable: { pid: r.id, field: "pr" },
+          currency: { value: currencyOf(r.id), options: p.currencies, onChange: (c) => { setSaved(false); setCurrencyEdits((s) => ({ ...s, [r.id]: c })); } },
+          cell: (m) => getInput(r.id, m, "pr"),
+          total: nz.length ? money2(nz.reduce((a, b) => a + b, 0) / nz.length) : "",
+        };
+      });
+    }
+    // Volume
+    if (section("vol", t("secVolume"), (m) => qty.format(rootSum((x) => x?.volume ?? 0)(m)), qty.format(sumM(rootSum((x) => x?.volume ?? 0))))) {
+      tree("v", (r) => {
+        const total = qty.format(sumM((m) => aggregated[r.id]?.[m]?.volume ?? 0));
+        if (!r.isLeaf) return { cell: (m) => qty.format(aggregated[r.id]?.[m]?.volume ?? 0), total };
+        return { editable: { pid: r.id, field: "v" }, cell: (m) => getInput(r.id, m, "v"), total };
+      });
+    }
+    // Receita bruta
+    const grossAt = (m: number) => toDisplay(rootSum((x) => x?.gross ?? 0)(m), m);
+    if (section("gross", t("kpiGross"), (m) => money2(grossAt(m)), money2(sumM(grossAt)))) {
+      tree("g", (r) => ({
+        cell: (m) => money2(toDisplay(gross(r.id, m), m)),
+        total: money2(sumM((m) => toDisplay(gross(r.id, m), m))),
+      }));
+    }
+    // Deduções, abertas por tipo
+    const dedAt = (m: number) => toDisplay(rootSum((x) => x?.deductions ?? 0)(m), m);
+    if (section("ded", t("kpiDeductions"), (m) => money2(dedAt(m)), money2(sumM(dedAt)))) {
+      const labelsList = Array.from(new Set(p.deductions.map((d) => d.label)));
+      if (labelsList.length === 0) {
+        rows.push({ key: "ded:none", kind: "note", depth: 1, label: t("noDeductionsHint"), cell: blank, total: "" });
+      }
+      for (const lb of labelsList) {
+        const pct = (pid: string) => p.deductions.filter((d) => d.productId === pid && d.label === lb).reduce((s, d) => s + d.pct, 0);
+        const pids = leaves.map((l) => l.id).filter((pid) => pct(pid) > 0);
+        const val = (pid: string, m: number) => toDisplay((gross(pid, m) * pct(pid)) / 100, m);
+        const open = labelOpen.has(lb);
+        rows.push({
+          key: `ded:${lb}`, kind: "row", depth: 1, label: lb,
+          toggle: { open, onToggle: () => setLabelOpen((s) => flip(s, lb)) },
+          cell: (m) => money2(pids.reduce((s, pid) => s + val(pid, m), 0)),
+          total: money2(sumM((m) => pids.reduce((s, pid) => s + val(pid, m), 0))),
+        });
+        if (open) {
+          for (const pid of pids) {
+            const prod = p.products.find((x) => x.id === pid);
+            rows.push({
+              key: `ded:${lb}:${pid}`, kind: "row", depth: 2, label: `${prod?.name ?? ""} · ${String(pct(pid)).replace(".", ",")}%`,
+              cell: (m) => money2(val(pid, m)),
+              total: money2(sumM((m) => val(pid, m))),
+            });
+          }
+        }
+      }
+    }
+    // Receita líquida
+    const netAt = (m: number) => toDisplay(rootSum((x) => x?.net ?? 0)(m), m);
+    if (section("net", t("kpiNet"), (m) => money2(netAt(m)), money2(sumM(netAt)))) {
+      tree("n", (r) => ({
+        cell: (m) => money2(toDisplay(aggregated[r.id]?.[m]?.net ?? 0, m)),
+        total: money2(sumM((m) => toDisplay(aggregated[r.id]?.[m]?.net ?? 0, m))),
+      }));
+    }
+    return rows;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aggregated, childrenOf, visibleRows, collapsed, secClosed, labelOpen, edits, currencyEdits, baseLines, p.deductions, p.currencies, p.products, p.displayCurrency, p.rates, money, qty, leaves]);
 
   function save() {
     setError(null);
@@ -216,8 +337,8 @@ export function ReceitaClient(p: Props) {
   }
 
   const tabs: { id: Tab; label: string }[] = [
+    { id: "unified", label: t("tabUnified") },
     { id: "summary", label: t("tabSummary") },
-    { id: "entry", label: t("tabEntry") },
     { id: "deductions", label: t("tabDeductions") },
     { id: "fx", label: t("tabFx") },
     { id: "assumptions", label: t("tabAssumptions") },
@@ -228,7 +349,7 @@ export function ReceitaClient(p: Props) {
   return (
     <div className="rec-wrap">
       <div className="rec-filters">
-        <label>
+        {p.entities.length > 0 && <label>
           {t("entity")}
           <select value={p.entityId} onChange={(e) => setParam("entidade", e.target.value)} disabled={dirty}>
             {p.entities.length > 0 && <option value="all">{t("allEntities")}</option>}
@@ -236,7 +357,7 @@ export function ReceitaClient(p: Props) {
               <option key={e.id} value={e.id}>{e.name}</option>
             ))}
           </select>
-        </label>
+        </label>}
         <label>
           {t("displayCurrency")}
           <select value={p.displayCurrency} onChange={(e) => setParam("moeda", e.target.value)}>
@@ -263,106 +384,90 @@ export function ReceitaClient(p: Props) {
 
       {error && <div className="rec-error">{error}</div>}
 
-      {(tab === "summary" || tab === "entry") && (
+      {tab === "unified" && (
         <>
-          {tab === "summary" && (
-            <div className="rec-metrics">
-              {(["gross", "deductions", "net", "volume", "price"] as Metric[]).map((m) => (
-                <button key={m} className={metric === m ? "active" : ""} onClick={() => setMetric(m)}>
-                  {t(`metric_${m}`)}
-                </button>
-              ))}
+          <div className="rec-entry-bar">
+            <span>{readOnly ? t("selectEntityToEdit") : t("unifiedHint")}</span>
+            <div>
+              {dirty && <Button variant="ghost" size="sm" onClick={() => { setEdits({}); setCurrencyEdits({}); }}>{t("discard")}</Button>}
+              <Button variant="primary" size="sm" onClick={save} disabled={!dirty || readOnly} isLoading={pending} loadingText={t("saving")}>
+                {t("save")}
+              </Button>
+              {saved && !dirty && <span className="rec-saved">{t("saved")}</span>}
             </div>
-          )}
-          {tab === "entry" && (
-            <div className="rec-entry-bar">
-              <span>{readOnly ? t("selectEntityToEdit") : t("entryHint")}</span>
-              <div>
-                {dirty && <Button variant="ghost" size="sm" onClick={() => { setEdits({}); setCurrencyEdits({}); }}>{t("discard")}</Button>}
-                <Button variant="primary" size="sm" onClick={save} disabled={!dirty || readOnly} isLoading={pending} loadingText={t("saving")}>
-                  {t("save")}
-                </Button>
-                {saved && !dirty && <span className="rec-saved">{t("saved")}</span>}
-              </div>
-            </div>
-          )}
+          </div>
+          <ReceitaGrid
+            rows={unifiedRows}
+            monthLabels={monthLabels}
+            readOnly={readOnly}
+            labels={{ item: t("product"), currency: t("currency"), total: t("total") }}
+            onApply={applyChanges}
+          />
+        </>
+      )}
 
+      {tab === "summary" && (
+        <>
+          <div className="rec-metrics">
+            {(["gross", "deductions", "net", "volume", "price"] as Metric[]).map((m) => (
+              <button key={m} className={metric === m ? "active" : ""} onClick={() => setMetric(m)}>
+                {t(`metric_${m}`)}
+              </button>
+            ))}
+          </div>
           <div className="rec-scroll">
             <table className="rec-table">
               <thead>
                 <tr>
                   <th className="rec-th-tree">{t("product")}</th>
-                  {tab === "entry" && <th className="rec-th-cur">{t("currency")}</th>}
                   {monthLabels.map((m, i) => <th key={i}>{m}</th>)}
-                  <th className="rec-th-total">{tab === "summary" && metric === "price" ? t("average") : t("total")}</th>
+                  <th className="rec-th-total">{metric === "price" ? t("average") : t("total")}</th>
                 </tr>
               </thead>
               <tbody>
-                {tab === "summary" &&
-                  visibleRows.map((r) => {
-                    const by = aggregated[r.id];
-                    const hasKids = !r.isLeaf;
-                    return (
-                      <tr key={r.id} className={hasKids ? "rec-parent" : ""}>
-                        <td className="rec-td-tree" style={{ paddingLeft: 10 + r.depth * 18 }}>
-                          {hasKids ? (
-                            <button
-                              className="rec-toggle"
-                              aria-label={collapsed.has(r.id) ? t("expand") : t("collapse")}
-                              onClick={() => setCollapsed((s) => { const n = new Set(s); if (n.has(r.id)) n.delete(r.id); else n.add(r.id); return n; })}
-                            >
-                              {collapsed.has(r.id) ? "▸" : "▾"}
-                            </button>
-                          ) : <span className="rec-toggle-gap" />}
-                          {r.name}
-                        </td>
-                        {MONTHS.map((m) => <td key={m} className="rec-num">{fmtCell(cellValue(by?.[m], m))}</td>)}
-                        <td className="rec-num rec-total">{fmtCell(totalValue(by))}</td>
-                      </tr>
-                    );
-                  })}
-                {tab === "entry" &&
-                  leaves.map((r) => (
-                    <EntryRows
-                      key={r.id}
-                      row={r}
-                      months={MONTHS}
-                      lines={lines}
-                      edits={edits[r.id]}
-                      readOnly={readOnly}
-                      currency={currencyOf(r.id)}
-                      currencies={p.currencies}
-                      onCurrency={(c) => { setSaved(false); setCurrencyEdits((s) => ({ ...s, [r.id]: c })); }}
-                      onEdit={(m, f, v) => setEdit(r.id, m, f, v)}
-                      labels={{ volume: t("volume"), price: t("unitPrice") }}
-                    />
-                  ))}
+                {visibleRows.map((r) => {
+                  const by = aggregated[r.id];
+                  const hasKids = !r.isLeaf;
+                  return (
+                    <tr key={r.id} className={hasKids ? "rec-parent" : ""}>
+                      <td className="rec-td-tree" style={{ paddingLeft: 10 + r.depth * 18 }}>
+                        {hasKids ? (
+                          <button
+                            className="rec-toggle"
+                            aria-label={collapsed.has(r.id) ? t("expand") : t("collapse")}
+                            onClick={() => toggleProduct(r.id)}
+                          >
+                            {collapsed.has(r.id) ? "▸" : "▾"}
+                          </button>
+                        ) : <span className="rec-toggle-gap" />}
+                        {r.name}
+                      </td>
+                      {MONTHS.map((m) => <td key={m} className="rec-num">{fmtCell(cellValue(by?.[m], m))}</td>)}
+                      <td className="rec-num rec-total">{fmtCell(totalValue(by))}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
-              {tab === "summary" && (
-                <tfoot>
-                  <tr>
-                    <td className="rec-td-tree">{t("total")}</td>
-                    {MONTHS.map((m) => <td key={m} className="rec-num">{fmtCell(cellValue(totals[m], m))}</td>)}
-                    <td className="rec-num rec-total">{fmtCell(totalValue(totals))}</td>
-                  </tr>
-                </tfoot>
-              )}
+              <tfoot>
+                <tr>
+                  <td className="rec-td-tree">{t("total")}</td>
+                  {MONTHS.map((m) => <td key={m} className="rec-num">{fmtCell(cellValue(totals[m], m))}</td>)}
+                  <td className="rec-num rec-total">{fmtCell(totalValue(totals))}</td>
+                </tr>
+              </tfoot>
             </table>
           </div>
-
-          {tab === "summary" && (
-            <ReceitaCharts
-              months={monthLabels}
-              net={MONTHS.map((m) => toDisplay(totals[m]?.net ?? 0, m))}
-              deductions={MONTHS.map((m) => toDisplay(totals[m]?.deductions ?? 0, m))}
-              products={(childrenOf.get(null) ?? []).map((r) => ({
-                name: r.name,
-                value: MONTHS.reduce((s, m) => s + toDisplay(aggregated[r.id]?.[m]?.gross ?? 0, m), 0),
-              }))}
-              labels={{ monthly: t("chartMonthly"), net: t("kpiNet"), deductions: t("kpiDeductions"), byProduct: t("chartByProduct"), empty: t("chartEmpty") }}
-              format={(n) => money.format(n)}
-            />
-          )}
+          <ReceitaCharts
+            months={monthLabels}
+            net={MONTHS.map((m) => toDisplay(totals[m]?.net ?? 0, m))}
+            deductions={MONTHS.map((m) => toDisplay(totals[m]?.deductions ?? 0, m))}
+            products={(childrenOf.get(null) ?? []).map((r) => ({
+              name: r.name,
+              value: MONTHS.reduce((s, m) => s + toDisplay(aggregated[r.id]?.[m]?.gross ?? 0, m), 0),
+            }))}
+            labels={{ monthly: t("chartMonthly"), net: t("kpiNet"), deductions: t("kpiDeductions"), byProduct: t("chartByProduct"), empty: t("chartEmpty") }}
+            format={(n) => money.format(n)}
+          />
         </>
       )}
 
@@ -374,46 +479,6 @@ export function ReceitaClient(p: Props) {
         <AssumptionsPanel orcamentoId={p.orcamentoId} entityKey={entityKey} readOnly={readOnly} leaves={leaves} onError={setError} />
       )}
     </div>
-  );
-}
-
-function EntryRows(props: {
-  row: ProductRow; months: number[]; lines: RevenueLine[]; edits?: Record<number, { v?: string; pr?: string }>;
-  readOnly: boolean; currency: string; currencies: string[]; onCurrency: (c: string) => void;
-  onEdit: (m: number, f: "v" | "pr", v: string) => void; labels: { volume: string; price: string };
-}) {
-  const { row } = props;
-  const val = (m: number, f: "v" | "pr") => {
-    const e = props.edits?.[m]?.[f];
-    if (e !== undefined) return e;
-    const l = props.lines.find((x) => x.productId === row.id && x.month === m);
-    return l ? fmtInput(f === "v" ? l.volume : l.unitPrice) : "";
-  };
-  return (
-    <>
-      <tr className="rec-entry-first">
-        <td className="rec-td-tree" rowSpan={2} style={{ paddingLeft: 10 + row.depth * 18 }}>{row.name}</td>
-        <td rowSpan={2} className="rec-td-cur">
-          <select value={props.currency} disabled={props.readOnly} onChange={(e) => props.onCurrency(e.target.value)}>
-            {props.currencies.map((c) => <option key={c}>{c}</option>)}
-          </select>
-        </td>
-        {props.months.map((m) => (
-          <td key={m} className="rec-td-input">
-            <input inputMode="decimal" placeholder={props.labels.volume} disabled={props.readOnly} value={val(m, "v")} onChange={(e) => props.onEdit(m, "v", e.target.value)} />
-          </td>
-        ))}
-        <td className="rec-num rec-total">{props.labels.volume}</td>
-      </tr>
-      <tr>
-        {props.months.map((m) => (
-          <td key={m} className="rec-td-input">
-            <input inputMode="decimal" placeholder={props.labels.price} disabled={props.readOnly} value={val(m, "pr")} onChange={(e) => props.onEdit(m, "pr", e.target.value)} />
-          </td>
-        ))}
-        <td className="rec-num rec-total">{props.labels.price}</td>
-      </tr>
-    </>
   );
 }
 
