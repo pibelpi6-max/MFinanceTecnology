@@ -304,6 +304,7 @@ export function ReceitaGrid({ rows, cols, readOnly, labels, onApply }: Props) {
             {groups.map((g) => (
               <th key={g.key} colSpan={g.span} className={`rec-g-grp rec-g-grp-${g.idx % 2}`}>{g.label}{g.hint && <small className="rec-g-hint">{g.hint}</small>}</th>
             ))}
+            <th className="rec-g-fill" rowSpan={2} />
           </tr>
           <tr className="rec-g-sub">
             {cols.map((c) => (
@@ -378,6 +379,7 @@ export function ReceitaGrid({ rows, cols, readOnly, labels, onApply }: Props) {
                   </td>
                 );
               })}
+              <td className="rec-g-fill" />
             </tr>
           ))}
         </tbody>
