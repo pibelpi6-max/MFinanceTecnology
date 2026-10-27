@@ -590,7 +590,12 @@
     "periodYear": "Ano",
     "quarterPrefix": "T",
     "semesterPrefix": "S",
-    "periodEditHint": "Para lançar, volte ao período Mês."
+    "periodEditHint": "Para lançar, volte ao período Mês.",
+    "fullscreen": "Tela cheia",
+    "exitFullscreen": "Sair da tela cheia",
+    "calcGross": "= Preço × Volume",
+    "calcDeduction": "= Bruta × %",
+    "calcNet": "= Bruta − Deduções"
   },
   "erpCodes": {
     "title": "Códigos do ERP",
