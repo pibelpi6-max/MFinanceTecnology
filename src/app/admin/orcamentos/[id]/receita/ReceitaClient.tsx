@@ -10,6 +10,7 @@ import {
 } from "@/lib/receita/calc";
 import { applyAssumption, saveCurrencyRates, saveDeductions, saveRevenueEntries } from "./_actions";
 import { ReceitaCharts } from "./ReceitaCharts";
+import type { TablePrefs } from "@/components/ui/DataTable/types";
 import { ProdutosPanel } from "./ProdutosPanel";
 import { ReceitaGrid, type GridChange, type GridCol, type GridRow } from "./ReceitaGrid";
 
@@ -30,6 +31,7 @@ interface Props {
   orcamentoId: string;
   year: number;
   productTypeId: string;
+  productPrefs?: TablePrefs;
   products: ProductRow[];
   entities: { id: string; name: string }[];
   entityId: string; // "all" = consolidado (somente leitura)
@@ -405,6 +407,7 @@ export function ReceitaClient(p: Props) {
               productTypeId={p.productTypeId}
               year={p.year}
               products={p.products}
+              initialPrefs={p.productPrefs}
               onChanged={() => router.refresh()}
               onError={setError}
             />
