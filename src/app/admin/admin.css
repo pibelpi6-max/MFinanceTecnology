@@ -1318,3 +1318,5 @@ a.orc-module:hover { border-color: #3E6FE0; box-shadow: 0 6px 16px rgba(62,111,2
 .rec-prod-actions { margin-left: auto; display: flex; gap: 12px; opacity: 0; transition: opacity .12s; }
 .rec-prod-row:hover .rec-prod-actions { opacity: 1; }
 .rec-prod-actions button { background: none; border: 0; color: #3E6FE0; cursor: pointer; font-size: 12.5px; padding: 0; }
+
+.rec-tabs button { display: inline-flex; align-items: center; gap: 7px; }
