@@ -396,15 +396,16 @@ export function ReceitaClient(p: Props) {
       {error && <div className="rec-error">{error}</div>}
 
       {tab === "params" && (
-        <>
-          <div className="rec-metrics rec-subtabs">
+        <div className="rec-params">
+          <nav className="rec-subtabs" aria-label={t("tabParams")}>
             {([["products", t("paramProducts")], ["deductions", t("tabDeductions")], ["fx", t("tabFx")]] as [ParamTab, string][]).map(([k, label]) => (
-              <button key={k} className={paramTab === k ? "active" : ""} onClick={() => setParamTab(k)}>
+              <button key={k} type="button" className={paramTab === k ? "active" : ""} aria-current={paramTab === k ? "page" : undefined} onClick={() => setParamTab(k)}>
                 <ParamIcon id={k} />
                 {label}
               </button>
             ))}
-          </div>
+          </nav>
+          <div className="rec-params-body">
           {paramTab === "products" && (
             <ProdutosPanel
               orcamentoId={p.orcamentoId}
@@ -422,7 +423,8 @@ export function ReceitaClient(p: Props) {
             <DeductionsPanel orcamentoId={p.orcamentoId} leaves={leaves} deductions={p.deductions} onError={setError} />
           )}
           {paramTab === "fx" && <FxPanel orcamentoId={p.orcamentoId} rates={p.rates} onError={setError} />}
-        </>
+          </div>
+        </div>
       )}
 
       {tab === "assumptions" && (
