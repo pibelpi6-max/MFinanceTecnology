@@ -647,7 +647,6 @@ export function ConfiguracoesClient({
     return (
       <div className={embedded ? "settings-structure-embedded" : "settings-structure-panel"}>
         <div className="settings-structure-header">
-          <span className="settings-structure-label">{t("dimensions.structuresOfDimension")}</span>
           <Button
             size="sm"
             variant="accent-blue"

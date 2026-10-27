@@ -371,7 +371,7 @@
    ao redor do conteúdo expandido, então aqui a gente não duplica fundo nem
    borda, só mantém o respiro interno. */
 .settings-structure-embedded { padding: 0; }
-.settings-structure-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 0 8px; gap: 12px; }
+.settings-structure-header { display: flex; align-items: center; justify-content: flex-end; padding: 10px 0 8px; gap: 12px; }
 .settings-structure-label { font-size: 10.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--text-muted); }
 /* margin-left:auto garante alinhamento à direita tanto quando há um
    label ao lado (space-between cuida disso) quanto quando este é o único
