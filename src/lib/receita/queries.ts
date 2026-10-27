@@ -74,3 +74,11 @@ export async function getItemKinds(tenantId: string): Promise<Record<string, Ite
   for (const r of data ?? []) out[r.dimension_node_id] = r.kind as ItemKind;
   return out;
 }
+
+/** Nomes de dedução já cadastrados em qualquer orçamento da empresa (viram atalhos reutilizáveis). */
+export async function getDeductionLabels(tenantId: string): Promise<string[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("revenue_deductions").select("label").eq("tenant_id", tenantId);
+  if (error) return [];
+  return Array.from(new Set((data ?? []).map((r) => String(r.label).trim()).filter(Boolean))).sort((a, b) => a.localeCompare(b, "pt-BR"));
+}

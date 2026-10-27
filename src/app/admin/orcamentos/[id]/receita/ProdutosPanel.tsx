@@ -21,6 +21,8 @@ interface Props {
   year: number;
   products: ProductRow[];
   deductions: Deduction[];
+  /** Nomes de dedução já cadastrados na empresa; viram atalhos ao lado dos padrões. */
+  deductionLabels: string[];
   initialPrefs?: TablePrefs;
   onChanged: () => void;
   onError: (s: string | null) => void;
@@ -41,7 +43,7 @@ type DedDraft = { label: string; pct: string };
  * editar código/nome/tipo e excluir. A organização em grupos fica para a
  * ficha técnica (Custos); aqui os itens entram direto sob a raiz.
  */
-export function ProdutosPanel({ orcamentoId, productTypeId, year, products, deductions, initialPrefs, onChanged, onError }: Props) {
+export function ProdutosPanel({ orcamentoId, productTypeId, year, products, deductions, deductionLabels, initialPrefs, onChanged, onError }: Props) {
   const t = useTranslations("receita");
   const [pending, start] = useTransition();
   const root = products.find((r) => r.depth === 0);
@@ -294,7 +296,7 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
                   </div>
                 ))}
                 <div className="rec-presets">
-                  {PRESETS.filter((x) => !editDeds.some((d) => d.label === x)).map((x) => (
+                  {[...PRESETS, ...deductionLabels.filter((l) => !PRESETS.some((p) => p.toLowerCase() === l.toLowerCase()))].filter((x) => !editDeds.some((d) => d.label.toLowerCase() === x.toLowerCase())).map((x) => (
                     <button type="button" key={x} className="rec-chip" onClick={() => setEditDeds((d) => [...d, { label: x, pct: "" }])}>+ {x}</button>
                   ))}
                   <button type="button" className="rec-chip" onClick={() => setEditDeds((d) => [...d, { label: "", pct: "" }])}>+ {t("other")}</button>
