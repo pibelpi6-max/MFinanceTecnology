@@ -1,5 +1,6 @@
 "use client";
 
+import { parseProductNames } from "@/lib/receita/parseProductNames";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -12,7 +13,7 @@ export function ReceitaSetup({ orcamentoId }: { orcamentoId: string }) {
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
-  const names = text.split("\n").map((n) => n.trim()).filter(Boolean);
+  const names = parseProductNames(text);
 
   return (
     <div className="rec-setup">

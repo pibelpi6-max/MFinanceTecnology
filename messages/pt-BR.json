@@ -573,7 +573,7 @@
     "applied": "Premissa aplicada",
     "setupTitle": "Cadastre seus produtos",
     "setupBody": "A receita é lançada por produto. Informe os produtos ou serviços que você vende e o sistema cria tudo para você.",
-    "setupLabel": "Um produto por linha",
+    "setupLabel": "Um produto por linha (ou separados por vírgula)",
     "setupPlaceholder": "Produto A\nProduto B\nServiço de consultoria",
     "setupButton": "Cadastrar {count, plural, =0 {produtos} one {# produto} other {# produtos}}",
     "setupHint": "Depois você pode reorganizar em grupos em Parâmetros > Hierarquias.",

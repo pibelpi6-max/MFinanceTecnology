@@ -573,7 +573,7 @@
     "applied": "Supuesto aplicado",
     "setupTitle": "Registre sus productos",
     "setupBody": "El ingreso se registra por producto. Indique los productos o servicios que vende y el sistema lo configura todo.",
-    "setupLabel": "Un producto por línea",
+    "setupLabel": "Un producto por línea (o separados por comas)",
     "setupPlaceholder": "Producto A\nProducto B\nServicio de consultoría",
     "setupButton": "Registrar {count, plural, =0 {productos} one {# producto} other {# productos}}",
     "setupHint": "Luego puede agruparlos en Parámetros > Jerarquías.",
