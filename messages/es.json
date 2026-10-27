@@ -642,7 +642,6 @@
     "kindLabel": "Tipo",
     "kindProduct": "Producto",
     "kindService": "Servicio",
-    "kindServiceHint": "Los servicios no tienen ficha técnica (Costos).",
     "dedSectionTitle": "Deducciones sobre el ingreso",
     "dedColName": "Deducción",
     "dedColPct": "Porcentaje",
