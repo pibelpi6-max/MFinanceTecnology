@@ -642,8 +642,6 @@
     "kindLabel": "Tipo",
     "kindProduct": "Producto",
     "kindService": "Servicio",
-    "dedApplyProducts": "Aplicar a todos los productos",
-    "dedApplyServices": "Aplicar a todos los servicios",
     "kindServiceHint": "Los servicios no tienen ficha técnica (Costos).",
     "dedSectionTitle": "Deducciones sobre el ingreso",
     "dedColName": "Deducción",
@@ -652,7 +650,14 @@
     "editDiscardTitle": "¿Descartar cambios?",
     "editDiscardBody": "Modificó este elemento sin guardar. Si continúa, los cambios se perderán.",
     "editDiscard": "Descartar",
-    "editKeep": "Seguir editando"
+    "editKeep": "Seguir editando",
+    "dedCopyTitle": "Copiar estas deducciones a:",
+    "dedCopyProducts": "Todos los productos ({n})",
+    "dedCopyServices": "Todos los servicios ({n})",
+    "dedCopyConfirmTitle": "¿Reemplazar las deducciones?",
+    "dedCopyConfirmBody": "Las deducciones de {n} elementos de tipo {kind} serán reemplazadas por estas. Se aplica de inmediato, sin necesidad de guardar.",
+    "dedCopyConfirm": "Aplicar",
+    "dedCopyDone": "Deducciones aplicadas a {n} elementos."
   },
   "erpCodes": {
     "title": "Códigos del ERP",

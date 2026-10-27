@@ -1423,7 +1423,14 @@ select.rec-kind option:checked { background: #fff; color: #1C2033; }
 .rec-edit-x { width: 34px; height: 34px; border: 0; border-radius: 8px; background: #fff; color: #5b6178; cursor: pointer; }
 .rec-edit-x:hover { background: #fdecec; color: #c62828; }
 .rec-chip-new { border-style: dashed; border-color: #3E6FE0; color: #2f5bd0; }
-.rec-edit-apply { display: flex; flex-wrap: wrap; gap: 22px; padding-top: 14px; border-top: 1px solid #e6e8f0; font-size: 13.5px; }
-.rec-edit-apply label { display: flex; align-items: center; gap: 8px; }
-.rec-edit-apply input { width: 18px; height: 18px; padding: 0; accent-color: #3E6FE0; }
 .rec-edit-foot { width: 100%; display: flex; justify-content: flex-end; gap: 10px; padding: 14px 24px; border-top: 1px solid #e6e8f0; }
+
+/* Ajustes da edição expandida: Tipo compacto, rótulos centralizados com os botões */
+.rec-edit .rec-seg { padding: 2px; border-radius: 10px; }
+.rec-edit .rec-seg button { height: 28px; font-size: 13px; border-radius: 8px; }
+.rec-edit-main { gap: 14px; }
+.rec-edit-hint { font-size: 12px; }
+.rec-edit .rec-presets { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.rec-edit .rec-chip { display: inline-flex; align-items: center; line-height: 1; height: 32px; }
+.rec-edit-apply { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-top: 14px; border-top: 1px solid #e6e8f0; font-size: 13px; color: #5b6178; }
+.rec-edit-apply .rec-chip:disabled { opacity: .5; cursor: default; }
