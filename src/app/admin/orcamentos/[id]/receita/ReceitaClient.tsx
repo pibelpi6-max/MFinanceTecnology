@@ -8,7 +8,7 @@ import {
   EMPTY_MONTH, avgPrice, computeByProduct, rateFor, sumMonths,
   type Deduction, type MonthResult, type RateTable, type RevenueLine,
 } from "@/lib/receita/calc";
-import { applyAssumption, saveCurrencyRates, saveDeductions, saveRevenueEntries } from "./_actions";
+import { applyAssumption, saveCurrencyRates, saveDeductionDefaults, saveRevenueEntries } from "./_actions";
 import { ReceitaCharts } from "./ReceitaCharts";
 import type { TablePrefs } from "@/components/ui/DataTable/types";
 import { ProdutosPanel } from "./ProdutosPanel";
@@ -33,6 +33,7 @@ interface Props {
   productTypeId: string;
   productPrefs?: TablePrefs;
   deductionLabels?: string[];
+  deductionDefaults?: { label: string; pct: number }[];
   products: ProductRow[];
   entities: { id: string; name: string }[];
   entityId: string; // "all" = consolidado (somente leitura)
@@ -413,13 +414,14 @@ export function ReceitaClient(p: Props) {
               products={p.products}
               deductions={p.deductions}
               deductionLabels={p.deductionLabels ?? []}
+              deductionDefaults={p.deductionDefaults ?? []}
               initialPrefs={p.productPrefs}
               onChanged={() => router.refresh()}
               onError={setError}
             />
           )}
           {paramTab === "deductions" && (
-            <DeductionsPanel orcamentoId={p.orcamentoId} leaves={leaves} deductions={p.deductions} onError={setError} />
+            <DeductionDefaultsPanel orcamentoId={p.orcamentoId} defaults={p.deductionDefaults ?? []} onError={setError} />
           )}
           {paramTab === "fx" && <FxPanel orcamentoId={p.orcamentoId} rates={p.rates} onError={setError} />}
         </>
@@ -573,50 +575,44 @@ function ParamIcon({ id }: { id: ParamTab }) {
 
 const PRESETS = ["ICMS", "PIS", "COFINS", "ISS", "IPI"];
 
-function DeductionsPanel({ orcamentoId, leaves, deductions, onError }: {
-  orcamentoId: string; leaves: ProductRow[]; deductions: Deduction[]; onError: (s: string | null) => void;
+/** Deduções padrão da empresa: viram atalhos (já com o percentual) ao editar um produto ou serviço. */
+function DeductionDefaultsPanel({ orcamentoId, defaults, onError }: {
+  orcamentoId: string; defaults: { label: string; pct: number }[]; onError: (s: string | null) => void;
 }) {
   const t = useTranslations("receita");
   const router = useRouter();
-  const [productId, setProductId] = useState(leaves[0]?.id ?? "");
-  const initial = (id: string) => deductions.filter((d) => d.productId === id).map((d) => ({ label: d.label, pct: fmtInput(d.pct) }));
-  const [items, setItems] = useState(() => initial(leaves[0]?.id ?? ""));
+  const [items, setItems] = useState(() => defaults.map((d) => ({ label: d.label, pct: fmtInput(d.pct) })));
   const [pending, start] = useTransition();
-  const total = items.reduce((s, i) => s + num(i.pct), 0);
-
-  if (leaves.length === 0) return <p className="rec-empty">{t("noProducts")}</p>;
+  const [saved, setSaved] = useState(false);
+  const touch = (fn: (s: typeof items) => typeof items) => { setSaved(false); setItems(fn); };
   return (
     <div className="rec-panel">
-      <p className="rec-hint">{t("deductionsHint")}</p>
-      <label className="rec-field">
-        {t("product")}
-        <select value={productId} onChange={(e) => { setProductId(e.target.value); setItems(initial(e.target.value)); }}>
-          {leaves.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
-        </select>
-      </label>
+      <p className="rec-hint">{t("dedDefaultsHint")}</p>
       {items.map((it, i) => (
         <div className="rec-ded-row" key={i}>
-          <input value={it.label} onChange={(e) => setItems((s) => s.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))} placeholder={t("deductionName")} />
-          <input inputMode="decimal" value={it.pct} onChange={(e) => /^\d*[.,]?\d*$/.test(e.target.value) && setItems((s) => s.map((x, j) => (j === i ? { ...x, pct: e.target.value } : x)))} placeholder="%" />
+          <input value={it.label} onChange={(e) => touch((s) => s.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))} placeholder={t("deductionName")} />
+          <input inputMode="decimal" value={it.pct} onChange={(e) => /^\d*[.,]?\d*$/.test(e.target.value) && touch((s) => s.map((x, j) => (j === i ? { ...x, pct: e.target.value } : x)))} placeholder="%" />
           <span>%</span>
-          <button className="rec-link" onClick={() => setItems((s) => s.filter((_, j) => j !== i))}>{t("remove")}</button>
+          <button type="button" className="rec-link" onClick={() => touch((s) => s.filter((_, j) => j !== i))}>{t("remove")}</button>
         </div>
       ))}
       <div className="rec-presets">
-        {PRESETS.filter((x) => !items.some((i) => i.label === x)).map((x) => (
-          <button key={x} className="rec-chip" onClick={() => setItems((s) => [...s, { label: x, pct: "" }])}>+ {x}</button>
+        {PRESETS.filter((x) => !items.some((i) => i.label.toLowerCase() === x.toLowerCase())).map((x) => (
+          <button type="button" key={x} className="rec-chip" onClick={() => touch((s) => [...s, { label: x, pct: "" }])}>+ {x}</button>
         ))}
-        <button className="rec-chip" onClick={() => setItems((s) => [...s, { label: "", pct: "" }])}>+ {t("other")}</button>
+        <button type="button" className="rec-chip" onClick={() => touch((s) => [...s, { label: "", pct: "" }])}>+ {t("other")}</button>
       </div>
-      <div className="rec-ded-total">{t("totalDeductions")}: <strong>{total.toFixed(2).replace(".", ",")}%</strong></div>
-      <Button
-        variant="primary" size="sm" isLoading={pending} loadingText={t("saving")}
-        onClick={() => start(async () => {
-          onError(null);
-          const r = await saveDeductions({ orcamentoId, productId, items: items.map((i) => ({ code: i.label, label: i.label, pct: num(i.pct) })) });
-          if (r.error) onError(r.error); else router.refresh();
-        })}
-      >{t("save")}</Button>
+      <div className="rec-actions" style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <Button
+          variant="primary" size="sm" isLoading={pending} loadingText={t("saving")}
+          onClick={() => start(async () => {
+            onError(null);
+            const r = await saveDeductionDefaults({ orcamentoId, items: items.map((i) => ({ label: i.label, pct: num(i.pct) })) });
+            if (r.error) onError(r.error); else { setSaved(true); router.refresh(); }
+          })}
+        >{t("save")}</Button>
+        {saved && <span className="rec-saved">{t("saved")}</span>}
+      </div>
     </div>
   );
 }
@@ -628,23 +624,41 @@ function FxPanel({ orcamentoId, rates, onError }: { orcamentoId: string; rates: 
   const [vals, setVals] = useState<string[]>(() => MONTHS.map((m) => fmtInput(rates[Object.keys(rates)[0] ?? "USD"]?.[m] ?? 0)));
   const [pending, start] = useTransition();
   const pick = (c: string) => { setCurrency(c); setVals(MONTHS.map((m) => fmtInput(rates[c]?.[m] ?? 0))); };
+  const inputRef = useRef<HTMLInputElement>(null);
+  const known = Object.keys(rates);
+  const repeatFrom = (i: number) => setVals((s) => s.map((x, j) => (j > i ? s[i] : x)));
   return (
     <div className="rec-panel">
       <p className="rec-hint">{t("fxHint")}</p>
       <div className="rec-fx-head">
         <label className="rec-field">
           {t("currency")}
-          <input value={currency} maxLength={3} onChange={(e) => pick(e.target.value.toUpperCase())} list="rec-cur-list" />
-          <datalist id="rec-cur-list">{Object.keys(rates).map((c) => <option key={c} value={c} />)}</datalist>
+          <input ref={inputRef} value={currency} maxLength={3} placeholder="EUR" onChange={(e) => pick(e.target.value.toUpperCase())} />
         </label>
-        <button className="rec-chip" onClick={() => setVals((s) => s.map(() => s[0]))}>{t("fillAll")}</button>
+        <div className="rec-presets">
+          {known.map((c) => (
+            <button type="button" key={c} className={`rec-chip${c === currency ? " rec-chip-on" : ""}`} onClick={() => pick(c)}>{c}</button>
+          ))}
+          <button type="button" className="rec-chip rec-chip-new" onClick={() => { pick(""); inputRef.current?.focus(); }}>+ {t("fxNewCurrency")}</button>
+        </div>
       </div>
       <div className="rec-fx-grid">
         {MONTHS.map((m, i) => (
-          <label key={m} className="rec-field">
-            {new Intl.DateTimeFormat(undefined, { month: "short" }).format(new Date(2000, m - 1, 1))}
-            <input inputMode="decimal" value={vals[i]} placeholder="0,0000" onChange={(e) => /^\d*[.,]?\d*$/.test(e.target.value) && setVals((s) => s.map((x, j) => (j === i ? e.target.value : x)))} />
-          </label>
+          <div key={m} className="rec-field">
+            <span>{new Intl.DateTimeFormat(undefined, { month: "short" }).format(new Date(2000, m - 1, 1))}</span>
+            <span className="rec-fx-cell">
+              <input
+                aria-label={new Intl.DateTimeFormat(undefined, { month: "long" }).format(new Date(2000, m - 1, 1))}
+                inputMode="decimal" value={vals[i]} placeholder="0,0000"
+                onChange={(e) => /^\d*[.,]?\d*$/.test(e.target.value) && setVals((s) => s.map((x, j) => (j === i ? e.target.value : x)))}
+              />
+              {i < MONTHS.length - 1 && (
+                <button type="button" className="rec-fx-repeat" title={t("fxRepeatNext")} aria-label={t("fxRepeatNext")} disabled={!vals[i]} onClick={() => repeatFrom(i)}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="m6 6 6 6-6 6M13 6l6 6-6 6" /></svg>
+                </button>
+              )}
+            </span>
+          </div>
         ))}
       </div>
       <Button

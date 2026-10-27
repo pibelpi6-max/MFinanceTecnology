@@ -23,6 +23,7 @@ interface Props {
   deductions: Deduction[];
   /** Nomes de dedução já cadastrados na empresa; viram atalhos ao lado dos padrões. */
   deductionLabels: string[];
+  deductionDefaults: { label: string; pct: number }[];
   initialPrefs?: TablePrefs;
   onChanged: () => void;
   onError: (s: string | null) => void;
@@ -43,7 +44,7 @@ type DedDraft = { label: string; pct: string };
  * editar código/nome/tipo e excluir. A organização em grupos fica para a
  * ficha técnica (Custos); aqui os itens entram direto sob a raiz.
  */
-export function ProdutosPanel({ orcamentoId, productTypeId, year, products, deductions, deductionLabels, initialPrefs, onChanged, onError }: Props) {
+export function ProdutosPanel({ orcamentoId, productTypeId, year, products, deductions, deductionLabels, deductionDefaults, initialPrefs, onChanged, onError }: Props) {
   const t = useTranslations("receita");
   const [pending, start] = useTransition();
   const root = products.find((r) => r.depth === 0);
@@ -122,7 +123,9 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
     const onKey = (e: React.KeyboardEvent) => { if (e.key === "Enter") saveEdit(row); if (e.key === "Escape") openOrClose(row); };
     const isItem = row.isLeaf && row.depth > 0;
     const total = editDeds.reduce((s, d) => s + parsePct(d.pct), 0);
-    const presets = [...PRESETS, ...deductionLabels.filter((l) => !PRESETS.some((p) => p.toLowerCase() === l.toLowerCase()))]
+    const known = deductionDefaults.map((d) => d.label);
+    const base = known.length > 0 ? known : PRESETS;
+    const presets = [...base, ...deductionLabels.filter((l) => !base.some((p) => p.toLowerCase() === l.toLowerCase()))]
       .filter((x) => !editDeds.some((d) => d.label.toLowerCase() === x.toLowerCase()));
     return (
       <div className="rec-edit">
@@ -267,6 +270,8 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
 
   /** Percentual mais usado para um nome de dedução já cadastrado (vem preenchido ao adicionar o atalho). */
   const defaultPct = (label: string): string => {
+    const preset = deductionDefaults.find((d) => d.label.toLowerCase() === label.toLowerCase());
+    if (preset && preset.pct > 0) return fmtPct(preset.pct);
     const counts = new Map<number, number>();
     for (const d of deductions) {
       if (d.label.toLowerCase() === label.toLowerCase() && d.pct > 0) counts.set(d.pct, (counts.get(d.pct) ?? 0) + 1);
