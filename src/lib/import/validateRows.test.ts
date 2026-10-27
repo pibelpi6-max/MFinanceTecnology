@@ -247,3 +247,34 @@ describe("código repetido, linha desmarcada e edição de célula", () => {
     expect(rows.every((r) => Object.keys(r.errors).length === 0)).toBe(true);
   });
 });
+
+describe("match por código do ERP (altCodes)", () => {
+  const erpFields: ImportFieldConfig[] = [
+    { key: "nome", label: "Nome", type: "text", required: true },
+    { key: "valor", label: "Valor", type: "number", required: true },
+    {
+      key: "centro_custo",
+      label: "Centro de Custo",
+      type: "node-ref",
+      required: false,
+      options: [
+        { value: "id-mkt", label: "Marketing", code: "MKT", altCodes: ["70001", "70002"] },
+        { value: "id-vnd", label: "Vendas", code: "VND", altCodes: ["80001"] },
+      ],
+    },
+  ];
+
+  it("resolve qualquer um dos códigos do ERP do mesmo item", () => {
+    const rows = buildAndValidateRows(
+      [
+        ["A", "1", "70001"],
+        ["B", "2", "70002"],
+        ["C", "3", "80001"],
+      ],
+      mapping,
+      erpFields
+    );
+    expect(rows.map((r) => r.values.centro_custo)).toEqual(["id-mkt", "id-mkt", "id-vnd"]);
+    expect(rows.every((r) => r.errors.centro_custo === undefined)).toBe(true);
+  });
+});

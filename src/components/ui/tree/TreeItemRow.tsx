@@ -44,6 +44,9 @@ export interface TreeItemRowProps {
   addLabel?: string;
 
   /** Ações no grupo à direita (só aparecem no hover). Omitir uma esconde só ela. */
+  /** Códigos do ERP do item (só faz sentido em itens do último nível). */
+  onCodes?: () => void;
+  codesLabel?: string;
   onEdit?: () => void;
   editLabel?: string;
   onDelete?: () => void;
@@ -81,6 +84,8 @@ export function TreeItemRow({
   onAddChild,
   addDisabled,
   addLabel,
+  onCodes,
+  codesLabel,
   onEdit,
   editLabel,
   onDelete,
@@ -189,8 +194,15 @@ export function TreeItemRow({
         )}
       </span>
       <span className="settings-structure-row-spacer" />
-      {(onEdit || onDelete) && (
+      {(onCodes || onEdit || onDelete) && (
         <span className="settings-item-actions">
+          {onCodes && (
+            <button type="button" className="settings-item-icon-btn" title={codesLabel} onClick={onCodes}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10 13a5 5 0 0 0 7.07 0l2.83-2.83a5 5 0 0 0-7.07-7.07L11.5 4.43M14 11a5 5 0 0 0-7.07 0L4.1 13.83a5 5 0 0 0 7.07 7.07l1.33-1.33" />
+              </svg>
+            </button>
+          )}
           {onEdit && (
             <button type="button" className="settings-item-icon-btn" title={editLabel} onClick={onEdit}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>

@@ -15,6 +15,8 @@ export interface ImportFieldOption {
   label: string;
   /** código curto usado para bater com a planilha, quando existir (node-ref) */
   code?: string;
+  /** códigos adicionais (ex.: códigos do ERP) que também identificam esta opção */
+  altCodes?: string[];
 }
 
 export interface ImportFieldConfig {

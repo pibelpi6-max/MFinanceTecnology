@@ -577,5 +577,13 @@
     "setupPlaceholder": "Product A\nProduct B\nConsulting service",
     "setupButton": "Add {count, plural, =0 {products} one {# product} other {# products}}",
     "setupHint": "You can group them later in Settings > Hierarchies."
+  },
+  "erpCodes": {
+    "title": "ERP codes",
+    "hint": "Link one or more ERP codes to this item (one per line). Actuals that arrive with only the code will be matched to this item.",
+    "placeholder": "1001\n1002\n1003",
+    "count": "{count, plural, =0 {No codes} one {# code} other {# codes}}",
+    "badge": "{count} codes",
+    "open": "ERP codes"
   }
 }

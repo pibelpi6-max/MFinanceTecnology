@@ -577,5 +577,13 @@
     "setupPlaceholder": "Producto A\nProducto B\nServicio de consultoría",
     "setupButton": "Registrar {count, plural, =0 {productos} one {# producto} other {# productos}}",
     "setupHint": "Luego puede agruparlos en Parámetros > Jerarquías."
+  },
+  "erpCodes": {
+    "title": "Códigos del ERP",
+    "hint": "Relacione uno o más códigos del ERP con este elemento (uno por línea). El realizado que llegue solo con el código se asociará a este elemento.",
+    "placeholder": "1001\n1002\n1003",
+    "count": "{count, plural, =0 {Ningún código} one {# código} other {# códigos}}",
+    "badge": "{count} cód.",
+    "open": "Códigos del ERP"
   }
 }

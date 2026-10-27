@@ -4,6 +4,7 @@ import { getDimensionTypes, getDimensionStructuresByType, getDimensionTreeByStru
 import { getTenantSettings } from "@/lib/settings/queries";
 import { getConjuntosByTenant } from "@/lib/orcamentos/queries";
 import type { DimensionNodeRow } from "@/lib/dimensions/types";
+import { getErpCodesByNode } from "@/lib/dimensions/erpCodesQueries";
 import { ConfiguracoesClient } from "./ConfiguracoesClient";
 
 export default async function ConfiguracoesPage() {
@@ -12,11 +13,12 @@ export default async function ConfiguracoesPage() {
 
   const year = new Date().getFullYear();
 
-  const [dimensionTypes, settings, structuresByType, conjuntos] = await Promise.all([
+  const [dimensionTypes, settings, structuresByType, conjuntos, erpCodesByNode] = await Promise.all([
     getDimensionTypes(tenant.tenantId),
     getTenantSettings(tenant.tenantId),
     getDimensionStructuresByType(tenant.tenantId),
     getConjuntosByTenant(tenant.tenantId),
+    getErpCodesByNode(tenant.tenantId),
   ]);
 
   // A árvore de itens de cada Estrutura é carregada de uma vez só aqui
@@ -47,6 +49,7 @@ export default async function ConfiguracoesPage() {
           fiscalYearStartMonth={settings.fiscalYearStartMonth}
           isAdmin={tenant.role === "admin"}
           conjuntos={conjuntos}
+          erpCodesByNode={erpCodesByNode}
         />
       </div>
     </>
