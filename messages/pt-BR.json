@@ -576,6 +576,11 @@
     "setupLabel": "Um produto por linha",
     "setupPlaceholder": "Produto A\nProduto B\nServiço de consultoria",
     "setupButton": "Cadastrar {count, plural, =0 {produtos} one {# produto} other {# produtos}}",
-    "setupHint": "Depois você pode reorganizar em grupos em Parâmetros > Dimensões."
+    "setupHint": "Depois você pode reorganizar em grupos em Parâmetros > Dimensões.",
+    "tabUnified": "Visão unificada",
+    "unifiedHint": "Digite direto nas células de preço e volume. Funciona como o Excel: copiar/colar (Ctrl+C / Ctrl+V), arrastar o quadradinho para preencher, Ctrl+D e Ctrl+R.",
+    "secPrice": "Preço unitário",
+    "secVolume": "Volume",
+    "noDeductionsHint": "Nenhuma dedução cadastrada. Configure na aba Deduções."
   }
 }

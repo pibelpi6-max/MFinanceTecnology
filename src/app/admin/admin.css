@@ -1250,3 +1250,27 @@ a.orc-module:hover { border-color: #3E6FE0; box-shadow: 0 6px 16px rgba(62,111,2
 .rec-setup h2 { margin: 0; font-size: 20px; color: #1c2033; }
 .rec-setup p { margin: 0; color: #6b7088; font-size: 14px; }
 .rec-setup textarea { width: 100%; border: 1px solid #d5daea; border-radius: 10px; padding: 10px 12px; font: inherit; font-size: 14px; resize: vertical; }
+
+/* Receita: grade estilo Excel (visão unificada) */
+.rec-g-wrap { overflow: auto; border: 1px solid #e3e7f2; border-radius: 10px; max-height: 68vh; outline: none; }
+.rec-g { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 13px; user-select: none; }
+.rec-g.is-dragging { cursor: crosshair; }
+.rec-g th { position: sticky; top: 0; background: #F3F6FD; color: #3a4060; font-weight: 600; padding: 8px 10px; text-align: right; white-space: nowrap; z-index: 3; }
+.rec-g td { padding: 0; border-top: 1px solid #eef0f7; border-right: 1px solid #f3f4fa; height: 30px; }
+.rec-g .rec-g-label { position: sticky; left: 0; background: #fff; text-align: left; min-width: 230px; padding: 0 10px; z-index: 2; white-space: nowrap; }
+.rec-g th.rec-g-label { background: #F3F6FD; z-index: 4; }
+.rec-g .rec-g-cur { width: 76px; min-width: 76px; text-align: center; }
+.rec-g .rec-g-cur select { width: 68px; padding: 2px 4px; font-size: 12px; }
+.rec-g .rec-g-total { text-align: right; padding: 0 10px; font-weight: 600; background: #FAFBFF; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.rec-g-cell { position: relative; text-align: right; min-width: 96px; padding: 0 10px !important; font-variant-numeric: tabular-nums; white-space: nowrap; cursor: cell; }
+.rec-g-cell.is-input { background: #fff; }
+.rec-g-cell:not(.is-input) { color: #3a4060; }
+.rec-g-cell.sel { background: #E6EEFD !important; }
+.rec-g-cell.anchor { outline: 2px solid #3E6FE0; outline-offset: -2px; background: #fff !important; }
+.rec-g-cell.fill-preview { outline: 1px dashed #3E6FE0; outline-offset: -1px; background: #F0F5FF; }
+.rec-g-input { width: 100%; height: 100%; border: 0 !important; border-radius: 0 !important; padding: 0 !important; text-align: right; background: #fff; outline: 2px solid #3E6FE0; font: inherit; }
+.rec-fill { position: absolute; right: -4px; bottom: -4px; width: 8px; height: 8px; background: #3E6FE0; border: 1px solid #fff; cursor: crosshair; z-index: 5; }
+.rec-g-section td { background: #EEF2FC; font-weight: 700; color: #1c2033; }
+.rec-g-section .rec-g-label { background: #EEF2FC; }
+.rec-g-section .rec-g-cell { cursor: default; }
+.rec-g-note td { padding: 8px 10px 8px 38px; color: #6b7088; font-size: 12.5px; }
