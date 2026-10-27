@@ -1052,8 +1052,8 @@ body.import-dragging-body, body.import-dragging-body * { cursor: grabbing !impor
 
 /* Linha do tempo horizontal: uma coluna por ano, rolagem lateral */
 .orc-timeline { --orc-card-w: 320px; display: flex; flex: 1; min-height: 0; overflow: auto; padding-bottom: 12px; }
-.orc-year-col { flex: none; display: flex; flex-direction: column; box-sizing: border-box; padding-right: 20px; }
-.orc-year-col + .orc-year-col { border-left: 2px dotted #cfd5e6; padding-left: 20px; }
+.orc-year-col { flex: none; display: flex; flex-direction: column; box-sizing: border-box; padding-right: 24px; }
+.orc-year-col + .orc-year-col { border-left: 4px dotted #8E98B8; padding-left: 24px; }
 .orc-year-col:last-child { padding-right: 0; }
 .orc-year-col.is-drop { background: #f5f8ff; outline: 2px dashed #3E6FE0; outline-offset: -2px; border-radius: 12px; }
 .orc-card { position: relative; }
