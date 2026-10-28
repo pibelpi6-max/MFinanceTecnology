@@ -318,6 +318,13 @@ export function ConfiguracoesClient({
   const [importModal, setImportModal] = useState<{ type: DimensionType; source: DimensionStructure } | null>(null);
 
   function toggleStructureExpanded(typeId: string, structureId: string) {
+    // Ao abrir uma estrutura, os dois primeiros níveis já vêm expandidos; o que está mais fundo começa recolhido.
+    if (expandedStructureId[typeId] !== structureId) {
+      for (const n of nodesByStructure[structureId] ?? []) {
+        if (n.level <= 2) treeExpand.expand(n.id);
+        else treeExpand.collapse(n.id);
+      }
+    }
     setExpandedStructureId((prev) => ({
       ...prev,
       [typeId]: prev[typeId] === structureId ? null : structureId,
