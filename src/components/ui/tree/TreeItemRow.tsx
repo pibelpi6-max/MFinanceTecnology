@@ -69,6 +69,19 @@ export interface TreeItemRowProps {
 
   /** Conteúdo extra à direita do nome, antes do botão "+" (ex: badge). */
   trailingName?: ReactNode;
+
+  /** Mover o item para outro pai (botão "Mover para..." nas ações). */
+  onMove?: () => void;
+  moveLabel?: string;
+  /** Arrastar e soltar: a linha vira origem (draggable) e alvo (onDragOver/onDrop). */
+  draggable?: boolean;
+  onDragStart?: (e: React.DragEvent) => void;
+  onDragEnd?: (e: React.DragEvent) => void;
+  onDragOver?: (e: React.DragEvent) => void;
+  onDragLeave?: (e: React.DragEvent) => void;
+  onDrop?: (e: React.DragEvent) => void;
+  /** Destaque visual enquanto algo é arrastado sobre a linha. */
+  isDropTarget?: boolean;
 }
 
 export function TreeItemRow({
@@ -104,6 +117,15 @@ export function TreeItemRow({
   saveLabel,
   cancelLabel,
   trailingName,
+  onMove,
+  moveLabel,
+  draggable,
+  onDragStart,
+  onDragEnd,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  isDropTarget,
 }: TreeItemRowProps) {
   const expandToggle = hasChildren ? (
     <TreeExpand isOpen={isOpen} onToggle={onToggleExpand} label={expandLabel} />
@@ -171,7 +193,15 @@ export function TreeItemRow({
   }
 
   return (
-    <div className="settings-item-row">
+    <div
+      className={`settings-item-row${isDropTarget ? " settings-item-row--drop" : ""}`}
+      draggable={draggable}
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
+    >
       <TreeGuides ancestorContinues={ancestorContinues} isLast={isLast} depth={depth} />
       {expandToggle}
       <span className="settings-item-name-wrap">
@@ -194,12 +224,19 @@ export function TreeItemRow({
         )}
       </span>
       <span className="settings-structure-row-spacer" />
-      {(onCodes || onEdit || onDelete) && (
+      {(onCodes || onEdit || onDelete || onMove) && (
         <span className="settings-item-actions">
           {onCodes && (
             <button type="button" className="settings-item-icon-btn" title={codesLabel} onClick={onCodes}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10 13a5 5 0 0 0 7.07 0l2.83-2.83a5 5 0 0 0-7.07-7.07L11.5 4.43M14 11a5 5 0 0 0-7.07 0L4.1 13.83a5 5 0 0 0 7.07 7.07l1.33-1.33" />
+              </svg>
+            </button>
+          )}
+          {onMove && (
+            <button type="button" className="settings-item-icon-btn" title={moveLabel} onClick={onMove}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 9 2 12l3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20" />
               </svg>
             </button>
           )}

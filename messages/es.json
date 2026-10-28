@@ -124,7 +124,12 @@
       "parent": "Elemento superior",
       "parentHelp": "Puede ser un elemento del mismo archivo o uno existente (código o nombre). Cada estructura tiene un único elemento de nivel 1 (deja el superior en blanco solo en él)."
     },
-    "importButton": "Importar"
+    "importButton": "Importar",
+    "move": "Mover a...",
+    "moveTitle": "Mover ítem",
+    "moveHint": "Elija el ítem que pasará a ser el superior de {name}. Todo lo que está debajo va junto.",
+    "moveConfirm": "Mover",
+    "moveNoTargets": "No hay otro ítem al que mover."
   },
   "budget": {
     "title": "Matriz Presupuestaria",

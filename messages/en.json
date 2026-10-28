@@ -124,7 +124,12 @@
       "parent": "Parent item",
       "parentHelp": "May be an item in the same file or an existing one (code or name). Each structure has a single level-1 item (leave Parent blank only for it)."
     },
-    "importButton": "Import"
+    "importButton": "Import",
+    "move": "Move to...",
+    "moveTitle": "Move item",
+    "moveHint": "Choose the item that will become the parent of {name}. Everything below it moves too.",
+    "moveConfirm": "Move",
+    "moveNoTargets": "There is no other item to move to."
   },
   "budget": {
     "title": "Budget Matrix",
