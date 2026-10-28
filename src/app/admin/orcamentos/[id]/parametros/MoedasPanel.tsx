@@ -106,9 +106,6 @@ export function MoedasPanel({ orcamentoId, currencies, rates, onError }: {
 
       {selected && (
         <div className="mo-rates">
-          <div className="mo-rates-head">
-            <strong>{selected}</strong>
-          </div>
           <div className="rec-fx-grid mo-grid">
             {MONTHS.map((m, i) => (
               <div key={m} className="rec-field">
@@ -145,14 +142,6 @@ export function MoedasPanel({ orcamentoId, currencies, rates, onError }: {
             <Button variant="primary" size="sm" onClick={saveRates} isLoading={pending} loadingText={t("saving")} disabled={!dirty}>
               {t("save")}
             </Button>
-            <button
-              type="button"
-              className="rec-link-btn"
-              disabled={!vals[0]}
-              onClick={() => { setDirty(true); setVals((s) => s.map(() => s[0])); }}
-            >
-              {t("fxRepeatAll")}
-            </button>
           </div>
         </div>
       )}
