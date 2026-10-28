@@ -180,7 +180,7 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
                       %
                     </span>
                     <button type="button" className="rec-edit-x" aria-label={t("remove")} title={t("remove")} onClick={() => setEditDeds((x) => x.filter((_, j) => j !== i))}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden><path d="M6 6l12 12M18 6 6 18" /></svg>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5" /></svg>
                     </button>
                   </div>
                 ))}
