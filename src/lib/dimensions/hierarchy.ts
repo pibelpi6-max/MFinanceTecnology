@@ -1,5 +1,10 @@
 import type { DimensionNodeRow } from "./types";
 
+/** Ordem entre irmãos: a manual (sortOrder) primeiro; empate cai no alfabético. */
+export function compareSiblings(a: DimensionNodeRow, b: DimensionNodeRow): number {
+  return (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.name.localeCompare(b.name, "pt-BR");
+}
+
 export interface HierarchyRow<T> {
   item: T;
   depth: number;
@@ -38,7 +43,7 @@ export function buildDimensionHierarchy(nodes: DimensionNodeRow[]): DimensionHie
     byParent.set(n.parentNodeId, list);
   });
   byParent.forEach((list) => {
-    list.sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+    list.sort(compareSiblings);
   });
 
   const rows: HierarchyRow<DimensionNodeRow>[] = [];

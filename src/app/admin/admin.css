@@ -1479,7 +1479,9 @@ select.rec-kind option:checked { background: #fff; color: #1C2033; }
 .settings-block-subtitle-row--stack { flex-direction: column; align-items: flex-start; gap: 12px; }
 
 /* Mover item da estrutura */
-.settings-item-row--drop { background: #E9EFFF; outline: 2px dashed #3E6FE0; outline-offset: -2px; }
+.settings-item-row--drop-inside { background: #E9EFFF; outline: 2px dashed #3E6FE0; outline-offset: -2px; }
+.settings-item-row--drop-before { box-shadow: 0 -3px 0 0 #3E6FE0; }
+.settings-item-row--drop-after { box-shadow: 0 3px 0 0 #3E6FE0; }
 .settings-item-row[draggable="true"] { cursor: grab; }
 .move-node-list { list-style: none; margin: 0; padding: 4px; border: 1px solid #E6E8F0; border-radius: 12px; max-height: 320px; overflow: auto; background: #fff; }
 .move-node-item { display: block; width: 100%; text-align: left; padding: 8px 12px; border: 0; border-radius: 8px; background: #fff; color: #1C2033; font-size: 14px; cursor: pointer; }

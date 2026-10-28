@@ -80,8 +80,8 @@ export interface TreeItemRowProps {
   onDragOver?: (e: React.DragEvent) => void;
   onDragLeave?: (e: React.DragEvent) => void;
   onDrop?: (e: React.DragEvent) => void;
-  /** Destaque visual enquanto algo é arrastado sobre a linha. */
-  isDropTarget?: boolean;
+  /** Onde o item arrastado cairia: dentro desta linha, ou antes/depois dela. */
+  dropPosition?: "inside" | "before" | "after" | null;
 }
 
 export function TreeItemRow({
@@ -125,7 +125,7 @@ export function TreeItemRow({
   onDragOver,
   onDragLeave,
   onDrop,
-  isDropTarget,
+  dropPosition,
 }: TreeItemRowProps) {
   const expandToggle = hasChildren ? (
     <TreeExpand isOpen={isOpen} onToggle={onToggleExpand} label={expandLabel} />
@@ -194,7 +194,7 @@ export function TreeItemRow({
 
   return (
     <div
-      className={`settings-item-row${isDropTarget ? " settings-item-row--drop" : ""}`}
+      className={`settings-item-row${dropPosition ? ` settings-item-row--drop-${dropPosition}` : ""}`}
       draggable={draggable}
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}

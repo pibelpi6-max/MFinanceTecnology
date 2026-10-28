@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentTenant } from "@/lib/tenant/getCurrentTenant";
 import { getDimensionTreeByStructure } from "@/lib/dimensions/queries";
+import { compareSiblings } from "@/lib/dimensions/hierarchy";
 import { BATCH_REF_PREFIX, type ImportRunSummary } from "@/lib/import/types";
 
 interface ActionResult {
@@ -412,13 +413,16 @@ export async function cancelDimensionNode(input: {
 }
 
 /**
- * Move um item (com tudo que está abaixo dele) para dentro de outro item da
- * mesma estrutura, a partir do ano informado. Valida ciclo (mover para dentro
- * de si mesmo ou de um filho) e a profundidade máxima de 10 níveis.
+ * Move um item (com tudo que está abaixo dele) na árvore da estrutura, a partir
+ * do ano informado: para dentro de outro item ("inside") ou antes/depois dele
+ * ("before"/"after", como irmão — também serve só para reordenar). Valida ciclo
+ * e a profundidade máxima de 10 níveis; a ordem entre irmãos fica em
+ * dimension_nodes.sort_order (migration 0026).
  */
 export async function moveDimensionNode(input: {
   nodeId: string;
-  newParentId: string;
+  targetId: string;
+  position: "inside" | "before" | "after";
   year: number;
 }): Promise<ActionResult> {
   try {
@@ -436,9 +440,14 @@ export async function moveDimensionNode(input: {
     const nodes = await getDimensionTreeByStructure(tenantId, nodeRow.structure_id, input.year);
     const byId = new Map(nodes.map((n) => [n.id, n]));
     const self = byId.get(input.nodeId);
-    const parent = byId.get(input.newParentId);
-    if (!self || !parent) return { error: "Item não encontrado nesta estrutura." };
-    if (self.parentNodeId === input.newParentId) return { success: true };
+    const target = byId.get(input.targetId);
+    if (!self || !target) return { error: "Item não encontrado nesta estrutura." };
+    if (self.id === target.id) return { success: true };
+
+    const newParentId = input.position === "inside" ? target.id : target.parentNodeId;
+    if (!newParentId) return { error: "O item raiz não pode ter itens ao lado dele." };
+    const parent = byId.get(newParentId);
+    if (!parent) return { error: "Item não encontrado nesta estrutura." };
 
     const childrenOf = new Map<string, typeof nodes>();
     for (const n of nodes) {
@@ -458,42 +467,70 @@ export async function moveDimensionNode(input: {
       return { error: "Não é possível mover um item para dentro dele mesmo ou de um item abaixo dele." };
     }
 
-    const delta = parent.level + 1 - self.level;
-    const deepest = Math.max(self.level, ...descendants.map((d) => d.level)) + delta;
-    if (deepest > 10) return { error: "Profundidade máxima de 10 níveis atingida." };
+    const parentChanged = self.parentNodeId !== parent.id;
+    if (parentChanged) {
+      const delta = parent.level + 1 - self.level;
+      const deepest = Math.max(self.level, ...descendants.map((d) => d.level)) + delta;
+      if (deepest > 10) return { error: "Profundidade máxima de 10 níveis atingida." };
 
-    const newLevel = parent.level + 1;
-    if (self.validFromYear === input.year) {
-      const { error } = await supabase
-        .from("dimension_node_versions")
-        .update({ parent_node_id: parent.id, level: newLevel })
-        .eq("id", self.versionId);
-      if (error) return { error: error.message };
-    } else {
-      const { error: closeError } = await supabase
-        .from("dimension_node_versions")
-        .update({ valid_until_year: input.year - 1 })
-        .eq("id", self.versionId);
-      if (closeError) return { error: closeError.message };
-      const { error: insertError } = await supabase.from("dimension_node_versions").insert({
-        dimension_node_id: self.id,
-        parent_node_id: parent.id,
-        name: self.name,
-        level: newLevel,
-        valid_from_year: input.year,
-        valid_until_year: null,
-      });
-      if (insertError) return { error: insertError.message };
+      const newLevel = parent.level + 1;
+      if (self.validFromYear === input.year) {
+        const { error } = await supabase
+          .from("dimension_node_versions")
+          .update({ parent_node_id: parent.id, level: newLevel })
+          .eq("id", self.versionId);
+        if (error) return { error: error.message };
+      } else {
+        const { error: closeError } = await supabase
+          .from("dimension_node_versions")
+          .update({ valid_until_year: input.year - 1 })
+          .eq("id", self.versionId);
+        if (closeError) return { error: closeError.message };
+        const { error: insertError } = await supabase.from("dimension_node_versions").insert({
+          dimension_node_id: self.id,
+          parent_node_id: parent.id,
+          name: self.name,
+          level: newLevel,
+          valid_from_year: input.year,
+          valid_until_year: null,
+        });
+        if (insertError) return { error: insertError.message };
+      }
+
+      if (delta !== 0) {
+        const results = await Promise.all(
+          descendants.map((d) =>
+            supabase.from("dimension_node_versions").update({ level: d.level + delta }).eq("id", d.versionId),
+          ),
+        );
+        const failed = results.find((r) => r.error);
+        if (failed?.error) return { error: failed.error.message };
+      }
     }
 
-    if (delta !== 0) {
-      const results = await Promise.all(
-        descendants.map((d) =>
-          supabase.from("dimension_node_versions").update({ level: d.level + delta }).eq("id", d.versionId),
-        ),
-      );
-      const failed = results.find((r) => r.error);
-      if (failed?.error) return { error: failed.error.message };
+    // Ordem entre irmãos: tira o item da lista, reinsere na posição pedida e regrava 0..n-1.
+    const siblings = nodes
+      .filter((n) => n.parentNodeId === parent.id && n.id !== self.id)
+      .sort(compareSiblings);
+    let index = siblings.length;
+    if (input.position !== "inside") {
+      const at = siblings.findIndex((n) => n.id === target.id);
+      index = at < 0 ? siblings.length : input.position === "before" ? at : at + 1;
+    }
+    const ordered = [...siblings.slice(0, index), self, ...siblings.slice(index)];
+    const orderUpdates = ordered
+      .map((n, i) => ({ n, i }))
+      .filter(({ n, i }) => n.id === self.id || (n.sortOrder ?? 0) !== i || parentChanged);
+    const orderResults = await Promise.all(
+      orderUpdates.map(({ n, i }) => supabase.from("dimension_nodes").update({ sort_order: i }).eq("id", n.id)),
+    );
+    const orderFailed = orderResults.find((r) => r.error);
+    if (orderFailed?.error) {
+      return {
+        error: /sort_order|schema cache/i.test(orderFailed.error.message)
+          ? "Rode a migration 0026 (ordem dos itens) no Supabase antes de reordenar."
+          : orderFailed.error.message,
+      };
     }
 
     revalidatePath("/admin/dimensoes");

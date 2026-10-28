@@ -152,7 +152,7 @@ export async function getDimensionTreeByStructure(
   const { data, error } = await supabase
     .from("dimension_nodes")
     .select(
-      `id, code,
+      `id, code, sort_order,
        dimension_node_versions!dimension_node_id!inner (
          id, name, parent_node_id, level, valid_from_year, valid_until_year
        )`
@@ -175,6 +175,7 @@ export async function getDimensionTreeByStructure(
       id: row.id,
       versionId: v.id,
       code: row.code,
+      sortOrder: row.sort_order ?? 0,
       name: v.name,
       parentNodeId: v.parent_node_id,
       level: v.level,

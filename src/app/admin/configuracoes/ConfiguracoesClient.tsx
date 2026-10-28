@@ -12,6 +12,7 @@ import { TreeItemRow } from "@/components/ui/tree";
 import { useTreeExpand } from "@/hooks/useTreeExpand";
 import type { DimensionType, DimensionNodeRow, DimensionStructure } from "@/lib/dimensions/types";
 import { isProtectedDimensionCode } from "@/lib/dimensions/constants";
+import { compareSiblings } from "@/lib/dimensions/hierarchy";
 import type { ConjuntoEstruturaWithItems } from "@/lib/orcamentos/queries";
 import { DimensionTypeFormModal } from "./DimensionTypeFormModal";
 import { StructureFormModal } from "./StructureFormModal";
@@ -22,7 +23,7 @@ import { deleteDimensionType, updateFiscalYearStartMonth } from "./_actions";
 import { setDimensionStructureActive, deleteDimensionStructure, duplicateDimensionStructure } from "./_structureActions";
 import { deleteConjunto } from "./_conjuntoActions";
 import { cancelDimensionNode, createDimensionNode, moveDimensionNode, updateDimensionNode } from "../dimensoes/_actions";
-import { MoveNodeModal, validMoveTargets } from "./MoveNodeModal";
+import { MoveNodeModal, canPlace, type DropPosition } from "./MoveNodeModal";
 
 type Translator = (key: string, values?: Record<string, string | number>) => string;
 
@@ -226,15 +227,15 @@ export function ConfiguracoesClient({
 
   // Mover item: arrastando para cima de outro ou pelo botão "Mover para...".
   const [dragNodeId, setDragNodeId] = useState<string | null>(null);
-  const [dropTargetId, setDropTargetId] = useState<string | null>(null);
+  const [dropTarget, setDropTarget] = useState<{ id: string; position: DropPosition } | null>(null);
   const [moveDialog, setMoveDialog] = useState<{ node: DimensionNodeRow; structureId: string } | null>(null);
   const [moveLoading, setMoveLoading] = useState(false);
   const [moveError, setMoveError] = useState<string | null>(null);
 
-  async function handleMoveNode(nodeId: string, targetId: string): Promise<boolean> {
+  async function handleMoveNode(nodeId: string, targetId: string, position: DropPosition = "inside"): Promise<boolean> {
     setMoveLoading(true);
     setMoveError(null);
-    const result = await moveDimensionNode({ nodeId, newParentId: targetId, year });
+    const result = await moveDimensionNode({ nodeId, targetId, position, year });
     setMoveLoading(false);
     if (result.error) {
       setMoveError(result.error);
@@ -242,7 +243,7 @@ export function ConfiguracoesClient({
       return false;
     }
     setAddNodeError(null);
-    treeExpand.expand(targetId);
+    if (position === "inside") treeExpand.expand(targetId);
     router.refresh();
     return true;
   }
@@ -574,7 +575,7 @@ export function ConfiguracoesClient({
       list.push(n);
       map.set(n.parentNodeId, list);
     });
-    map.forEach((list) => list.sort((a, b) => a.name.localeCompare(b.name, "pt-BR")));
+    map.forEach((list) => list.sort(compareSiblings));
     return map;
   }
 
@@ -655,25 +656,34 @@ export function ConfiguracoesClient({
             e.dataTransfer.effectAllowed = "move";
             e.dataTransfer.setData("text/plain", node.id);
           }}
-          onDragEnd={() => { setDragNodeId(null); setDropTargetId(null); }}
+          onDragEnd={() => { setDragNodeId(null); setDropTarget(null); }}
           onDragOver={(e) => {
             if (!dragNodeId || dragNodeId === node.id) return;
             const nodes = nodesByStructure[s.id] ?? [];
             const dragged = nodes.find((n) => n.id === dragNodeId);
-            if (!dragged || !validMoveTargets(nodes, dragged).some((x) => x.id === node.id)) return;
+            if (!dragged) return;
+            // Faixa de cima = antes, faixa de baixo = depois, meio = dentro dele.
+            const rect = e.currentTarget.getBoundingClientRect();
+            const y = (e.clientY - rect.top) / Math.max(rect.height, 1);
+            const position: DropPosition = y < 0.28 ? "before" : y > 0.72 ? "after" : "inside";
+            if (!canPlace(nodes, dragged, node, position)) {
+              if (dropTarget?.id === node.id) setDropTarget(null);
+              return;
+            }
             e.preventDefault();
             e.dataTransfer.dropEffect = "move";
-            if (dropTargetId !== node.id) setDropTargetId(node.id);
+            if (dropTarget?.id !== node.id || dropTarget.position !== position) setDropTarget({ id: node.id, position });
           }}
-          onDragLeave={() => { if (dropTargetId === node.id) setDropTargetId(null); }}
+          onDragLeave={() => { if (dropTarget?.id === node.id) setDropTarget(null); }}
           onDrop={(e) => {
             e.preventDefault();
             const id = dragNodeId;
+            const position = dropTarget?.id === node.id ? dropTarget.position : "inside";
             setDragNodeId(null);
-            setDropTargetId(null);
-            if (id && id !== node.id) void handleMoveNode(id, node.id);
+            setDropTarget(null);
+            if (id && id !== node.id) void handleMoveNode(id, node.id, position);
           }}
-          isDropTarget={dropTargetId === node.id}
+          dropPosition={dropTarget?.id === node.id ? dropTarget.position : null}
           isEditing={isEditing}
           editCode={editNodeCode}
           onEditCodeChange={setEditNodeCode}
