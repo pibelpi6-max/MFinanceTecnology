@@ -658,7 +658,12 @@
     "dedCopyDone": "Deductions applied to {n} items.",
     "dedDefaultsHint": "Register the company's default deductions with their percentage. When editing a product or service, they appear as pre-filled shortcuts.",
     "fxRepeatNext": "Repeat in the following months",
-    "fxNewCurrency": "New currency"
+    "fxNewCurrency": "New currency",
+    "ruleButton": "Special conditions by structure",
+    "ruleAllStructures": "All structures",
+    "ruleAllProducts": "All products and services",
+    "ruleColStructure": "Structure",
+    "ruleColProduct": "Product or service"
   },
   "erpCodes": {
     "title": "ERP codes",

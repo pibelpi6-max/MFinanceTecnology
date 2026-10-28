@@ -6,9 +6,9 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import {
   EMPTY_MONTH, avgPrice, computeByProduct, rateFor, sumMonths,
-  type Deduction, type MonthResult, type RateTable, type RevenueLine,
+  type Deduction, type MonthResult, type RateTable, type RevenueLine, type DeductionRule,
 } from "@/lib/receita/calc";
-import { applyAssumption, saveCurrencyRates, saveDeductionDefaults, saveRevenueEntries } from "./_actions";
+import { applyAssumption, saveCurrencyRates, saveDeductionDefaults, saveDeductionRules, saveRevenueEntries } from "./_actions";
 import { ReceitaCharts } from "./ReceitaCharts";
 import type { TablePrefs } from "@/components/ui/DataTable/types";
 import { ProdutosPanel } from "./ProdutosPanel";
@@ -35,7 +35,8 @@ interface Props {
   deductionLabels?: string[];
   deductionDefaults?: { label: string; pct: number }[];
   products: ProductRow[];
-  entities: { id: string; name: string }[];
+  entities: { id: string; name: string; depth?: number; parentId?: string | null }[];
+  deductionRules?: DeductionRule[];
   entityId: string; // "all" = consolidado (somente leitura)
   displayCurrency: string;
   currencies: string[];
@@ -98,11 +99,11 @@ export function ReceitaClient(p: Props) {
   // Linhas efetivas = banco + edições pendentes
   const lines: RevenueLine[] = useMemo(() => {
     const map = new Map<string, RevenueLine>();
-    for (const l of baseLines) map.set(`${l.productId}:${l.month}`, { ...l, currency: currencyEdits[l.productId] ?? l.currency });
+    for (const l of baseLines) map.set(`${l.productId}:${l.entityId ?? ""}:${l.month}`, { ...l, currency: currencyEdits[l.productId] ?? l.currency });
     for (const [pid, months] of Object.entries(edits)) {
       for (const [m, e] of Object.entries(months)) {
-        const k = `${pid}:${m}`;
-        const cur = map.get(k) ?? { productId: pid, month: Number(m), currency: currencyEdits[pid] ?? "BRL", volume: 0, unitPrice: 0 };
+        const k = `${pid}:${entityKey ?? ""}:${m}`;
+        const cur = map.get(k) ?? { productId: pid, entityId: entityKey, month: Number(m), currency: currencyEdits[pid] ?? "BRL", volume: 0, unitPrice: 0 };
         map.set(k, {
           ...cur,
           currency: currencyEdits[pid] ?? cur.currency,
@@ -112,9 +113,16 @@ export function ReceitaClient(p: Props) {
       }
     }
     return Array.from(map.values());
-  }, [baseLines, edits, currencyEdits]);
+  }, [baseLines, edits, currencyEdits, entityKey]);
 
-  const byProduct = useMemo(() => computeByProduct(lines, p.deductions, p.rates), [lines, p.deductions, p.rates]);
+  const ruleCtx = useMemo(() => ({
+    entityParents: Object.fromEntries(p.entities.map((e) => [e.id, e.parentId ?? null])),
+    productParents: Object.fromEntries(p.products.map((x) => [x.id, x.parentId ?? null])),
+  }), [p.entities, p.products]);
+  const byProduct = useMemo(
+    () => computeByProduct(lines, p.deductions, p.rates, p.deductionRules ?? [], ruleCtx),
+    [lines, p.deductions, p.rates, p.deductionRules, ruleCtx],
+  );
 
   // Agrega pais = soma dos descendentes
   const childrenOf = useMemo(() => {
@@ -421,7 +429,7 @@ export function ReceitaClient(p: Props) {
             />
           )}
           {paramTab === "deductions" && (
-            <DeductionDefaultsPanel orcamentoId={p.orcamentoId} defaults={p.deductionDefaults ?? []} onError={setError} />
+            <DeductionDefaultsPanel orcamentoId={p.orcamentoId} defaults={p.deductionDefaults ?? []} rules={p.deductionRules ?? []} entities={p.entities} products={p.products} onError={setError} />
           )}
           {paramTab === "fx" && <FxPanel orcamentoId={p.orcamentoId} rates={p.rates} onError={setError} />}
         </>
@@ -575,17 +583,34 @@ function ParamIcon({ id }: { id: ParamTab }) {
 
 const PRESETS = ["ICMS", "PIS", "COFINS", "ISS", "IPI"];
 
-/** Deduções padrão da empresa: viram atalhos (já com o percentual) ao editar um produto ou serviço. */
-function DeductionDefaultsPanel({ orcamentoId, defaults, onError }: {
-  orcamentoId: string; defaults: { label: string; pct: number }[]; onError: (s: string | null) => void;
+type RuleDraft = { entityId: string; productId: string; pct: string };
+type DedDraftRow = { label: string; pct: string; rules: RuleDraft[] };
+
+/** Deduções padrão da empresa e suas condições especiais por estrutura / produto. */
+function DeductionDefaultsPanel({ orcamentoId, defaults, rules, entities, products, onError }: {
+  orcamentoId: string;
+  defaults: { label: string; pct: number }[];
+  rules: DeductionRule[];
+  entities: { id: string; name: string; depth?: number }[];
+  products: ProductRow[];
+  onError: (s: string | null) => void;
 }) {
   const t = useTranslations("receita");
   const router = useRouter();
-  const [items, setItems] = useState(() => defaults.map((d) => ({ label: d.label, pct: fmtInput(d.pct) })));
+  const [items, setItems] = useState<DedDraftRow[]>(() =>
+    defaults.map((d) => ({
+      label: d.label,
+      pct: fmtInput(d.pct),
+      rules: rules
+        .filter((r) => r.label.toLowerCase() === d.label.toLowerCase())
+        .map((r) => ({ entityId: r.entityId ?? "", productId: r.productId ?? "", pct: fmtInput(r.pct) })),
+    })),
+  );
   const [pending, start] = useTransition();
-  const touch = (fn: (s: typeof items) => typeof items) => setItems(fn);
+  const touch = (fn: (s: DedDraftRow[]) => DedDraftRow[]) => setItems(fn);
   const listRef = useRef<HTMLDivElement>(null);
   const [focusRow, setFocusRow] = useState<{ i: number; field: 0 | 1 } | null>(null);
+  const [focusRule, setFocusRule] = useState<{ i: number; j: number } | null>(null);
   useEffect(() => {
     if (!focusRow) return;
     const el = listRef.current?.querySelectorAll(".rec-ded-row")[focusRow.i]?.querySelectorAll<HTMLInputElement>("input")[focusRow.field];
@@ -593,18 +618,61 @@ function DeductionDefaultsPanel({ orcamentoId, defaults, onError }: {
     el?.select();
     setFocusRow(null);
   }, [focusRow]);
-  const addRow = (label: string, field: 0 | 1) => { setFocusRow({ i: items.length, field }); touch((s) => [...s, { label, pct: "" }]); };
+  useEffect(() => {
+    if (!focusRule) return;
+    const el = listRef.current?.querySelectorAll(".rec-ded-block")[focusRule.i]?.querySelectorAll<HTMLSelectElement>(".rec-rule-row")[focusRule.j]?.querySelector("select");
+    el?.focus();
+    setFocusRule(null);
+  }, [focusRule]);
+  const addRow = (label: string, field: 0 | 1) => { setFocusRow({ i: items.length, field }); touch((s) => [...s, { label, pct: "", rules: [] }]); };
+  const addRule = (i: number) => {
+    setFocusRule({ i, j: items[i].rules.length });
+    touch((s) => s.map((x, k) => (k === i ? { ...x, rules: [...x.rules, { entityId: "", productId: "", pct: "" }] } : x)));
+  };
+  const patchRule = (i: number, j: number, patch: Partial<RuleDraft>) =>
+    touch((s) => s.map((x, k) => (k === i ? { ...x, rules: x.rules.map((r, m) => (m === j ? { ...r, ...patch } : r)) } : x)));
+  const indent = (d?: number) => "\u00A0\u00A0".repeat(d ?? 0);
   return (
     <div className="rec-panel" ref={listRef}>
       <p className="rec-hint">{t("dedDefaultsHint")}</p>
       {items.map((it, i) => (
-        <div className="rec-ded-row" key={i}>
-          <input value={it.label} onChange={(e) => touch((s) => s.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))} placeholder={t("deductionName")} />
-          <input inputMode="decimal" value={it.pct} onChange={(e) => /^\d*[.,]?\d*$/.test(e.target.value) && touch((s) => s.map((x, j) => (j === i ? { ...x, pct: e.target.value } : x)))} placeholder="%" />
-          <span>%</span>
-          <button type="button" className="rec-edit-x" aria-label={t("remove")} title={t("remove")} onClick={() => touch((s) => s.filter((_, j) => j !== i))}>
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5" /></svg>
-          </button>
+        <div className="rec-ded-block" key={i}>
+          <div className="rec-ded-row">
+            <input value={it.label} onChange={(e) => touch((s) => s.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))} placeholder={t("deductionName")} />
+            <input inputMode="decimal" value={it.pct} onChange={(e) => /^\d*[.,]?\d*$/.test(e.target.value) && touch((s) => s.map((x, j) => (j === i ? { ...x, pct: e.target.value } : x)))} placeholder="%" />
+            <span>%</span>
+            <button type="button" className="rec-edit-x" aria-label={t("remove")} title={t("remove")} onClick={() => touch((s) => s.filter((_, j) => j !== i))}>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5" /></svg>
+            </button>
+            <button type="button" className="rec-rule-btn" onClick={() => addRule(i)} disabled={!it.label.trim()}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z" /></svg>
+              {t("ruleButton")}{it.rules.length > 0 ? ` (${it.rules.length})` : ""}
+            </button>
+          </div>
+          {it.rules.length > 0 && (
+            <div className="rec-rules">
+              <div className="rec-rule-row rec-rule-head"><span>{t("ruleColStructure")}</span><span>{t("ruleColProduct")}</span><span>{t("dedColPct")}</span><span /></div>
+              {it.rules.map((r, j) => (
+                <div className="rec-rule-row" key={j}>
+                  <select value={r.entityId} onChange={(e) => patchRule(i, j, { entityId: e.target.value })} aria-label={t("ruleColStructure")}>
+                    <option value="">{t("ruleAllStructures")}</option>
+                    {entities.map((e) => <option key={e.id} value={e.id}>{indent(e.depth)}{e.name}</option>)}
+                  </select>
+                  <select value={r.productId} onChange={(e) => patchRule(i, j, { productId: e.target.value })} aria-label={t("ruleColProduct")}>
+                    <option value="">{t("ruleAllProducts")}</option>
+                    {products.map((x) => <option key={x.id} value={x.id}>{indent(x.depth)}{x.name}</option>)}
+                  </select>
+                  <span className="rec-edit-pct">
+                    <input inputMode="decimal" value={r.pct} placeholder="0" aria-label={t("dedColPct")} onChange={(e) => /^\d*[.,]?\d*$/.test(e.target.value) && patchRule(i, j, { pct: e.target.value })} />
+                    %
+                  </span>
+                  <button type="button" className="rec-edit-x" aria-label={t("remove")} title={t("remove")} onClick={() => touch((s) => s.map((x, k) => (k === i ? { ...x, rules: x.rules.filter((_, m) => m !== j) } : x)))}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5" /></svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       ))}
       <div className="rec-presets">
@@ -619,7 +687,10 @@ function DeductionDefaultsPanel({ orcamentoId, defaults, onError }: {
           onClick={() => start(async () => {
             onError(null);
             const r = await saveDeductionDefaults({ orcamentoId, items: items.map((i) => ({ label: i.label, pct: num(i.pct) })) });
-            if (r.error) onError(r.error); else router.refresh();
+            if (r.error) { onError(r.error); return; }
+            const flat = items.flatMap((i) => i.rules.map((x) => ({ label: i.label, entityId: x.entityId || null, productId: x.productId || null, pct: num(x.pct) })));
+            const r2 = await saveDeductionRules({ orcamentoId, items: flat });
+            if (r2.error) onError(r2.error); else router.refresh();
           })}
         >{t("save")}</Button>
       </div>

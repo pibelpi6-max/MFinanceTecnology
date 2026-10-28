@@ -213,6 +213,44 @@ export async function saveDeductionDefaults(input: {
   }
 }
 
+export async function saveDeductionRules(input: {
+  orcamentoId: string;
+  items: { label: string; entityId: string | null; productId: string | null; pct: number }[];
+}): Promise<Result> {
+  try {
+    const tenant = await getCurrentTenant();
+    if (!tenant) return { error: "Não autenticado" };
+    const seen = new Set<string>();
+    const items: { label: string; entityId: string | null; productId: string | null; pct: number }[] = [];
+    for (const i of input.items) {
+      const label = i.label.trim();
+      if (!label) continue;
+      if (!i.entityId && !i.productId) return { error: `Escolha a estrutura ou o produto da condição de ${label}` };
+      if (!Number.isFinite(i.pct) || i.pct < 0 || i.pct > 100) return { error: "Percentual deve estar entre 0 e 100" };
+      const key = `${label.toLowerCase()}|${i.entityId ?? ""}|${i.productId ?? ""}`;
+      if (seen.has(key)) return { error: `Há condições repetidas para ${label}` };
+      seen.add(key);
+      items.push({ label, entityId: i.entityId, productId: i.productId, pct: i.pct });
+    }
+    const supabase = await createClient();
+    const hint = "Rode a migration 0024 (condições especiais) no Supabase antes de salvar.";
+    const del = await supabase.from("revenue_deduction_rules").delete().eq("tenant_id", tenant.tenantId);
+    if (del.error) return { error: /does not exist|schema cache|permission/i.test(del.error.message) ? hint : del.error.message };
+    if (items.length > 0) {
+      const ins = await supabase.from("revenue_deduction_rules").insert(
+        items.map((i, idx) => ({
+          tenant_id: tenant.tenantId, label: i.label, entity_node_id: i.entityId, product_node_id: i.productId, pct: i.pct, sort_order: idx,
+        })),
+      );
+      if (ins.error) return { error: ins.error.message };
+    }
+    refresh(input.orcamentoId);
+    return { success: true };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Erro ao salvar" };
+  }
+}
+
 export async function saveCurrencyRates(input: {
   orcamentoId: string;
   currency: string;

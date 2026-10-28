@@ -99,3 +99,27 @@ export async function getDeductionDefaults(tenantId: string): Promise<DeductionD
   if (error) return [];
   return (data ?? []).map((r) => ({ label: String(r.label), pct: Number(r.pct) }));
 }
+
+export interface DeductionRuleRow {
+  label: string;
+  entityId: string | null;
+  productId: string | null;
+  pct: number;
+}
+
+/** Condições especiais por estrutura. Tolera a tabela ainda não existir (migration 0024). */
+export async function getDeductionRules(tenantId: string): Promise<DeductionRuleRow[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("revenue_deduction_rules")
+    .select("label, entity_node_id, product_node_id, pct, sort_order")
+    .eq("tenant_id", tenantId)
+    .order("sort_order");
+  if (error) return [];
+  return (data ?? []).map((r) => ({
+    label: String(r.label),
+    entityId: r.entity_node_id,
+    productId: r.product_node_id,
+    pct: Number(r.pct),
+  }));
+}

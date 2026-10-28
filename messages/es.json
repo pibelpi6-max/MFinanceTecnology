@@ -658,7 +658,12 @@
     "dedCopyDone": "Deducciones aplicadas a {n} elementos.",
     "dedDefaultsHint": "Registre las deducciones estándar de la empresa con su porcentaje. Al editar un producto o servicio, aparecen como atajos ya completados.",
     "fxRepeatNext": "Repetir en los meses siguientes",
-    "fxNewCurrency": "Nueva moneda"
+    "fxNewCurrency": "Nueva moneda",
+    "ruleButton": "Condiciones especiales por estructura",
+    "ruleAllStructures": "Todas las estructuras",
+    "ruleAllProducts": "Todos los productos y servicios",
+    "ruleColStructure": "Estructura",
+    "ruleColProduct": "Producto o servicio"
   },
   "erpCodes": {
     "title": "Códigos del ERP",

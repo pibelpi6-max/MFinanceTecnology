@@ -5,7 +5,7 @@ import { getOrcamentoById } from "@/lib/orcamentos/queries";
 import { getDimensionTypeByCode, getDimensionTree } from "@/lib/dimensions/queries";
 import { DIMENSION_CODES } from "@/lib/dimensions/constants";
 import { buildDimensionHierarchy } from "@/lib/dimensions/hierarchy";
-import { getDeductionDefaults, getDeductionLabels, getItemKinds, getReceitaData } from "@/lib/receita/queries";
+import { getDeductionDefaults, getDeductionLabels, getDeductionRules, getItemKinds, getReceitaData } from "@/lib/receita/queries";
 import { BackToMapLink } from "@/components/orcamentos/BackToMapLink";
 import { ModuleTitle } from "@/components/orcamentos/ModuleTitle";
 import { getUserPreference } from "@/app/_actions/userPreferences";
@@ -62,10 +62,11 @@ export default async function ReceitaPage({ params, searchParams }: PageProps) {
     );
   }
 
-  const [kinds, deductionLabels, deductionDefaults] = await Promise.all([
+  const [kinds, deductionLabels, deductionDefaults, deductionRules] = await Promise.all([
     getItemKinds(tenant.tenantId),
     getDeductionLabels(tenant.tenantId),
     getDeductionDefaults(tenant.tenantId),
+    getDeductionRules(tenant.tenantId),
   ]);
   const hierarchy = buildDimensionHierarchy(productNodes);
   const products: ProductRow[] = hierarchy.rows.map((r) => ({
@@ -79,7 +80,7 @@ export default async function ReceitaPage({ params, searchParams }: PageProps) {
     versionId: r.item.versionId,
     validFromYear: r.item.validFromYear,
   }));
-  const entities = buildDimensionHierarchy(entityNodes).rows.map((r) => ({ id: r.item.id, name: r.item.name }));
+  const entities = buildDimensionHierarchy(entityNodes).rows.map((r) => ({ id: r.item.id, name: r.item.name, depth: r.depth, parentId: r.item.parentNodeId }));
   const entityId =
     searchParams.entidade === "all" || entities.some((e) => e.id === searchParams.entidade)
       ? (searchParams.entidade as string)
@@ -102,6 +103,7 @@ export default async function ReceitaPage({ params, searchParams }: PageProps) {
             productPrefs={productPrefs ?? undefined}
             deductionLabels={deductionLabels}
             deductionDefaults={deductionDefaults}
+            deductionRules={deductionRules}
             products={products}
             entities={entities}
             entityId={entityId}
