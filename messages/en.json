@@ -678,7 +678,12 @@
     "treeNoResults": "Nothing found.",
     "treeExpand": "Expand",
     "treeCollapse": "Collapse",
-    "treeSelected": "{count} selected"
+    "treeSelected": "{count} selected",
+    "ruleModalTitle": "Special conditions",
+    "ruleAdd": "Add condition",
+    "ruleDone": "Done",
+    "ruleModalHint": "Apply instead of the default ({pct}%) for the chosen structure and/or product.",
+    "ruleEmpty": "No conditions yet."
   },
   "erpCodes": {
     "title": "ERP codes",

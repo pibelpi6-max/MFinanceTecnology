@@ -678,7 +678,12 @@
     "treeNoResults": "Sin resultados.",
     "treeExpand": "Expandir",
     "treeCollapse": "Contraer",
-    "treeSelected": "{count} seleccionados"
+    "treeSelected": "{count} seleccionados",
+    "ruleModalTitle": "Condiciones especiales",
+    "ruleAdd": "Agregar condición",
+    "ruleDone": "Listo",
+    "ruleModalHint": "Valen en lugar del estándar ({pct}%) para la estructura y/o producto elegidos.",
+    "ruleEmpty": "Aún no hay condiciones."
   },
   "erpCodes": {
     "title": "Códigos del ERP",
