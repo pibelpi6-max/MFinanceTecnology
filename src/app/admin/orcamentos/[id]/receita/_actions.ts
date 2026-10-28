@@ -396,7 +396,7 @@ export async function setupProdutos(input: { orcamentoId: string; names: string[
       .select("id", { count: "exact", head: true })
       .eq("tenant_id", tenant.tenantId)
       .eq("dimension_type_id", typeId);
-    if ((count ?? 0) > 0) return { error: "A hierarquia Produto já tem itens. Gerencie-os em Parâmetros." };
+    if ((count ?? 0) > 0) return { error: "Já existem produtos cadastrados. Gerencie-os na aba Produtos e serviços." };
 
     const root = await createDimensionNode({ dimensionTypeId: typeId, code: "PROD", name: "Produtos", parentNodeId: null, year: orc.year });
     if (root.error) return { error: root.error };
