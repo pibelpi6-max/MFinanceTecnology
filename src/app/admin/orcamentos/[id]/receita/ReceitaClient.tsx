@@ -130,6 +130,19 @@ export function ReceitaClient(p: Props) {
   const sliceDims: Record<string, string> = readOnly ? {} : Object.fromEntries(carried.map((id) => [id, sel[id]]));
   const dimsKey = (d: Record<string, string> | undefined) => JSON.stringify(Object.entries(d ?? {}).sort(([a], [b]) => (a < b ? -1 : 1)));
 
+  // Ordem das hierarquias (arrastável): define o aninhamento dos grupos na tabela consolidada.
+  const orderParam = (search.get("ord") ?? "").split(",").filter(Boolean);
+  const order = [...orderParam.filter((id) => carried.includes(id)), ...carried.filter((id) => !orderParam.includes(id))];
+  const groupDims = readOnly ? order.filter((id) => sel[id] === "all") : [];
+  const groupKeyStr = groupDims.join(",");
+  const [dragId, setDragId] = useState<string | null>(null);
+  function reorder(from: string, to: string) {
+    if (from === to) return;
+    const next = order.filter((id) => id !== from);
+    next.splice(next.indexOf(to), 0, from);
+    setParam("ord", next.join(","));
+  }
+
   const monthLabelsAll = MONTHS.map((m) => new Intl.DateTimeFormat(locale, { month: "short" }).format(new Date(2000, m - 1, 1)));
 
   const money = useMemo(
@@ -219,40 +232,28 @@ export function ReceitaClient(p: Props) {
     return m;
   }, [p.products]);
 
-  const aggregated = useMemo(() => {
+  const aggregateOf = (bp: Record<string, Record<number, MonthResult>>) => {
     const out: Record<string, Record<number, MonthResult>> = {};
-    const walk = (id: string): Record<number, MonthResult> => {
-      const kids = childrenOf.get(id) ?? [];
-      if (kids.length === 0) return (out[id] = byProduct[id] ?? {});
-      const acc: Record<number, MonthResult> = {};
-      for (const k of kids) {
-        const r = walk(k.id);
-        for (const [m, v] of Object.entries(r)) {
-          const c = acc[Number(m)] ?? { ...EMPTY_MONTH };
-          acc[Number(m)] = { gross: c.gross + v.gross, deductions: c.deductions + v.deductions, net: c.net + v.net, volume: c.volume + v.volume };
-        }
-      }
-      // Lançamentos diretos num pai (se existirem) também entram
-      for (const [m, v] of Object.entries(byProduct[id] ?? {})) {
+    const add = (acc: Record<number, MonthResult>, r: Record<number, MonthResult>) => {
+      for (const [m, v] of Object.entries(r)) {
         const c = acc[Number(m)] ?? { ...EMPTY_MONTH };
         acc[Number(m)] = { gross: c.gross + v.gross, deductions: c.deductions + v.deductions, net: c.net + v.net, volume: c.volume + v.volume };
       }
+    };
+    const walk = (id: string): Record<number, MonthResult> => {
+      const kids = childrenOf.get(id) ?? [];
+      if (kids.length === 0) return (out[id] = bp[id] ?? {});
+      const acc: Record<number, MonthResult> = {};
+      for (const k of kids) add(acc, walk(k.id));
+      add(acc, bp[id] ?? {}); // lançamentos diretos num pai
       return (out[id] = acc);
     };
     for (const r of childrenOf.get(null) ?? []) walk(r.id);
-    return out;
-  }, [childrenOf, byProduct]);
-
-  const totals = useMemo(() => {
-    const acc: Record<number, MonthResult> = {};
-    for (const r of childrenOf.get(null) ?? []) {
-      for (const [m, v] of Object.entries(aggregated[r.id] ?? {})) {
-        const c = acc[Number(m)] ?? { ...EMPTY_MONTH };
-        acc[Number(m)] = { gross: c.gross + v.gross, deductions: c.deductions + v.deductions, net: c.net + v.net, volume: c.volume + v.volume };
-      }
-    }
-    return acc;
-  }, [childrenOf, aggregated]);
+    const tot: Record<number, MonthResult> = {};
+    for (const r of childrenOf.get(null) ?? []) add(tot, out[r.id] ?? {});
+    return { agg: out, totals: tot };
+  };
+  const { agg: aggregated, totals } = useMemo(() => aggregateOf(byProduct), [childrenOf, byProduct]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Conversão para a moeda de exibição
   const toDisplay = (brl: number, month: number) => {
@@ -288,7 +289,6 @@ export function ReceitaClient(p: Props) {
     setParam(`s_${typeId}`, value);
   }
 
-  const [detailType, setDetailType] = useState<string>("");
   function toggleProduct(id: string) {
     setCollapsed((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   }
@@ -341,52 +341,88 @@ export function ReceitaClient(p: Props) {
     return memo;
   }, [childrenOf, p.products]);
 
-  // "Detalhar por": volume de cada produto/família aberto nos itens de uma hierarquia (só no consolidado).
-  const detail = useMemo(() => {
-    if (!detailType || tab !== "entry" || !readOnly) return null;
-    const vols = new Map<string, Record<number, number>>();
-    const present = new Map<string, Set<string>>();
-    for (const l of premisedLines) {
-      const n = l.dims?.[detailType];
-      if (!n) continue;
-      let cur: string | null = l.productId;
-      while (cur) {
-        const key = `d|${cur}|${n}`;
-        const v = vols.get(key) ?? {};
-        v[l.month] = (v[l.month] ?? 0) + l.volume;
-        vols.set(key, v);
-        const set = present.get(cur) ?? new Set<string>();
-        set.add(n);
-        present.set(cur, set);
-        cur = ruleCtx.productParents[cur] ?? null;
+  // Consolidado agrupado: a ordem das hierarquias vira níveis (tree view); produtos ficam por dentro.
+  type GData = { lines: RevenueLine[]; byProduct: Record<string, Record<number, MonthResult>>; agg: Record<string, Record<number, MonthResult>>; totals: Record<number, MonthResult> };
+  type GEntry = { key: string; parentKey: string | null; depth: number; label: string; gid: string; prod?: string; hasKids: boolean };
+  const grouped = useMemo(() => {
+    if (groupDims.length === 0 || tab === "params" || tab === "assumptions") return null;
+    const data = new Map<string, GData>();
+    const entries: GEntry[] = [];
+    const dataOf = (gid: string, ls: RevenueLine[]) => {
+      if (!data.has(gid)) {
+        const bp = computeByProduct(ls, p.deductions, p.rates, p.deductionRules ?? [], ruleCtx);
+        data.set(gid, { lines: ls, byProduct: bp, ...aggregateOf(bp) });
       }
-    }
-    return { vols, present };
-  }, [detailType, tab, readOnly, premisedLines, ruleCtx.productParents]);
+    };
+    const build = (ls: RevenueLine[], idx: number, depth: number, prefix: string, parentKey: string | null) => {
+      if (idx >= groupDims.length) {
+        const present = new Set(ls.map((l) => l.productId));
+        for (const r of p.products) {
+          const leaves = leavesUnder.get(r.id) ?? [];
+          if (!leaves.some((x) => present.has(x))) continue;
+          entries.push({ key: `${prefix}|p:${r.id}`, parentKey: r.parentId && (leavesUnder.get(r.parentId) ?? []).some((x) => present.has(x)) ? `${prefix}|p:${r.parentId}` : parentKey, depth: depth + r.depth, label: r.name, gid: prefix, prod: r.id, hasKids: !r.isLeaf });
+        }
+        return;
+      }
+      const d = groupDims[idx];
+      const has = new Set<string>();
+      for (const l of ls) for (const n of lineage(l.dims?.[d], nodeParents)) has.add(n);
+      const nodes = (p.dimNodes[d] ?? []).filter((n) => has.has(n.id));
+      for (const n of nodes) {
+        const gid = `${prefix}|${d}:${n.id}`;
+        const sub = ls.filter((l) => lineage(l.dims?.[d], nodeParents).includes(n.id));
+        dataOf(gid, sub);
+        const leafNode = !nodes.some((x) => nodeParents[x.id] === n.id);
+        const par = nodeParents[n.id] && has.has(nodeParents[n.id] as string) ? `${prefix}|${d}:${nodeParents[n.id]}` : parentKey;
+        entries.push({ key: gid, parentKey: par, depth: depth + n.depth, label: n.name, gid, hasKids: true });
+        if (leafNode) build(sub, idx + 1, depth + n.depth + 1, gid, gid);
+      }
+      const none = ls.filter((l) => !l.dims?.[d]);
+      if (none.length) {
+        const gid = `${prefix}|${d}:none`;
+        dataOf(gid, none);
+        entries.push({ key: gid, parentKey, depth, label: "—", gid, hasKids: true });
+        build(none, idx + 1, depth + 1, gid, gid);
+      }
+    };
+    build(premisedLines, 0, 0, "g", null);
+    return { data, entries };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [groupKeyStr, premisedLines, tab, p.products, p.dimNodes, nodeParents, leavesUnder, p.deductions, p.rates, p.deductionRules, ruleCtx, childrenOf]);
 
   const unifiedRows: GridRow[] = useMemo(() => {
-    const rows: GridRow[] = visibleRows.flatMap((r) => {
-      const main: GridRow = {
-      key: r.id,
-      depth: r.depth,
-      label: r.name,
-      toggle: r.isLeaf ? undefined : { open: !collapsed.has(r.id), onToggle: () => toggleProduct(r.id) },
-      pid: r.isLeaf ? r.id : undefined,
-      currency: r.isLeaf
-        ? { value: currencyOf(r.id), options: p.currencies, onChange: (c: string) => { setSaved(false); setCurrencyEdits((s) => ({ ...s, [r.id]: c })); } }
-        : undefined,
-      };
-      const nodes = detail?.present.get(r.id);
-      if (!detail || !nodes) return [main];
-      const sub: GridRow[] = (p.dimNodes[detailType] ?? [])
-        .filter((n) => nodes.has(n.id))
-        .map((n) => ({ key: `d|${r.id}|${n.id}`, depth: r.depth + 1, label: n.name, detail: true }));
-      return [main, ...sub];
-    });
+    let rows: GridRow[];
+    if (grouped) {
+      const hidden = new Set<string>();
+      rows = [];
+      for (const e of grouped.entries) {
+        if (e.parentKey && (hidden.has(e.parentKey) || collapsed.has(e.parentKey))) {
+          hidden.add(e.key);
+          continue;
+        }
+        rows.push({
+          key: e.key, depth: e.depth, label: e.label, gid: e.gid, prod: e.prod,
+          toggle: e.hasKids && !(e.prod && (leavesUnder.get(e.prod) ?? []).length === 1 && leavesUnder.get(e.prod)?.[0] === e.prod)
+            ? { open: !collapsed.has(e.key), onToggle: () => toggleProduct(e.key) }
+            : undefined,
+        });
+      }
+    } else {
+      rows = visibleRows.map((r) => ({
+        key: r.id,
+        depth: r.depth,
+        label: r.name,
+        toggle: r.isLeaf ? undefined : { open: !collapsed.has(r.id), onToggle: () => toggleProduct(r.id) },
+        pid: r.isLeaf ? r.id : undefined,
+        currency: r.isLeaf
+          ? { value: currencyOf(r.id), options: p.currencies, onChange: (c: string) => { setSaved(false); setCurrencyEdits((s) => ({ ...s, [r.id]: c })); } }
+          : undefined,
+      }));
+    }
     rows.push({ key: TOTAL_KEY, depth: 0, label: t("total"), strong: true });
     return rows;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visibleRows, collapsed, currencyEdits, baseLines, p.currencies, detail, detailType]);
+  }, [visibleRows, collapsed, currencyEdits, baseLines, p.currencies, grouped, leavesUnder]);
 
   const makeCols = (shown: Set<Measure>, period: Period): GridCol[] => {
     const periods: { label: string; months: number[]; month?: number }[] =
@@ -398,7 +434,13 @@ export function ReceitaClient(p: Props) {
             ? [0, 1].map((i) => ({ label: `${t("semesterPrefix")}${i + 1}`, months: MONTHS.slice(i * 6, i * 6 + 6) }))
             : [];
     const money2 = (n: number) => money.format(n);
-    const agg = (key: string) => (key === TOTAL_KEY ? totals : aggregated[key]);
+    const gdOf = (row: GridRow) => (row.gid !== undefined ? grouped?.data.get(row.gid) : undefined);
+    const agg = (row: GridRow) => {
+      const g = gdOf(row);
+      if (g) return row.prod ? g.agg[row.prod] : g.totals;
+      return row.key === TOTAL_KEY ? totals : aggregated[row.key];
+    };
+    const isLeafProd = (id?: string) => !!id && (leavesUnder.get(id) ?? []).length === 1 && leavesUnder.get(id)?.[0] === id;
     const sum = (months: number[], f: (m: number) => number) => months.reduce((s, m) => s + f(m), 0);
     const avgInput = (pid: string, months: number[]) => {
       const nz = months.map((m) => num(getInput(pid, m, "pr"))).filter((x) => x > 0);
@@ -414,7 +456,14 @@ export function ReceitaClient(p: Props) {
       defs.push({
         key: "pr", label: t("secPrice"), measure: "pr",
         text: (row, months, month) => {
-          if (!row.pid || row.detail) return "";
+          const g = gdOf(row);
+          if (g && isLeafProd(row.prod)) {
+            const ls = g.lines.filter((x) => x.productId === row.prod && months.includes(x.month));
+            const vol = ls.reduce((a, x) => a + x.volume, 0);
+            if (ls.length === 0) return "";
+            return money2(vol > 0 ? ls.reduce((a, x) => a + x.unitPrice * x.volume, 0) / vol : ls.reduce((a, x) => a + x.unitPrice, 0) / ls.length);
+          }
+          if (!row.pid) return "";
           return month ? getInput(row.pid, month, "pr") : avgInput(row.pid, months);
         },
       });
@@ -423,17 +472,15 @@ export function ReceitaClient(p: Props) {
       defs.push({
         key: "v", label: t("secVolume"), measure: "v",
         text: (row, months, month) => {
-          const dv = detail?.vols.get(row.key);
-          if (dv) return qty.format(sum(months, (m) => dv[m] ?? 0));
           if (row.pid && month) return getInput(row.pid, month, "v");
-          return qty.format(sum(months, (m) => agg(row.key)?.[m]?.volume ?? 0));
+          return qty.format(sum(months, (m) => agg(row)?.[m]?.volume ?? 0));
         },
       });
     }
     if (shown.has("gross")) {
       defs.push({
         key: "gross", label: t("kpiGross"), measure: "gross", hint: t("calcGross"),
-        text: (row, months) => money2(sum(months, (m) => toDisplay(agg(row.key)?.[m]?.gross ?? 0, m))),
+        text: (row, months) => money2(sum(months, (m) => toDisplay(agg(row)?.[m]?.gross ?? 0, m))),
       });
     }
     if (shown.has("ded")) {
@@ -443,8 +490,10 @@ export function ReceitaClient(p: Props) {
         defs.push({
           key: `ded:${lb}`, label: lb, measure: "ded", hint: t("calcDeduction"),
           text: (row, months) => {
-            const ids = leavesUnder.get(row.key) ?? [];
-            return money2(sum(months, (m) => ids.reduce((s, pid) => s + toDisplay(((byProduct[pid]?.[m]?.gross ?? 0) * pct(pid)) / 100, m), 0)));
+            const g = gdOf(row);
+            const bp = g ? g.byProduct : byProduct;
+            const ids = leavesUnder.get(g ? row.prod ?? TOTAL_KEY : row.key) ?? [];
+            return money2(sum(months, (m) => ids.reduce((s, pid) => s + toDisplay(((bp[pid]?.[m]?.gross ?? 0) * pct(pid)) / 100, m), 0)));
           },
         });
       }
@@ -452,7 +501,7 @@ export function ReceitaClient(p: Props) {
     if (shown.has("net")) {
       defs.push({
         key: "net", label: t("kpiNet"), measure: "net", hint: t("calcNet"),
-        text: (row, months) => money2(sum(months, (m) => toDisplay(agg(row.key)?.[m]?.net ?? 0, m))),
+        text: (row, months) => money2(sum(months, (m) => toDisplay(agg(row)?.[m]?.net ?? 0, m))),
       });
     }
 
@@ -472,7 +521,7 @@ export function ReceitaClient(p: Props) {
     }
     return cols;
   };
-  const colDeps = [detail, aggregated, totals, byProduct, leavesUnder, edits, baseLines, p.deductions, p.displayCurrency, p.rates, money, qty];
+  const colDeps = [grouped, aggregated, totals, byProduct, leavesUnder, edits, baseLines, p.deductions, p.displayCurrency, p.rates, money, qty];
   // Lançamento: só preço e volume por mês. Análise: tudo, com período à escolha.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const entryCols = useMemo(() => makeCols(new Set<Measure>(["pr", "v"]), "month"), colDeps);
@@ -524,9 +573,23 @@ export function ReceitaClient(p: Props) {
       {carried.length > 0 && (
         <div className="rec-slice-row rec-slice-row--end">
           <span className="rec-slice-lbl">{readOnly ? t("viewing") : t("launchingIn")}</span>
-          {carried.map((id) => (
-            <label key={id}>
-              {p.dimensions.find((d) => d.id === id)?.name}
+          {order.map((id) => (
+            <label
+              key={id}
+              className={`rec-slice-dim${dragId === id ? " is-drag" : ""}`}
+              onDragOver={(e) => { if (dragId && dragId !== id) e.preventDefault(); }}
+              onDrop={(e) => { e.preventDefault(); if (dragId) reorder(dragId, id); setDragId(null); }}
+            >
+              <span
+                className="rec-slice-grip"
+                draggable
+                title={t("dragToReorder")}
+                onDragStart={(e) => { setDragId(id); e.dataTransfer.effectAllowed = "move"; const box = (e.currentTarget as HTMLElement).closest("label"); if (box) e.dataTransfer.setDragImage(box, 20, 20); }}
+                onDragEnd={() => setDragId(null)}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden><circle cx="9" cy="6" r="1.8" /><circle cx="15" cy="6" r="1.8" /><circle cx="9" cy="12" r="1.8" /><circle cx="15" cy="12" r="1.8" /><circle cx="9" cy="18" r="1.8" /><circle cx="15" cy="18" r="1.8" /></svg>
+                {p.dimensions.find((d) => d.id === id)?.name}
+              </span>
               <select value={sel[id]} onChange={(e) => setSel(id, e.target.value)} disabled={dirty}>
                 <option value="all">{t("allItems")}</option>
                 {(p.dimNodes[id] ?? []).map((n) => (
@@ -535,15 +598,6 @@ export function ReceitaClient(p: Props) {
               </select>
             </label>
           ))}
-          {withCarried && readOnly && (
-            <label>
-              {t("detailBy")}
-              <select value={detailType} onChange={(e) => setDetailType(e.target.value)}>
-                <option value="">{t("noDetail")}</option>
-                {p.dimensions.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-              </select>
-            </label>
-          )}
         </div>
       )}
     </div>
