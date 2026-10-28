@@ -725,7 +725,9 @@
     "valuesFor": "Los números de abajo valen para",
     "consolidatedHint": "Consolidado: solo lectura. Para editar, elige un elemento en cada jerarquía.",
     "detailBy": "Desglosar por",
-    "noDetail": "Sin desglose"
+    "noDetail": "Sin desglose",
+    "premMoreFilters": "Más filtros",
+    "premFewerFilters": "Menos filtros"
   },
   "erpCodes": {
     "title": "Códigos del ERP",
