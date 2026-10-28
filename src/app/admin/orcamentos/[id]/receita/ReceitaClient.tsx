@@ -655,7 +655,7 @@ export function ReceitaClient(p: Props) {
             rows={unifiedRows}
             cols={entryCols}
             readOnly={readOnly}
-            labels={{ item: t("product"), currency: t("currency") }}
+            labels={{ item: t("productService"), currency: t("currency") }}
             onApply={applyChanges}
           />
         </>
@@ -710,7 +710,7 @@ export function ReceitaClient(p: Props) {
             cols={analysisCols}
             readOnly
             showCurrency={false}
-            labels={{ item: t("product"), currency: t("currency") }}
+            labels={{ item: t("productService"), currency: t("currency") }}
             onApply={() => {}}
           />
           <ReceitaCharts

@@ -748,7 +748,8 @@
     "parGroupCosts": "Custos",
     "parInputs": "Insumos",
     "parSoon": "em breve",
-    "parNavLabel": "Parâmetros por módulo"
+    "parNavLabel": "Parâmetros por módulo",
+    "productService": "Produto/Serviço"
   },
   "erpCodes": {
     "title": "Códigos do ERP",
