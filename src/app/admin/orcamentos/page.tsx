@@ -30,7 +30,6 @@ export default async function OrcamentosPage() {
       packageCounts={packageCounts}
       currentId={atualId}
       title={t("title")}
-      subtitle={t("subtitle")}
     />
   );
 }

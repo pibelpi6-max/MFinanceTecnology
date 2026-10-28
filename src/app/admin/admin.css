@@ -1032,6 +1032,7 @@ body.import-dragging-body, body.import-dragging-body * { cursor: grabbing !impor
   border: 1px solid #e6e8f0; border-radius: 16px; padding: 24px 28px 28px; overflow: hidden;
 }
 .orc-panel--scroll { overflow: auto; }
+.orc-toolbar { display: flex; justify-content: flex-start; margin: 0 0 16px; }
 .orc-subtitle { margin: 0 0 16px; font-size: 13px; color: #6b7088; }
 .orc-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }
 .orc-chip {
