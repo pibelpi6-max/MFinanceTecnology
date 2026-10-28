@@ -182,7 +182,7 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
             </div>
           )}
           {isItem && root && (
-            <label>
+            <label className="rec-f-family">
               {t("familyLabel")}
               <select value={editParent} onChange={(e) => setEditParent(e.target.value)}>
                 <option value={root.id}>{t("familyNone")}</option>
@@ -190,11 +190,11 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
               </select>
             </label>
           )}
-          <label>
+          <label className="rec-f-code">
             {t("importColCode")}
             <input value={editCode} onChange={(e) => setEditCode(e.target.value)} onKeyDown={onKey} />
           </label>
-          <label>
+          <label className="rec-f-name">
             {t("product")}
             <input autoFocus value={editName} onChange={(e) => setEditName(e.target.value)} onKeyDown={onKey} />
           </label>

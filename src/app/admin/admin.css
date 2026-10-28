@@ -1620,6 +1620,8 @@ select.rec-kind option:checked { background: #fff; color: #1C2033; }
 /* Editor de item sem deduções (Parâmetros): campos lado a lado, ocupando a largura */
 .rec-edit--compact { flex-direction: column; }
 .rec-edit--compact .rec-edit-main { width: 100%; flex-direction: row; flex-wrap: wrap; align-items: flex-end; border-right: 0; padding: 16px 24px; gap: 16px; }
-.rec-edit--compact .rec-edit-main > * { flex: 1 1 180px; min-width: 0; }
-.rec-edit--compact .rec-edit-main > .rec-edit-field { flex: 0 1 280px; }
+.rec-edit--compact .rec-edit-main > .rec-edit-field { flex: 0 0 100%; max-width: 300px; order: 0; }
+.rec-edit--compact .rec-f-code { flex: 0 0 130px; order: 1; }
+.rec-edit--compact .rec-f-name { flex: 1 1 240px; max-width: 380px; order: 2; }
+.rec-edit--compact .rec-f-family { flex: 0 1 220px; order: 3; }
 .rec-edit--compact .rec-edit-foot { border-top: 1px solid #e6e8f0; }
