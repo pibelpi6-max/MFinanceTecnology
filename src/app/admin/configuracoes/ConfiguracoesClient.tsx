@@ -1060,7 +1060,6 @@ export function ConfiguracoesClient({
         <div className="settings-block-subtitle-row settings-block-subtitle-row--stack">
           <div>
             <h2 className="settings-block-title">{tConjunto("title")}</h2>
-            <p className="settings-block-intro">{tConjunto("intro")}</p>
           </div>
           {isAdmin && (
             <Button size="sm" variant="accent-blue" className="px-3" onClick={() => setConjuntoModal({ editing: null })}>
