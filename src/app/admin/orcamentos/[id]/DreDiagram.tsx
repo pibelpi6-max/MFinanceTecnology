@@ -24,7 +24,7 @@ interface Node {
 }
 
 const NODES: Node[] = [
-  { key: "parametros", slug: "parametros", x: 75, y: 872, w: 352, h: 88, title: ["Parâmetros"], },
+  { key: "parametros", slug: "parametros", x: -280, y: 396, w: 250, h: 88, title: ["Parâmetros"], },
   { key: "receita", slug: "receita", x: 75, y: 59, w: 352, h: 101, title: ["Receita"], },
   { key: "custos", slug: "custos", x: 75, y: 223, w: 352, h: 102, title: ["Custos (ficha técnica)"], },
   { key: "capex", slug: "capex", x: 75, y: 369, w: 352, h: 101, title: ["Capex"], },
@@ -87,7 +87,7 @@ export function DreDiagram({ orcamentoId, year }: { orcamentoId: string; year: n
         </button>
       ))}
     </div>
-    <svg viewBox="0 0 1500 990" className="dre-map" role="group" aria-label="Mapa do orçamento">
+    <svg viewBox="-300 0 1800 880" className="dre-map" role="group" aria-label="Mapa do orçamento">
       <defs>
         {[
           ["b", BLUE],
@@ -118,15 +118,26 @@ export function DreDiagram({ orcamentoId, year }: { orcamentoId: string; year: n
         {shown.consumes && <path d="M1297 238V383" stroke={MUTED} markerEnd="url(#arr-m)" />}
       </g>
 
-      {/* Parâmetros (valem para o sistema todo) alimentam Receita e Custos pela lateral */}
+      {/* Parâmetros (valem para o sistema todo) alimentam Receita e Custos */}
       {shown.params && (
         <g fill="none" strokeWidth="2" strokeLinecap="round" stroke={MUTED} strokeDasharray="4 7">
-          <path d="M75 916H36V110H72" markerEnd="url(#arr-m)" />
+          <path d="M-30 440H36V110H72" markerEnd="url(#arr-m)" />
           <path d="M36 274H72" markerEnd="url(#arr-m)" />
+          <circle cx="36" cy="440" r="5" fill={MUTED} stroke="none" />
+          <circle cx="36" cy="274" r="5" fill={MUTED} stroke="none" />
         </g>
       )}
 
       {/* partículas percorrendo as setas que alimentam a DRE */}
+      {shown.params && (
+        <g className="dre-dots" fill={MUTED}>
+          {["M-30 440H36V110H72", "M-30 440H36V274H72"].map((d, i) => (
+            <circle key={d} r="4.5">
+              <animateMotion dur="2.6s" begin={`${i * 0.7}s`} repeatCount="indefinite" path={d} />
+            </circle>
+          ))}
+        </g>
+      )}
       {shown.feeds && <g className="dre-dots" fill={BLUE}>
         {FEEDS.map((d, i) => (
           <circle key={d} r="5">
