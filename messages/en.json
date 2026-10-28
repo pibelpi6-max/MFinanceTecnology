@@ -754,7 +754,9 @@
     "fxSectionTitle": "Monthly rates for this budget",
     "currencyBaseHint": "Type the code (e.g. USD) and add it. Then enter each month's rate.",
     "currencyInvalid": "Invalid code: use 3 letters (e.g. USD).",
-    "fxRepeatAll": "Repeat January for all 12 months"
+    "fxRepeatAll": "Repeat January for all 12 months",
+    "parProductsSub": "General registry of products and services. Applies to all budgets and years.",
+    "parCurrenciesSub": "Company currencies and the monthly rate of each one to convert to BRL. Rates apply to this budget."
   },
   "erpCodes": {
     "title": "ERP codes",
