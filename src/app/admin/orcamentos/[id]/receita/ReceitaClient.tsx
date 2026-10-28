@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import {
   EMPTY_MONTH, avgPrice, computeByProduct, rateFor, sumMonths,
@@ -661,6 +662,19 @@ function DeductionDefaultsPanel({ orcamentoId, defaults, rules, groups, products
     setFocusRule(null);
   }, [focusRule]);
   const addRow = (label: string, field: 0 | 1) => { setFocusRow({ i: items.length, field }); touch((s) => [...s, { label, pct: "", rules: [] }]); };
+  const [ruleIdx, setRuleIdx] = useState<number | null>(null);
+  const cur = ruleIdx !== null ? items[ruleIdx] : null;
+  const openRules = (i: number) => {
+    setRuleIdx(i);
+    if (items[i].rules.length === 0) touch((s) => s.map((x, k) => (k === i ? { ...x, rules: [{ entityIds: [], productId: "", pct: "" }] } : x)));
+  };
+  // Ao fechar, descarta condições totalmente vazias (sem estrutura, produto nem %).
+  const closeRules = () => {
+    const i = ruleIdx;
+    setRuleIdx(null);
+    if (i === null) return;
+    touch((s) => s.map((x, k) => (k === i ? { ...x, rules: x.rules.filter((r) => r.entityIds.length > 0 || r.productId || r.pct) } : x)));
+  };
   const addRule = (i: number) => {
     setFocusRule({ i, j: items[i].rules.length });
     touch((s) => s.map((x, k) => (k === i ? { ...x, rules: [...x.rules, { entityIds: [], productId: "", pct: "" }] } : x)));
@@ -692,34 +706,54 @@ function DeductionDefaultsPanel({ orcamentoId, defaults, rules, groups, products
             <button type="button" className="rec-edit-x" aria-label={t("remove")} title={t("remove")} onClick={() => touch((s) => s.filter((_, j) => j !== i))}>
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5" /></svg>
             </button>
-            <button type="button" className="rec-rule-btn" onClick={() => addRule(i)} disabled={!it.label.trim()}>
+            <button type="button" className={`rec-rule-btn${it.rules.length > 0 ? " is-set" : ""}`} onClick={() => openRules(i)} disabled={!it.label.trim()}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z" /></svg>
               {t("ruleButton")}{it.rules.length > 0 ? ` (${it.rules.length})` : ""}
             </button>
           </div>
-          {it.rules.length > 0 && (
-            <div className="rec-rules">
+        </div>
+      ))}
+      {ruleIdx !== null && cur && (
+        <Modal
+          open
+          onClose={closeRules}
+          title={`${t("ruleModalTitle")} · ${cur.label}`}
+          size="lg"
+          footer={
+            <div className="flex items-center justify-between gap-2">
+              <Button variant="accent-blue" size="sm" className="px-3" onClick={() => addRule(ruleIdx)}>+ {t("ruleAdd")}</Button>
+              <Button variant="primary" size="sm" onClick={closeRules}>{t("ruleDone")}</Button>
+            </div>
+          }
+        >
+          <p className="rec-hint">{t("ruleModalHint", { pct: cur.pct || "0" })}</p>
+          {cur.rules.length === 0 ? (
+            <p className="rec-hint">{t("ruleEmpty")}</p>
+          ) : (
+            <div className="rec-rules rec-rules--modal">
+
               <div className="rec-rule-row rec-rule-head"><span>{t("ruleColStructure")}</span><span>{t("ruleColProduct")}</span><span>{t("dedColPct")}</span><span /></div>
-              {it.rules.map((r, j) => (
+              {cur.rules.map((r, j) => (
                 <div className="rec-rule-row" key={j}>
-                  <TreeMultiSelect groups={groups} value={r.entityIds} onChange={(ids) => patchRule(i, j, { entityIds: ids })} labels={treeLabels} ariaLabel={t("ruleColStructure")} />
-                  <select value={r.productId} onChange={(e) => patchRule(i, j, { productId: e.target.value })} aria-label={t("ruleColProduct")}>
+                  <TreeMultiSelect groups={groups} value={r.entityIds} onChange={(ids) => patchRule(ruleIdx, j, { entityIds: ids })} labels={treeLabels} ariaLabel={t("ruleColStructure")} />
+                  <select value={r.productId} onChange={(e) => patchRule(ruleIdx, j, { productId: e.target.value })} aria-label={t("ruleColProduct")}>
                     <option value="">{t("ruleAllProducts")}</option>
                     {products.map((x) => <option key={x.id} value={x.id}>{indent(x.depth)}{x.name}</option>)}
                   </select>
                   <span className="rec-edit-pct">
-                    <input inputMode="decimal" value={r.pct} placeholder="0" aria-label={t("dedColPct")} onChange={(e) => /^\d*[.,]?\d*$/.test(e.target.value) && patchRule(i, j, { pct: e.target.value })} />
+                    <input inputMode="decimal" value={r.pct} placeholder="0" aria-label={t("dedColPct")} onChange={(e) => /^\d*[.,]?\d*$/.test(e.target.value) && patchRule(ruleIdx, j, { pct: e.target.value })} />
                     %
                   </span>
-                  <button type="button" className="rec-edit-x" aria-label={t("remove")} title={t("remove")} onClick={() => touch((s) => s.map((x, k) => (k === i ? { ...x, rules: x.rules.filter((_, m) => m !== j) } : x)))}>
+                  <button type="button" className="rec-edit-x" aria-label={t("remove")} title={t("remove")} onClick={() => touch((s) => s.map((x, k) => (k === ruleIdx ? { ...x, rules: x.rules.filter((_, m) => m !== j) } : x)))}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5" /></svg>
                   </button>
                 </div>
               ))}
-            </div>
+                        </div>
           )}
-        </div>
-      ))}
+          <div style={{ minHeight: 300 }} />
+        </Modal>
+      )}
       <div className="rec-presets">
         {PRESETS.filter((x) => !items.some((i) => i.label.toLowerCase() === x.toLowerCase())).map((x) => (
           <button type="button" key={x} className="rec-chip" onClick={() => addRow(x, 1)}>+ {x}</button>

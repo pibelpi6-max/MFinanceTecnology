@@ -1507,3 +1507,7 @@ select.rec-kind option:checked { background: #fff; color: #1C2033; }
 .tms-name--syn { font-weight: 600; }
 .tms-group + .tms-group { margin-top: 4px; }
 .tms-empty { padding: 12px; font-size: 13px; color: #6b7088; }
+
+.rec-rule-btn.is-set { border-style: solid; border-color: #F59E0B; background: #FFF4E0; color: #B45309; font-weight: 600; }
+.rec-rules--modal { margin-left: 0; max-width: none; }
+.rec-rules--modal .rec-rule-row { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.2fr) 110px 36px; }
