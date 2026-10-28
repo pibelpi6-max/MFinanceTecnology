@@ -960,7 +960,7 @@ export function ConfiguracoesClient({
       <div className="settings-divider" />
 
       <section className="settings-block">
-        <div className="settings-block-subtitle-row">
+        <div className="settings-block-subtitle-row settings-block-subtitle-row--stack">
           <div>
             <h2 className="settings-block-title">{tConjunto("title")}</h2>
             <p className="settings-block-intro">{tConjunto("intro")}</p>
