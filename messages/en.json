@@ -742,7 +742,13 @@
     "globalCurrencies": "Currencies",
     "currencyName": "Name",
     "currencyNamePlaceholder": "E.g. US dollar",
-    "currencyAdd": "Add currency"
+    "currencyAdd": "Add currency",
+    "parGroupGeneral": "General",
+    "parGroupRevenue": "Revenue",
+    "parGroupCosts": "Costs",
+    "parInputs": "Inputs",
+    "parSoon": "soon",
+    "parNavLabel": "Parameters by module"
   },
   "erpCodes": {
     "title": "ERP codes",
