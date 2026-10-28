@@ -1582,3 +1582,11 @@ select.rec-kind option:checked { background: #fff; color: #1C2033; }
 .rec-kind-wrap select.rec-kind { padding-left: 27px; }
 .rec-kind-wrap-produto { color: #3E6FE0; }
 .rec-kind-wrap-servico { color: #a45a00; }
+
+/* Premissa: formulário na própria tela */
+.rec-prem-card { border: 1px solid #E6E8F0; border-radius: 14px; background: #fff; margin: 4px 0 18px; overflow: visible; }
+.rec-prem-card-head { padding: 14px 20px; border-bottom: 1px solid #E6E8F0; font-size: 16px; }
+.rec-prem-card .rec-prem-form { padding: 18px 20px; }
+.rec-prem-card-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 12px 20px; border-top: 1px solid #E6E8F0; background: #FAFBFE; border-radius: 0 0 14px 14px; }
+.rec-prem-form .rec-seg button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.rec-prem-form input[inputmode] { height: 40px; border: 1px solid #D5DAEA; border-radius: 10px; padding: 0 12px; font-size: 15px; background: #fff; }
