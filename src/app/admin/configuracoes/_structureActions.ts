@@ -43,16 +43,24 @@ export async function createDimensionStructure(input: {
       .limit(1)
       .maybeSingle();
 
-    // Nasce inativa: a usuária decide quando "virar a chave" pra essa
-    // estrutura passar a alimentar Matriz/Pacotes/Realizado (só pode
-    // haver 1 ativa por dimensão — ver setDimensionStructureActive).
+    // Só pode haver 1 ativa por dimensão (índice único). Se a hierarquia ainda não tem
+    // nenhuma ativa, a nova nasce ativa; se já tem, nasce inativa e a usuária "vira a chave"
+    // quando quiser (ver setDimensionStructureActive).
+    const { data: activeNow } = await supabase
+      .from("dimension_structures")
+      .select("id")
+      .eq("dimension_type_id", input.dimensionTypeId)
+      .eq("is_active", true)
+      .limit(1)
+      .maybeSingle();
+
     const { data: created, error } = await supabase
       .from("dimension_structures")
       .insert({
         tenant_id: tenant.tenantId,
         dimension_type_id: input.dimensionTypeId,
         name,
-        is_active: false,
+        is_active: !activeNow,
         sort_order: (last?.sort_order ?? 0) + 1,
       })
       .select("id")
