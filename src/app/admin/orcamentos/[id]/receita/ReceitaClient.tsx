@@ -53,6 +53,8 @@ interface Props {
   deductionRules?: DeductionRule[];
   displayCurrency: string;
   currencies: string[];
+  /** Moedas cadastradas em Parâmetros (sugeridas no câmbio). */
+  companyCurrencies?: string[];
   entries: (RevenueLine & { entityId: string | null; extra: Record<string, string> })[];
   deductions: Deduction[];
   rates: RateTable;
@@ -627,7 +629,7 @@ export function ReceitaClient(p: Props) {
           {paramTab === "deductions" && (
             <DeductionDefaultsPanel orcamentoId={p.orcamentoId} defaults={p.deductionDefaults ?? []} rules={p.deductionRules ?? []} groups={p.ruleGroups} products={p.products} onError={setError} />
           )}
-          {paramTab === "fx" && <FxPanel orcamentoId={p.orcamentoId} rates={p.rates} onError={setError} />}
+          {paramTab === "fx" && <FxPanel orcamentoId={p.orcamentoId} rates={p.rates} companyCurrencies={p.companyCurrencies ?? []} onError={setError} />}
         </>
       )}
 
@@ -946,7 +948,7 @@ function DeductionDefaultsPanel({ orcamentoId, defaults, rules, groups, products
   );
 }
 
-function FxPanel({ orcamentoId, rates, onError }: { orcamentoId: string; rates: RateTable; onError: (s: string | null) => void }) {
+function FxPanel({ orcamentoId, rates, companyCurrencies, onError }: { orcamentoId: string; rates: RateTable; companyCurrencies: string[]; onError: (s: string | null) => void }) {
   const t = useTranslations("receita");
   const router = useRouter();
   const [currency, setCurrency] = useState("");
@@ -954,7 +956,7 @@ function FxPanel({ orcamentoId, rates, onError }: { orcamentoId: string; rates: 
   const [pending, start] = useTransition();
   const pick = (c: string) => { setCurrency(c); setVals(MONTHS.map((m) => fmtInput(rates[c]?.[m] ?? 0))); };
   const inputRef = useRef<HTMLInputElement>(null);
-  const known = Object.keys(rates);
+  const known = Array.from(new Set([...Object.keys(rates), ...companyCurrencies])).filter((c) => c !== "BRL");
   const repeatFrom = (i: number) => setVals((s) => s.map((x, j) => (j > i ? s[i] : x)));
   return (
     <div className="rec-panel">

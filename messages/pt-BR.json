@@ -603,7 +603,7 @@
     "calcNet": "= Bruta − Deduções",
     "tabParams": "Parâmetros",
     "tabAnalysis": "Análises",
-    "paramProducts": "Produtos e serviços",
+    "paramProducts": "Deduções por produto",
     "analysisHint": "Visão calculada (somente leitura): Receita bruta = Preço × Volume; Receita líquida = Bruta − Deduções.",
     "prodAddLabel": "Adicionar produtos ou serviços",
     "prodAddPlaceholder": "Nomes separados por vírgula ou um por linha",
@@ -731,7 +731,12 @@
     "baseOtherBudget": "Outro orçamento",
     "premBaseBudget": "Orçamento de referência",
     "premBaseBudgetPick": "Escolha o orçamento",
-    "unitOverBase": "sobre o mesmo mês da base"
+    "unitOverBase": "sobre o mesmo mês da base",
+    "globalProducts": "Produtos e serviços",
+    "globalCurrencies": "Moedas",
+    "currencyName": "Nome",
+    "currencyNamePlaceholder": "Ex.: Dólar americano",
+    "currencyAdd": "Adicionar moeda"
   },
   "erpCodes": {
     "title": "Códigos do ERP",

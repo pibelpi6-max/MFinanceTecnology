@@ -603,7 +603,7 @@
     "calcNet": "= Bruta − Deducciones",
     "tabParams": "Parámetros",
     "tabAnalysis": "Análisis",
-    "paramProducts": "Productos y servicios",
+    "paramProducts": "Deducciones por producto",
     "analysisHint": "Vista calculada (solo lectura): Ingreso bruto = Precio × Volumen; Ingreso neto = Bruto − Deducciones.",
     "prodAddLabel": "Agregar productos o servicios",
     "prodAddPlaceholder": "Nombres separados por comas o uno por línea",
@@ -731,7 +731,12 @@
     "baseOtherBudget": "Otro presupuesto",
     "premBaseBudget": "Presupuesto de referencia",
     "premBaseBudgetPick": "Elige el presupuesto",
-    "unitOverBase": "sobre el mismo mes de la base"
+    "unitOverBase": "sobre el mismo mes de la base",
+    "globalProducts": "Productos y servicios",
+    "globalCurrencies": "Monedas",
+    "currencyName": "Nombre",
+    "currencyNamePlaceholder": "Ej.: Dólar estadounidense",
+    "currencyAdd": "Agregar moneda"
   },
   "erpCodes": {
     "title": "Códigos del ERP",

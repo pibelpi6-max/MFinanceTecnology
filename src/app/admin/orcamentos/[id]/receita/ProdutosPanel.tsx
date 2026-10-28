@@ -28,6 +28,8 @@ interface Props {
   initialPrefs?: TablePrefs;
   onChanged: () => void;
   onError: (s: string | null) => void;
+  /** Cadastro geral (Parâmetros): sem a coluna e o editor de deduções, que são por orçamento. */
+  hideDeductions?: boolean;
 }
 
 type Kind = "produto" | "servico";
@@ -45,7 +47,7 @@ type DedDraft = { label: string; pct: string };
  * editar código/nome/tipo e excluir. A organização em grupos fica para a
  * ficha técnica (Custos); aqui os itens entram direto sob a raiz.
  */
-export function ProdutosPanel({ orcamentoId, productTypeId, year, products, deductions, deductionLabels, deductionDefaults, initialPrefs, onChanged, onError }: Props) {
+export function ProdutosPanel({ orcamentoId, productTypeId, year, products, deductions, deductionLabels, deductionDefaults, initialPrefs, onChanged, onError, hideDeductions = false }: Props) {
   const t = useTranslations("receita");
   const [pending, start] = useTransition();
   const root = products.find((r) => r.depth === 0);
@@ -198,7 +200,7 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
             <input autoFocus value={editName} onChange={(e) => setEditName(e.target.value)} onKeyDown={onKey} />
           </label>
         </div>
-        {isItem && (
+        {isItem && !hideDeductions && (
           <div className="rec-edit-deds">
             <div className="rec-edit-deds-head">
               <strong>{t("dedSectionTitle")}</strong>
@@ -258,7 +260,7 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
         const k = await setItemKind({ orcamentoId, nodeId: row.id, kind: editKind });
         if (k.error) { onError(k.error); return; }
       }
-      if (row.isLeaf && row.depth > 0) {
+      if (row.isLeaf && row.depth > 0 && !hideDeductions) {
         const items = editDeds.filter((d) => d.label.trim()).map((d) => ({ label: d.label.trim(), pct: parsePct(d.pct) }));
         const d = await saveDeductions({ orcamentoId, productId: row.id, items: items.map((i) => ({ code: i.label, ...i })) });
         if (d.error) { onError(d.error); return; }
@@ -369,14 +371,16 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
     },
   ];
 
+  const visibleColumns = hideDeductions ? columns.filter((c) => c.key !== "deductions") : columns;
+
   return (
     <div className="rec-prod">
       {notice && <p className="rec-saved">{notice}</p>}
 
       <DataTable<ProductRow>
         items={products}
-        columns={columns}
-        prefsKey="receita_produtos_cols"
+        columns={visibleColumns}
+        prefsKey={hideDeductions ? "parametros_produtos_cols" : "receita_produtos_cols"}
         initialPrefs={initialPrefs}
         buildTree={(items) => items.map((item) => ({ item, depth: depthById.get(item.id) ?? 0 }))}
         isIndentedRow={(r) => r.depth > 0}

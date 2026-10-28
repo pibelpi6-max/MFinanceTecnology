@@ -23,6 +23,7 @@ interface Node {
 }
 
 const NODES: Node[] = [
+  { key: "parametros", slug: "parametros", x: 75, y: 872, w: 352, h: 88, title: ["Parâmetros"], },
   { key: "receita", slug: "receita", x: 75, y: 59, w: 352, h: 101, title: ["Receita"], },
   { key: "custos", slug: "custos", x: 75, y: 223, w: 352, h: 102, title: ["Custos (ficha técnica)"], },
   { key: "capex", slug: "capex", x: 75, y: 369, w: 352, h: 101, title: ["Capex"], },
@@ -56,7 +57,7 @@ export function DreDiagram({ orcamentoId, year }: { orcamentoId: string; year: n
   const t = useTranslations("orcamentos");
 
   return (
-    <svg viewBox="0 0 1500 880" className="dre-map" role="group" aria-label="Mapa do orçamento">
+    <svg viewBox="0 0 1500 990" className="dre-map" role="group" aria-label="Mapa do orçamento">
       <defs>
         {[
           ["b", BLUE],
@@ -85,6 +86,12 @@ export function DreDiagram({ orcamentoId, year }: { orcamentoId: string; year: n
         <path d="M1005 342L1131 196" stroke={GREEN} markerEnd="url(#arr-g)" />
         <path d="M1005 410L1131 447" stroke={GREEN} markerEnd="url(#arr-g)" />
         <path d="M1297 238V383" stroke={MUTED} markerEnd="url(#arr-m)" />
+      </g>
+
+      {/* Parâmetros (valem para o sistema todo) alimentam Receita e Custos pela lateral */}
+      <g fill="none" strokeWidth="2" strokeLinecap="round" stroke={MUTED} strokeDasharray="4 7">
+        <path d="M75 916H36V110H72" markerEnd="url(#arr-m)" />
+        <path d="M36 274H72" markerEnd="url(#arr-m)" />
       </g>
 
       {/* partículas percorrendo as setas que alimentam a DRE */}
