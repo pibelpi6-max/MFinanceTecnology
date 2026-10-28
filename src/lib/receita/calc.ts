@@ -4,6 +4,8 @@ export const BASE_CURRENCY = "BRL";
 
 export interface RevenueLine {
   productId: string;
+  /** Estrutura (entidade) do lançamento; usada nas condições especiais. */
+  entityId?: string | null;
   month: number; // 1..12
   currency: string;
   volume: number;
@@ -15,6 +17,60 @@ export interface Deduction {
   code: string;
   label: string;
   pct: number; // 0..100
+}
+
+/** Condição especial: percentual diferente para uma parte da estrutura e/ou um produto. */
+export interface DeductionRule {
+  label: string;
+  entityId: string | null;
+  productId: string | null;
+  pct: number;
+}
+
+/** Pais na hierarquia (id -> id do pai ou null), para valer também nos filhos. */
+export interface RuleContext {
+  entityParents: Record<string, string | null>;
+  productParents: Record<string, string | null>;
+}
+
+/** [id, pai, avô, ...]: a posição é a distância (0 = o próprio nó). */
+function lineage(id: string | null | undefined, parents: Record<string, string | null>): string[] {
+  const out: string[] = [];
+  const seen = new Set<string>();
+  let cur: string | null | undefined = id;
+  while (cur && !seen.has(cur)) {
+    out.push(cur);
+    seen.add(cur);
+    cur = parents[cur];
+  }
+  return out;
+}
+
+/** Percentual de uma dedução para uma linha: vale a condição mais específica, senão o padrão do item. */
+export function effectivePct(
+  base: Deduction,
+  rules: DeductionRule[],
+  ctx: RuleContext,
+  entityId: string | null | undefined,
+  productId: string,
+): number {
+  const eLine = lineage(entityId, ctx.entityParents);
+  const pLine = lineage(productId, ctx.productParents);
+  let best: { rank: [number, number, number]; pct: number } | null = null;
+  for (const r of rules) {
+    if (r.label.toLowerCase() !== base.label.toLowerCase()) continue;
+    const ed = r.entityId ? eLine.indexOf(r.entityId) : -1;
+    const pd = r.productId ? pLine.indexOf(r.productId) : -1;
+    if (r.entityId && ed < 0) continue;
+    if (r.productId && pd < 0) continue;
+    // maior = mais específico: produto+estrutura (3) > estrutura (2) > produto (1); depois o nó mais próximo
+    const kind = r.entityId && r.productId ? 3 : r.entityId ? 2 : 1;
+    const rank: [number, number, number] = [kind, -(ed < 0 ? 0 : ed), -(pd < 0 ? 0 : pd)];
+    if (!best || rank[0] > best.rank[0] || (rank[0] === best.rank[0] && (rank[1] > best.rank[1] || (rank[1] === best.rank[1] && rank[2] > best.rank[2])))) {
+      best = { rank, pct: r.pct };
+    }
+  }
+  return best ? best.pct : base.pct;
 }
 
 /** rates[currency][month] = taxa para BRL. BRL é sempre 1. */
@@ -47,12 +103,16 @@ export function deductionPct(deductions: Deduction[], productId: string): number
 export function computeByProduct(
   lines: RevenueLine[],
   deductions: Deduction[],
-  rates: RateTable
+  rates: RateTable,
+  rules: DeductionRule[] = [],
+  ctx: RuleContext = { entityParents: {}, productParents: {} },
 ): Record<string, Record<number, MonthResult>> {
   const out: Record<string, Record<number, MonthResult>> = {};
   for (const l of lines) {
     const gross = grossOf(l, rates);
-    const ded = (gross * deductionPct(deductions, l.productId)) / 100;
+    const own = deductions.filter((d) => d.productId === l.productId);
+    const pct = rules.length === 0 ? own.reduce((s, d) => s + d.pct, 0) : own.reduce((s, d) => s + effectivePct(d, rules, ctx, l.entityId, l.productId), 0);
+    const ded = (gross * pct) / 100;
     const byMonth = (out[l.productId] ??= {});
     const cur = byMonth[l.month] ?? { ...EMPTY_MONTH };
     byMonth[l.month] = {

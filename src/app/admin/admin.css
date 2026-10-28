@@ -1463,3 +1463,15 @@ select.rec-kind option:checked { background: #fff; color: #1C2033; }
 .rec-chip-new { border-style: dashed; border-color: #3E6FE0; color: #2f5bd0; }
 .rec-fx-head { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px; }
 .rec-fx-head .rec-presets { align-items: center; padding-bottom: 4px; }
+
+/* Condições especiais por estrutura (aba Deduções) */
+.rec-ded-block { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+.rec-ded-row { flex-wrap: wrap; }
+.rec-rule-btn { display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 14px; border-radius: 999px; border: 1px dashed #3E6FE0; background: #fff; color: #2F5BD0; font-size: 13px; cursor: pointer; margin-left: 8px; }
+.rec-rule-btn:disabled { opacity: .5; cursor: not-allowed; }
+.rec-rules { border: 1px solid #E6E8F0; border-radius: 12px; overflow: hidden; margin-left: 16px; max-width: 760px; background: #fff; }
+.rec-rule-row { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.2fr) 110px 36px; gap: 10px; align-items: center; padding: 8px 12px; border-top: 1px solid #E6E8F0; }
+.rec-rule-row:first-child { border-top: 0; }
+.rec-rule-head { background: #F5F7FC; font-size: 12.5px; font-weight: 600; color: #5B6178; }
+.rec-rule-row select { height: 36px; border: 1px solid #D5DAEA; border-radius: 8px; padding: 0 8px; background: #fff; color: #1C2033; font-size: 14px; min-width: 0; }
+.rec-rule-row select option { background: #fff; color: #1C2033; }

@@ -52,3 +52,37 @@ describe("receita/calc", () => {
     expect(distributeSeasonality(120, []).every((x) => x === 10)).toBe(true);
   });
 });
+
+import { effectivePct, computeByProduct as computeRules, type DeductionRule } from "./calc";
+
+describe("condições especiais por estrutura", () => {
+  const ctx = {
+    entityParents: { sp: "sudeste", rj: "sudeste", sudeste: null, ba: null },
+    productParents: { p1: "grp", grp: null },
+  };
+  const base = { productId: "p1", code: "", label: "ICMS", pct: 18 };
+  const r = (entityId: string | null, productId: string | null, pct: number): DeductionRule => ({ label: "ICMS", entityId, productId, pct });
+
+  it("sem condição vale o padrão do item", () => {
+    expect(effectivePct(base, [], ctx, "sp", "p1")).toBe(18);
+    expect(effectivePct(base, [r("ba", null, 20)], ctx, "sp", "p1")).toBe(18);
+  });
+  it("vale também para os filhos da estrutura", () => {
+    expect(effectivePct(base, [r("sudeste", null, 12)], ctx, "sp", "p1")).toBe(12);
+  });
+  it("estrutura + produto vence estrutura, que vence produto", () => {
+    const rules = [r(null, "p1", 5), r("sp", null, 12), r("sp", "p1", 9)];
+    expect(effectivePct(base, rules, ctx, "sp", "p1")).toBe(9);
+    expect(effectivePct(base, rules.slice(0, 2), ctx, "sp", "p1")).toBe(12);
+    expect(effectivePct(base, [rules[0]], ctx, "ba", "p1")).toBe(5);
+  });
+  it("o nó mais próximo vence o ancestral", () => {
+    expect(effectivePct(base, [r("sudeste", null, 12), r("sp", null, 14)], ctx, "sp", "p1")).toBe(14);
+  });
+  it("aplica no cálculo da receita líquida", () => {
+    const lines = [{ productId: "p1", entityId: "rj", month: 1, currency: "BRL", volume: 10, unitPrice: 100 }];
+    const out = computeRules(lines, [base], {}, [r("rj", null, 20)], ctx);
+    expect(out.p1[1].deductions).toBeCloseTo(200);
+    expect(out.p1[1].net).toBeCloseTo(800);
+  });
+});

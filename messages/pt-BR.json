@@ -658,7 +658,12 @@
     "dedCopyDone": "Deduções aplicadas a {n} itens.",
     "dedDefaultsHint": "Cadastre as deduções padrão da empresa, com o percentual. Ao editar um produto ou serviço, elas aparecem como atalhos já preenchidos.",
     "fxRepeatNext": "Repetir nos meses seguintes",
-    "fxNewCurrency": "Nova moeda"
+    "fxNewCurrency": "Nova moeda",
+    "ruleButton": "Condições especiais por estrutura",
+    "ruleAllStructures": "Todas as estruturas",
+    "ruleAllProducts": "Todos os produtos e serviços",
+    "ruleColStructure": "Estrutura",
+    "ruleColProduct": "Produto ou serviço"
   },
   "erpCodes": {
     "title": "Códigos do ERP",
