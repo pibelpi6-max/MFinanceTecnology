@@ -27,6 +27,18 @@ export function validMoveTargets(nodes: DimensionNodeRow[], node: DimensionNodeR
   return nodes.filter((n) => !excluded.has(n.id) && n.id !== node.parentNodeId && n.level + 1 + height <= 10);
 }
 
+export type DropPosition = "inside" | "before" | "after";
+
+/** Se `dragged` pode ser solto em `target` na posição dada (dentro, antes ou depois dele). */
+export function canPlace(nodes: DimensionNodeRow[], dragged: DimensionNodeRow, target: DimensionNodeRow, position: DropPosition): boolean {
+  if (dragged.id === target.id) return false;
+  const newParentId = position === "inside" ? target.id : target.parentNodeId;
+  if (!newParentId) return false; // só existe um item raiz: nada "ao lado" dele
+  // Reordenar entre irmãos do mesmo pai é sempre possível.
+  if (newParentId === dragged.parentNodeId) return true;
+  return validMoveTargets(nodes, dragged).some((x) => x.id === newParentId);
+}
+
 interface Props {
   open: boolean;
   onClose: () => void;

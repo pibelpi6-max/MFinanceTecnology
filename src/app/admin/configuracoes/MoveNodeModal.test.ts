@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validMoveTargets } from "./MoveNodeModal";
+import { canPlace, validMoveTargets } from "./MoveNodeModal";
 import type { DimensionNodeRow } from "@/lib/dimensions/types";
 
 const n = (id: string, parentNodeId: string | null, level: number): DimensionNodeRow => ({
@@ -30,5 +30,29 @@ describe("validMoveTargets", () => {
     expect(ids).toContain("l8");
     expect(ids).not.toContain("l9");
     expect(ids).not.toContain("l10");
+  });
+});
+
+describe("canPlace", () => {
+  // raiz > a > a1 ; raiz > b ; raiz > c
+  const nodes = [n("raiz", null, 1), n("a", "raiz", 2), n("a1", "a", 3), n("b", "raiz", 2), n("c", "raiz", 2)];
+  const by = (id: string) => nodes.find((x) => x.id === id)!;
+
+  it("reordena entre irmãos (antes/depois)", () => {
+    expect(canPlace(nodes, by("a"), by("b"), "after")).toBe(true);
+    expect(canPlace(nodes, by("c"), by("a"), "before")).toBe(true);
+  });
+  it("não coloca nada ao lado do item raiz", () => {
+    expect(canPlace(nodes, by("a"), by("raiz"), "before")).toBe(false);
+    expect(canPlace(nodes, by("a"), by("raiz"), "after")).toBe(false);
+  });
+  it("não solta um item dentro dele mesmo ou de um filho", () => {
+    expect(canPlace(nodes, by("a"), by("a"), "inside")).toBe(false);
+    expect(canPlace(nodes, by("a"), by("a1"), "inside")).toBe(false);
+    expect(canPlace(nodes, by("a"), by("a1"), "after")).toBe(false);
+  });
+  it("muda de pai ao soltar dentro de outro ou ao lado de um primo", () => {
+    expect(canPlace(nodes, by("c"), by("b"), "inside")).toBe(true);
+    expect(canPlace(nodes, by("c"), by("a1"), "after")).toBe(true); // vira filho de "a"
   });
 });

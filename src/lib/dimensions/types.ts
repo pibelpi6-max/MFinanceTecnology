@@ -28,4 +28,6 @@ export interface DimensionNodeRow {
   level: number;
   validFromYear: number;
   validUntilYear: number | null;
+  /** Ordem manual entre irmãos (0 = sem ordem definida: vale o alfabético). */
+  sortOrder?: number;
 }
