@@ -292,7 +292,10 @@
       "duplicateStructureConfirmBody": "Duplicate structure <b>{name}</b>?",
       "typeLabel": "Type",
       "usageCount": "Used in {count} set(s)",
-      "usageCountHint": "How many Structure Sets use this structure"
+      "usageCountHint": "How many Structure Sets use this structure",
+      "useInReceita": "Use in Revenue",
+      "useInReceitaHint": "If checked, sales in the Revenue module are entered by this hierarchy.",
+      "useInReceitaYes": "Revenue"
     },
     "conjuntos": {
       "title": "Structure Sets",
@@ -723,8 +726,6 @@
     "premOtherDimHint": "This assumption filters by a hierarchy the sales of this budget do not carry (see \"Each sale carries\" in Entries); it has no effect until you tick it. Hierarchy(ies):",
     "premDeleteTitle": "Delete assumption",
     "premDeleteBody": "Delete \"{name}\" ({pct})? Entered numbers do not change.",
-    "carriesLabel": "Each sale carries",
-    "carriesHint": "choose the hierarchies the sales of this budget carry",
     "launchingIn": "Entering for",
     "viewing": "Viewing",
     "allItems": "All",

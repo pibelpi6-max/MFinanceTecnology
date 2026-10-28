@@ -12,7 +12,7 @@ import {
   lineage, type Deduction, type MonthResult, type RateTable, type RevenueLine, type DeductionRule,
 } from "@/lib/receita/calc";
 import { TreeMultiSelect, type TreeMultiSelectLabels, type TreeSelectGroup } from "@/components/ui/tree/TreeMultiSelect";
-import { deletePremise, savePremise, setPremiseActive, saveDeductionDefaults, saveDeductionRules, saveRevenueEntries, saveRevenueDimensions } from "./_actions";
+import { deletePremise, savePremise, setPremiseActive, saveDeductionDefaults, saveDeductionRules, saveRevenueEntries } from "./_actions";
 import { ReceitaCharts } from "./ReceitaCharts";
 import type { TablePrefs } from "@/components/ui/DataTable/types";
 import { ProdutosPanel } from "./ProdutosPanel";
@@ -289,21 +289,6 @@ export function ReceitaClient(p: Props) {
   }
 
   const [detailType, setDetailType] = useState<string>("");
-  const [dimBusy, setDimBusy] = useState(false);
-  function toggleCarried(typeId: string) {
-    const has = carried.includes(typeId);
-    if (has && carried.length === 1) return;
-    const next = dimOrder.filter((id) => (id === typeId ? !has : carried.includes(id)));
-    setError(null);
-    setDimBusy(true);
-    startTransition(async () => {
-      const r = await saveRevenueDimensions({ orcamentoId: p.orcamentoId, typeIds: next });
-      setDimBusy(false);
-      if (r.error) return setError(r.error);
-      router.refresh();
-    });
-  }
-
   function toggleProduct(id: string) {
     setCollapsed((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   }
@@ -536,24 +521,6 @@ export function ReceitaClient(p: Props) {
   ];
   const sliceBar = (withCarried: boolean) => (
     <div className="rec-slice">
-      {withCarried && p.dimensions.length > 1 && (
-        <div className="rec-slice-row">
-          <span className="rec-slice-lbl">{t("carriesLabel")}</span>
-          {p.dimensions.map((d) => (
-            <button
-              key={d.id}
-              type="button"
-              className={`rec-chip${carried.includes(d.id) ? " on" : ""}`}
-              aria-pressed={carried.includes(d.id)}
-              disabled={dirty || dimBusy}
-              onClick={() => toggleCarried(d.id)}
-            >
-              {carried.includes(d.id) ? "✓ " : ""}{d.name}
-            </button>
-          ))}
-          <span className="rec-slice-hint">{t("carriesHint")}</span>
-        </div>
-      )}
       {carried.length > 0 && (
         <div className="rec-slice-row rec-slice-row--end">
           <span className="rec-slice-lbl">{readOnly ? t("viewing") : t("launchingIn")}</span>

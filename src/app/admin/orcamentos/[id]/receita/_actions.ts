@@ -98,28 +98,6 @@ export async function saveRevenueEntries(input: {
   }
 }
 
-export async function saveRevenueDimensions(input: { orcamentoId: string; typeIds: string[] }): Promise<Result> {
-  try {
-    const tenant = await getCurrentTenant();
-    if (!tenant) return { error: "Não autenticado" };
-    if (!(await assertOrcamento(tenant.tenantId, input.orcamentoId))) return { error: "Orçamento não encontrado" };
-    if (input.typeIds.some((id) => !UUID_RE.test(id))) return { error: "Hierarquia inválida" };
-    const supabase = await createClient();
-    const { error } = await supabase
-      .from("orcamentos")
-      .update({ revenue_dimension_type_ids: input.typeIds })
-      .eq("tenant_id", tenant.tenantId)
-      .eq("id", input.orcamentoId);
-    if (error) {
-      return { error: /revenue_dimension_type_ids/.test(error.message) ? "Falta rodar a migration 0028 no Supabase (SQL Editor)." : error.message };
-    }
-    refresh(input.orcamentoId);
-    return { success: true };
-  } catch (e) {
-    return { error: e instanceof Error ? e.message : "Erro ao salvar" };
-  }
-}
-
 export async function saveDeductions(input: {
   orcamentoId: string;
   productId: string;

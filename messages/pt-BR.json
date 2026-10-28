@@ -292,7 +292,10 @@
       "duplicateStructureConfirmBody": "Deseja duplicar a estrutura <b>{name}</b>?",
       "typeLabel": "Tipo",
       "usageCount": "Usada em {count} conjunto(s)",
-      "usageCountHint": "Quantos Conjuntos de Estrutura usam esta estrutura"
+      "usageCountHint": "Quantos Conjuntos de Estrutura usam esta estrutura",
+      "useInReceita": "Usar na Receita",
+      "useInReceitaHint": "Se marcado, as vendas do módulo Receita são lançadas por esta hierarquia.",
+      "useInReceitaYes": "Receita"
     },
     "conjuntos": {
       "title": "Conjuntos de Estrutura",
@@ -723,8 +726,6 @@
     "premOtherDimHint": "Esta premissa filtra por uma hierarquia que as vendas deste orçamento não carregam (veja \"Cada venda leva\" em Lançamentos); ela não terá efeito até você marcá-la. Hierarquia(s):",
     "premDeleteTitle": "Excluir premissa",
     "premDeleteBody": "Excluir \"{name}\" ({pct})? Os números lançados não mudam.",
-    "carriesLabel": "Cada venda leva",
-    "carriesHint": "escolha as hierarquias que as vendas deste orçamento carregam",
     "launchingIn": "Lançando em",
     "viewing": "Vendo",
     "allItems": "Todos",
