@@ -111,6 +111,12 @@ describe("premissas guardadas", () => {
     expect(r.map((l) => l.volume)).toEqual([100, 110, 121]);
   });
 
+  it("base em outro orçamento: mesmo mês da referência × (1 + %)", () => {
+    const refCtx: PremiseContext = { ...ctx, refLines: { o25: [mk("a1", 1, 200), mk("a1", 2, 200), mk("a1", 3, 300), mk("b1", 2, 999)] } };
+    const r = applyPremises([mk("a1", 1), mk("a1", 2), mk("a1", 3)], [{ ...base, base: "other_budget", baseOrcamentoId: "o25", pct: 10, fromMonth: 2 }], refCtx);
+    expect(r.map((l) => l.volume)).toEqual([100, 220, 330]);
+  });
+
   it("encadeia no mês anterior", () => {
     const r = applyPremises([mk("a1", 1), mk("a1", 2, 999), mk("a1", 3, 999)], [{ ...base, base: "previous_month" }], ctx);
     expect(r.map((l) => l.volume)).toEqual([100, 110, 121]);

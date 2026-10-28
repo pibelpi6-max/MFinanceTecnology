@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getCurrentTenant } from "@/lib/tenant/getCurrentTenant";
-import { getOrcamentoById } from "@/lib/orcamentos/queries";
+import { getOrcamentoById, getOrcamentosByTenant } from "@/lib/orcamentos/queries";
 import { getDimensionTypeByCode, getDimensionTree, getDimensionTypes } from "@/lib/dimensions/queries";
 import { DIMENSION_CODES } from "@/lib/dimensions/constants";
 import { buildDimensionHierarchy } from "@/lib/dimensions/hierarchy";
-import { getDeductionDefaults, getDeductionLabels, getDeductionRules, getItemKinds, getPremises, getReceitaData, getRevenueDimensionIds } from "@/lib/receita/queries";
+import { getDeductionDefaults, getDeductionLabels, getDeductionRules, getItemKinds, getPremises, getReceitaData, getReferenceEntries, getRevenueDimensionIds } from "@/lib/receita/queries";
 import { BackToMapLink } from "@/components/orcamentos/BackToMapLink";
 import { ModuleTitle } from "@/components/orcamentos/ModuleTitle";
 import { getUserPreference } from "@/app/_actions/userPreferences";
@@ -96,6 +96,11 @@ export default async function ReceitaPage({ params, searchParams }: PageProps) {
     validFromYear: r.item.validFromYear,
   }));
   const premises = await getPremises(tenant.tenantId, orcamento.id);
+  const budgetOptions = (await getOrcamentosByTenant(tenant.tenantId).catch(() => []))
+    .filter((o) => o.id !== orcamento.id)
+    .map((o) => ({ id: o.id, label: o.label, year: o.year }));
+  const refIds = Array.from(new Set(premises.filter((x) => x.isActive && x.base === "other_budget" && x.baseOrcamentoId).map((x) => x.baseOrcamentoId as string)));
+  const refEntries = await getReferenceEntries(tenant.tenantId, refIds);
   const data = await getReceitaData(tenant.tenantId, orcamento.id, orcamento.year);
   const displayCurrency = data.currencies.includes(searchParams.moeda ?? "") ? (searchParams.moeda as string) : "BRL";
 
@@ -119,6 +124,8 @@ export default async function ReceitaPage({ params, searchParams }: PageProps) {
             defaultTypeId={defaultTypeId}
             ruleGroups={ruleGroups}
             premises={premises}
+            budgetOptions={budgetOptions}
+            refEntries={refEntries}
             displayCurrency={displayCurrency}
             currencies={data.currencies}
             entries={data.entries}

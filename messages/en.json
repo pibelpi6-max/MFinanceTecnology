@@ -727,7 +727,11 @@
     "detailBy": "Break down by",
     "noDetail": "No breakdown",
     "premMoreFilters": "More filters",
-    "premFewerFilters": "Fewer filters"
+    "premFewerFilters": "Fewer filters",
+    "baseOtherBudget": "Another budget",
+    "premBaseBudget": "Reference budget",
+    "premBaseBudgetPick": "Pick a budget",
+    "unitOverBase": "over the same month of the base"
   },
   "erpCodes": {
     "title": "ERP codes",
