@@ -1620,11 +1620,12 @@ select.rec-kind option:checked { background: #fff; color: #1C2033; }
 /* Editor de item sem deduções (Parâmetros): Tipo na 1ª linha; Código, Produto e Família na 2ª */
 .rec-edit--compact { flex-direction: column; }
 .rec-edit--compact .rec-edit-main { width: 100%; display: grid; grid-template-columns: 130px minmax(200px, 340px) 220px; align-items: end; border-right: 0; padding: 16px 24px; gap: 14px 16px; }
-.rec-edit--compact .rec-edit-main > .rec-edit-field { grid-column: 1 / -1; width: 300px; max-width: 100%; }
-.rec-edit--compact .rec-f-code { grid-column: 1; }
-.rec-edit--compact .rec-f-name { grid-column: 2; }
-.rec-edit--compact .rec-f-family { grid-column: 3; }
-@media (max-width: 800px) { .rec-edit--compact .rec-edit-main { grid-template-columns: 1fr; } .rec-edit--compact .rec-f-code, .rec-edit--compact .rec-f-name, .rec-edit--compact .rec-f-family { grid-column: 1; } }
+.rec-edit--compact .rec-edit-main > .rec-edit-field { grid-row: 1; grid-column: 1 / -1; width: 300px; max-width: 100%; }
+.rec-edit--compact .rec-f-code { grid-row: 2; grid-column: 1; }
+.rec-edit--compact .rec-f-name { grid-row: 2; grid-column: 2; }
+.rec-edit--compact .rec-f-family { grid-row: 2; grid-column: 3; }
+.rec-edit--compact .rec-f-family select { height: 40px; box-sizing: border-box; border: 1px solid #d5daea; border-radius: 10px; padding: 0 12px; font-size: 14px; font-family: inherit; color: #1c2033; background: #fff; }
+@media (max-width: 800px) { .rec-edit--compact .rec-edit-main { grid-template-columns: 1fr; } .rec-edit--compact .rec-f-code, .rec-edit--compact .rec-f-name, .rec-edit--compact .rec-f-family { grid-row: auto; grid-column: 1; } }
 .rec-edit--compact .rec-edit-foot { border-top: 1px solid #e6e8f0; }
 
 /* Foco dos campos: borda azul suave no lugar do contorno preto do navegador */
