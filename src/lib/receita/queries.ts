@@ -146,7 +146,8 @@ export interface PremiseRow {
   kind: "volume_growth" | "price_adjust";
   pct: number;
   fromMonth: number;
-  base: "entered" | "previous_month";
+  base: "entered" | "previous_month" | "other_budget";
+  baseOrcamentoId: string | null;
   productIds: string[];
   dimensionFilters: Record<string, string[]>;
   isActive: boolean;
@@ -155,22 +156,53 @@ export interface PremiseRow {
 /** Premissas guardadas do orçamento. Tolera a tabela ainda não existir (migration 0027). */
 export async function getPremises(tenantId: string, orcamentoId: string): Promise<PremiseRow[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("revenue_premises")
-    .select("id, kind, pct, from_month, base, product_node_ids, dimension_filters, is_active")
-    .eq("tenant_id", tenantId)
-    .eq("orcamento_id", orcamentoId)
-    .order("sort_order")
-    .order("created_at");
-  if (error) return [];
-  return (data ?? []).map((r) => ({
+  const q = (cols: string) =>
+    supabase
+      .from("revenue_premises")
+      .select(cols)
+      .eq("tenant_id", tenantId)
+      .eq("orcamento_id", orcamentoId)
+      .order("sort_order")
+      .order("created_at");
+  // Tolera a migration 0029 ainda não rodada (coluna base_orcamento_id).
+  let res = await q("id, kind, pct, from_month, base, base_orcamento_id, product_node_ids, dimension_filters, is_active");
+  if (res.error) res = await q("id, kind, pct, from_month, base, product_node_ids, dimension_filters, is_active");
+  if (res.error) return [];
+  type Raw = { id: string; kind: PremiseRow["kind"]; pct: number | string; from_month: number | string; base: PremiseRow["base"]; base_orcamento_id?: string | null; product_node_ids: string[] | null; dimension_filters: Record<string, string[]> | null; is_active: boolean };
+  return ((res.data ?? []) as unknown as Raw[]).map((r) => ({
     id: String(r.id),
     kind: r.kind,
     pct: Number(r.pct),
     fromMonth: Number(r.from_month),
     base: r.base,
+    baseOrcamentoId: r.base_orcamento_id ?? null,
     productIds: (r.product_node_ids ?? []) as string[],
     dimensionFilters: (r.dimension_filters ?? {}) as Record<string, string[]>,
     isActive: !!r.is_active,
   }));
+}
+
+/** Lançamentos de receita de outros orçamentos (base de premissas). */
+export async function getReferenceEntries(tenantId: string, orcamentoIds: string[]): Promise<Record<string, ReceitaEntry[]>> {
+  const out: Record<string, ReceitaEntry[]> = {};
+  if (orcamentoIds.length === 0) return out;
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("revenue_entries")
+    .select("orcamento_id, product_node_id, entity_node_id, extra_dimensions, month, currency, volume, unit_price")
+    .eq("tenant_id", tenantId)
+    .in("orcamento_id", orcamentoIds);
+  if (error) return out;
+  for (const x of data ?? []) {
+    (out[x.orcamento_id] ??= []).push({
+      productId: x.product_node_id,
+      entityId: x.entity_node_id,
+      extra: (x.extra_dimensions && typeof x.extra_dimensions === "object" ? x.extra_dimensions : {}) as Record<string, string>,
+      month: x.month,
+      currency: x.currency,
+      volume: Number(x.volume),
+      unitPrice: Number(x.unit_price),
+    });
+  }
+  return out;
 }

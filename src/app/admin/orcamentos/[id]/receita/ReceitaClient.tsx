@@ -47,6 +47,9 @@ interface Props {
   defaultTypeId: string | null;
   ruleGroups: TreeSelectGroup[];
   premises?: PremiseRow[];
+  budgetOptions?: { id: string; label: string; year: number }[];
+  /** Lançamentos de outros orçamentos usados como base de premissas. */
+  refEntries?: Record<string, (RevenueLine & { entityId: string | null; extra: Record<string, string> })[]>;
   deductionRules?: DeductionRule[];
   displayCurrency: string;
   currencies: string[];
@@ -181,9 +184,20 @@ export function ReceitaClient(p: Props) {
     productParents: Object.fromEntries(p.products.map((x) => [x.id, x.parentId ?? null])),
   }), [nodeParents, p.products]);
   // Premissas guardadas: aplicadas por cima do lançado (o lançado não muda).
-  const premiseCtx = useMemo(() => ({ ...ruleCtx, entityTypeId: null, nodeParents }), [ruleCtx, nodeParents]);
+  const refLines = useMemo(() => {
+    const out: Record<string, RevenueLine[]> = {};
+    for (const [oid, list] of Object.entries(p.refEntries ?? {})) {
+      out[oid] = list.map((e) => {
+        const dims: Record<string, string> = { ...e.extra };
+        if (e.entityId && nodeType[e.entityId]) dims[nodeType[e.entityId]] = e.entityId;
+        return { ...e, dims };
+      });
+    }
+    return out;
+  }, [p.refEntries, nodeType]);
+  const premiseCtx = useMemo(() => ({ ...ruleCtx, entityTypeId: null, nodeParents, refLines }), [ruleCtx, nodeParents, refLines]);
   const activePremises = useMemo(
-    () => (p.premises ?? []).filter((x) => x.isActive).map((x) => ({ kind: x.kind, pct: x.pct, fromMonth: x.fromMonth, base: x.base, productIds: x.productIds, dimensionFilters: x.dimensionFilters })),
+    () => (p.premises ?? []).filter((x) => x.isActive).map((x) => ({ kind: x.kind, pct: x.pct, fromMonth: x.fromMonth, base: x.base, baseOrcamentoId: x.baseOrcamentoId, productIds: x.productIds, dimensionFilters: x.dimensionFilters })),
     [p.premises],
   );
   const premisedLines = useMemo(() => applyPremises(lines, activePremises, premiseCtx), [lines, activePremises, premiseCtx]);
@@ -618,7 +632,7 @@ export function ReceitaClient(p: Props) {
       )}
 
       {tab === "assumptions" && (
-        <PremissasPanel orcamentoId={p.orcamentoId} premises={p.premises ?? []} products={p.products} groups={p.ruleGroups} carriedIds={carried} onError={setError} />
+        <PremissasPanel orcamentoId={p.orcamentoId} premises={p.premises ?? []} budgets={p.budgetOptions ?? []} products={p.products} groups={p.ruleGroups} carriedIds={carried} onError={setError} />
       )}
 
       {tab === "entry" && (
@@ -993,15 +1007,15 @@ type PremiseDraft = {
   kind: "volume_growth" | "price_adjust";
   pct: string;
   fromMonth: number;
-  base: "entered" | "previous_month";
+  base: PremiseRow["base"]; baseOrcamentoId: string | null;
   productIds: string[];
   dimensionFilters: Record<string, string[]>;
 };
-const EMPTY_PREMISE: PremiseDraft = { id: null, kind: "volume_growth", pct: "", fromMonth: 1, base: "entered", productIds: [], dimensionFilters: {} };
+const EMPTY_PREMISE: PremiseDraft = { id: null, kind: "volume_growth", pct: "", fromMonth: 1, base: "entered", baseOrcamentoId: null, productIds: [], dimensionFilters: {} };
 
 /** Premissas guardadas: lista + modal com recorte por produto/família e por dimensão (canal, unidade...). */
-function PremissasPanel({ orcamentoId, premises, products, groups, carriedIds, onError }: {
-  orcamentoId: string; premises: PremiseRow[]; products: ProductRow[]; groups: TreeSelectGroup[]; carriedIds: string[]; onError: (s: string | null) => void;
+function PremissasPanel({ orcamentoId, premises, budgets, products, groups, carriedIds, onError }: {
+  orcamentoId: string; premises: PremiseRow[]; budgets: { id: string; label: string; year: number }[]; products: ProductRow[]; groups: TreeSelectGroup[]; carriedIds: string[]; onError: (s: string | null) => void;
 }) {
   const t = useTranslations("receita");
   const locale = useLocale();
@@ -1032,18 +1046,19 @@ function PremissasPanel({ orcamentoId, premises, products, groups, carriedIds, o
   };
   const pctNum = (d: PremiseDraft) => parseFloat(d.pct.replace(",", "."));
   const kindText = (k: PremiseRow["kind"]) => (k === "volume_growth" ? t("kindVolume") : t("kindPrice"));
-  const pctText = (r: PremiseRow) => `${r.pct > 0 ? "+" : ""}${String(r.pct).replace(".", ",")}% ${r.kind === "volume_growth" ? t("unitMonth") : t("unitOnce")}`;
-  const baseText = (r: PremiseRow) => (r.kind === "price_adjust" ? t("basePrice") : r.base === "previous_month" ? t("basePrevious") : t("baseEntered"));
+  const pctText = (r: PremiseRow) => `${r.pct > 0 ? "+" : ""}${String(r.pct).replace(".", ",")}% ${r.kind === "volume_growth" ? (r.base === "other_budget" ? t("unitOverBase") : t("unitMonth")) : t("unitOnce")}`;
+  const baseText = (r: PremiseRow) => (r.kind === "price_adjust" ? t("basePrice") : r.base === "previous_month" ? t("basePrevious") : r.base === "other_budget" ? budgetName(r.baseOrcamentoId) : t("baseEntered"));
+  const budgetName = (id: string | null) => { const b = budgets.find((x) => x.id === id); return b ? `${b.label} (${b.year})` : t("baseOtherBudget"); };
 
   function open(r?: PremiseRow) {
     onError(null);
-    setDraft(r ? { id: r.id, kind: r.kind, pct: String(r.pct).replace(".", ","), fromMonth: r.fromMonth, base: r.base, productIds: r.productIds, dimensionFilters: r.dimensionFilters } : EMPTY_PREMISE);
+    setDraft(r ? { id: r.id, kind: r.kind, pct: String(r.pct).replace(".", ","), fromMonth: r.fromMonth, base: r.base, baseOrcamentoId: r.baseOrcamentoId, productIds: r.productIds, dimensionFilters: r.dimensionFilters } : EMPTY_PREMISE);
   }
   function save() {
     if (!draft) return;
     onError(null);
     start(async () => {
-      const r = await savePremise({ orcamentoId, id: draft.id, kind: draft.kind, pct: pctNum(draft), fromMonth: draft.fromMonth, base: draft.base, productIds: draft.productIds, dimensionFilters: draft.dimensionFilters });
+      const r = await savePremise({ orcamentoId, id: draft.id, kind: draft.kind, pct: pctNum(draft), fromMonth: draft.fromMonth, base: draft.base, baseOrcamentoId: draft.baseOrcamentoId, productIds: draft.productIds, dimensionFilters: draft.dimensionFilters });
       if (r.error) { onError(r.error); return; }
       setDraft(null);
       router.refresh();
@@ -1125,7 +1140,7 @@ function PremissasPanel({ orcamentoId, premises, products, groups, carriedIds, o
               </div>
             </div>
             <div className="rec-prem-grid">
-              <label className="rec-field">{t("premPct")} ({draft.kind === "volume_growth" ? t("unitMonth") : t("unitOnce")})
+              <label className="rec-field">{t("premPct")} ({draft.kind === "volume_growth" ? (draft.base === "other_budget" ? t("unitOverBase") : t("unitMonth")) : t("unitOnce")})
                 <input inputMode="decimal" value={draft.pct} autoFocus placeholder="0,0" onChange={(e) => /^-?\d*[.,]?\d*$/.test(e.target.value) && setDraft({ ...draft, pct: e.target.value })} />
               </label>
               <label className="rec-field">{t("colFrom")}
@@ -1135,9 +1150,18 @@ function PremissasPanel({ orcamentoId, premises, products, groups, carriedIds, o
               </label>
               {draft.kind === "volume_growth" && (
                 <label className="rec-field">{t("premBase")}
-                  <select value={draft.base} onChange={(e) => setDraft({ ...draft, base: e.target.value as PremiseDraft["base"] })}>
+                  <select value={draft.base} onChange={(e) => setDraft({ ...draft, base: e.target.value as PremiseDraft["base"], baseOrcamentoId: e.target.value === "other_budget" ? draft.baseOrcamentoId : null })}>
                     <option value="entered">{t("baseEntered")}</option>
                     <option value="previous_month">{t("basePrevious")}</option>
+                    <option value="other_budget">{t("baseOtherBudget")}</option>
+                  </select>
+                </label>
+              )}
+              {draft.kind === "volume_growth" && draft.base === "other_budget" && (
+                <label className="rec-field">{t("premBaseBudget")}
+                  <select value={draft.baseOrcamentoId ?? ""} onChange={(e) => setDraft({ ...draft, baseOrcamentoId: e.target.value || null })}>
+                    <option value="">{t("premBaseBudgetPick")}</option>
+                    {budgets.map((b) => <option key={b.id} value={b.id}>{b.label} ({b.year})</option>)}
                   </select>
                 </label>
               )}
@@ -1171,7 +1195,7 @@ function PremissasPanel({ orcamentoId, premises, products, groups, carriedIds, o
               {t("premSummary", {
                 kind: kindText(draft.kind),
                 pct: draft.pct || "0",
-                unit: draft.kind === "volume_growth" ? t("unitMonth") : t("unitOnce"),
+                unit: draft.kind === "volume_growth" ? (draft.base === "other_budget" ? t("unitOverBase") : t("unitMonth")) : t("unitOnce"),
                 month: monthName(draft.fromMonth),
                 scope: summaryNames(draft),
               })}
@@ -1183,7 +1207,7 @@ function PremissasPanel({ orcamentoId, premises, products, groups, carriedIds, o
           </div>
           <div className="rec-prem-card-foot">
             <Button variant="ghost" size="sm" onClick={() => setDraft(null)} disabled={pending}>{t("prodCancel")}</Button>
-            <Button variant="primary" size="sm" isLoading={pending} loadingText={t("saving")} disabled={!Number.isFinite(pctNum(draft))} onClick={save}>{t("premSave")}</Button>
+            <Button variant="primary" size="sm" isLoading={pending} loadingText={t("saving")} disabled={!Number.isFinite(pctNum(draft)) || (draft.kind === "volume_growth" && draft.base === "other_budget" && !draft.baseOrcamentoId)} onClick={save}>{t("premSave")}</Button>
           </div>
         </div>
       )}

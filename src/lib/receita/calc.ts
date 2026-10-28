@@ -183,7 +183,9 @@ export interface Premise {
   pct: number;
   fromMonth: number;
   /** "entered": cresce em cima do valor lançado; "previous_month": encadeia no mês anterior (só volume). */
-  base: "entered" | "previous_month";
+  base: "entered" | "previous_month" | "other_budget";
+  /** Orçamento de referência quando base = "other_budget" (volume do mesmo mês × (1 + %)). */
+  baseOrcamentoId?: string | null;
   productIds: string[];
   /** id do tipo de hierarquia -> itens escolhidos (vazio = todos). */
   dimensionFilters: Record<string, string[]>;
@@ -196,6 +198,13 @@ export interface PremiseContext {
   productParents: Record<string, string | null>;
   /** Pais de TODOS os itens das demais hierarquias (para famílias/níveis sintéticos). */
   nodeParents: Record<string, string | null>;
+  /** Lançamentos de outros orçamentos usados como base, por id do orçamento. */
+  refLines?: Record<string, RevenueLine[]>;
+}
+
+/** Chave de série independente da ordem das chaves de dims. */
+export function seriesKey(l: RevenueLine): string {
+  return `${l.productId}|${JSON.stringify(Object.entries(l.dims ?? {}).sort(([a], [b]) => (a < b ? -1 : 1)))}`;
 }
 
 function lineMatches(l: RevenueLine, p: Premise, ctx: PremiseContext): boolean {
@@ -245,6 +254,16 @@ export function applyPremises(lines: RevenueLine[], premises: Premise[], ctx: Pr
       const factor = 1 + p.pct / 100;
       if (p.kind === "price_adjust") {
         for (const l of arr) if (l.month >= p.fromMonth) l.unitPrice = round4(l.unitPrice * factor);
+      } else if (p.base === "other_budget") {
+        const ref = ctx.refLines?.[p.baseOrcamentoId ?? ""];
+        if (!ref) continue;
+        const key = seriesKey(arr[0]);
+        const byMonth = new Map<number, number>();
+        for (const r of ref) if (seriesKey(r) === key) byMonth.set(r.month, (byMonth.get(r.month) ?? 0) + r.volume);
+        for (const l of arr) {
+          const v = byMonth.get(l.month);
+          if (l.month >= p.fromMonth && v !== undefined) l.volume = round4(v * factor);
+        }
       } else if (p.base === "previous_month") {
         let prev: number | null = null;
         for (const l of arr) {

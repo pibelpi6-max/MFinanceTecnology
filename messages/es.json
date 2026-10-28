@@ -727,7 +727,11 @@
     "detailBy": "Desglosar por",
     "noDetail": "Sin desglose",
     "premMoreFilters": "Más filtros",
-    "premFewerFilters": "Menos filtros"
+    "premFewerFilters": "Menos filtros",
+    "baseOtherBudget": "Otro presupuesto",
+    "premBaseBudget": "Presupuesto de referencia",
+    "premBaseBudgetPick": "Elige el presupuesto",
+    "unitOverBase": "sobre el mismo mes de la base"
   },
   "erpCodes": {
     "title": "Códigos del ERP",

@@ -323,6 +323,8 @@ export async function saveCurrencyRates(input: {
 }
 
 const PREMISE_HINT = "Rode a migration 0027 (premissas da receita) no Supabase antes de salvar.";
+const premiseErr = (m: string) =>
+  /base_orcamento_id|revenue_premises_base_check/.test(m) ? "Rode a migration 0029 (premissa com base em outro orçamento) no Supabase antes de salvar." : /does not exist|schema cache|permission/i.test(m) ? PREMISE_HINT : m;
 
 export async function savePremise(input: {
   orcamentoId: string;
@@ -330,7 +332,8 @@ export async function savePremise(input: {
   kind: "volume_growth" | "price_adjust";
   pct: number;
   fromMonth: number;
-  base: "entered" | "previous_month";
+  base: "entered" | "previous_month" | "other_budget";
+  baseOrcamentoId?: string | null;
   productIds: string[];
   dimensionFilters: Record<string, string[]>;
 }): Promise<Result> {
@@ -343,11 +346,17 @@ export async function savePremise(input: {
     if (input.fromMonth < 1 || input.fromMonth > 12) return { error: "Mês inválido" };
     const filters: Record<string, string[]> = {};
     for (const [k, v] of Object.entries(input.dimensionFilters)) if (v.length > 0) filters[k] = Array.from(new Set(v));
+    const useBudget = input.kind === "volume_growth" && input.base === "other_budget";
+    if (useBudget) {
+      if (!input.baseOrcamentoId || !UUID_RE.test(input.baseOrcamentoId)) return { error: "Escolha o orçamento de referência" };
+      if (!(await assertOrcamento(tenant.tenantId, input.baseOrcamentoId))) return { error: "Orçamento de referência não encontrado" };
+    }
     const row = {
       kind: input.kind,
       pct: input.pct,
       from_month: input.fromMonth,
       base: input.kind === "volume_growth" ? input.base : "entered",
+      base_orcamento_id: useBudget ? input.baseOrcamentoId : null,
       product_node_ids: Array.from(new Set(input.productIds)),
       dimension_filters: filters,
     };
@@ -355,12 +364,12 @@ export async function savePremise(input: {
     if (input.id) {
       const { data, error } = await supabase
         .from("revenue_premises").update(row).eq("id", input.id).eq("tenant_id", tenant.tenantId).eq("orcamento_id", input.orcamentoId).select("id");
-      if (error) return { error: /does not exist|schema cache|permission/i.test(error.message) ? PREMISE_HINT : error.message };
+      if (error) return { error: premiseErr(error.message) };
       if (!data || data.length === 0) return { error: "Premissa não encontrada." };
     } else {
       const { error } = await supabase
         .from("revenue_premises").insert({ ...row, tenant_id: tenant.tenantId, orcamento_id: input.orcamentoId, sort_order: Date.now() % 1000000000 });
-      if (error) return { error: /does not exist|schema cache|permission/i.test(error.message) ? PREMISE_HINT : error.message };
+      if (error) return { error: premiseErr(error.message) };
     }
     refresh(input.orcamentoId);
     return { success: true };
