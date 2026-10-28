@@ -750,7 +750,8 @@
     "parSoon": "soon",
     "parNavLabel": "Parameters by module",
     "productService": "Product/Service",
-    "parGroupBudget": "This budget"
+    "parGroupBudget": "This budget",
+    "fxSectionTitle": "Monthly rates for this budget"
   },
   "erpCodes": {
     "title": "ERP codes",
