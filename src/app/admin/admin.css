@@ -1638,7 +1638,7 @@ input:focus, input:focus-visible, select:focus, select:focus-visible, textarea:f
 .par-section { margin: 28px 0 8px; padding-top: 20px; border-top: 1px solid #E6E8F0; font-size: 14px; font-weight: 700; color: #1C2033; }
 
 /* Parâmetros > Moedas */
-.mo-panel { display: flex; flex-direction: column; gap: 20px; padding: 4px 6px 24px; }
+.mo-panel { display: flex; flex-direction: column; gap: 20px; padding: 6px 10px 24px; }
 .mo-add { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .mo-add input { width: 110px; height: 40px; box-sizing: border-box; border: 1px solid #d5daea; border-radius: 10px; padding: 0 12px; font-size: 15px; font-family: inherit; text-transform: uppercase; background: #fff; }
 .mo-hint { font-size: 12.5px; color: #8A90A6; }
@@ -1650,7 +1650,5 @@ input:focus, input:focus-visible, select:focus, select:focus-visible, textarea:f
 .mo-rates { display: flex; flex-direction: column; gap: 14px; }
 .mo-rates-head { display: flex; align-items: baseline; gap: 12px; font-size: 13px; color: #5B6178; }
 .mo-rates-head strong { font-size: 16px; color: #1C2033; }
-.mo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 14px; padding: 3px; }
-.mo-cell { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: #5B6178; min-width: 0; }
-.mo-cell input { width: 100%; height: 40px; box-sizing: border-box; border: 1px solid #d5daea; border-radius: 10px; padding: 0 12px; font-size: 14px; font-family: inherit; text-align: right; background: #fff; }
+.mo-grid { padding: 4px; }
 .mo-actions { display: flex; align-items: center; gap: 16px; }
