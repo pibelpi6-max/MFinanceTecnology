@@ -22,7 +22,7 @@ interface Props {
   rates: RateTable;
 }
 
-type Tab = "products" | "currencies" | "fx";
+type Tab = "products" | "currencies";
 
 /** Parâmetros agrupados pelo módulo a que pertencem; módulos sem parâmetros ainda ganham seção quando tiverem. */
 export function ParametrosClient(p: Props) {
@@ -32,7 +32,6 @@ export function ParametrosClient(p: Props) {
   const [error, setError] = useState<string | null>(null);
   const groups: { title: string; items: { key: Tab | null; label: string }[] }[] = [
     { title: t("parGroupGeneral"), items: [{ key: "currencies", label: t("globalCurrencies") }] },
-    { title: t("parGroupBudget"), items: [{ key: "fx", label: t("tabFx") }] },
     { title: t("parGroupRevenue"), items: [{ key: "products", label: t("globalProducts") }] },
     { title: t("parGroupCosts"), items: [{ key: null, label: t("parInputs") }] },
   ];
@@ -75,8 +74,13 @@ export function ParametrosClient(p: Props) {
             onError={setError}
           />
         )}
-        {tab === "fx" && <FxPanel orcamentoId={p.orcamentoId} rates={p.rates} companyCurrencies={p.currencies.map((c) => c.code)} onError={setError} />}
-        {tab === "currencies" && <CurrenciesPanel orcamentoId={p.orcamentoId} currencies={p.currencies} onError={setError} />}
+        {tab === "currencies" && (
+          <>
+            <CurrenciesPanel orcamentoId={p.orcamentoId} currencies={p.currencies} onError={setError} />
+            <h3 className="par-section">{t("fxSectionTitle")}</h3>
+            <FxPanel orcamentoId={p.orcamentoId} rates={p.rates} companyCurrencies={p.currencies.map((c) => c.code)} onError={setError} />
+          </>
+        )}
       </div>
     </div>
   );

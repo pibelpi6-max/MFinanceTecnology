@@ -750,7 +750,8 @@
     "parSoon": "pronto",
     "parNavLabel": "Parámetros por módulo",
     "productService": "Producto/Servicio",
-    "parGroupBudget": "Este presupuesto"
+    "parGroupBudget": "Este presupuesto",
+    "fxSectionTitle": "Tasas mensuales de este presupuesto"
   },
   "erpCodes": {
     "title": "Códigos del ERP",

@@ -1634,3 +1634,5 @@ input:focus, input:focus-visible, select:focus, select:focus-visible, textarea:f
   border-color: #3E6FE0;
   box-shadow: 0 0 0 3px rgba(62, 111, 224, .15);
 }
+
+.par-section { margin: 28px 0 8px; padding-top: 20px; border-top: 1px solid #E6E8F0; font-size: 14px; font-weight: 700; color: #1C2033; }
