@@ -8,6 +8,8 @@ export interface DimensionType {
   sort_order: number;
   /** Se esta dimensão aparece como eixo extra (filtro) na Matriz Orçamentária. */
   use_in_matriz: boolean;
+  /** Se a Receita carrega esta hierarquia nas vendas (migration 0032). */
+  use_in_receita?: boolean;
 }
 
 export interface DimensionStructure {

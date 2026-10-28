@@ -54,6 +54,7 @@ export async function createDimensionType(input: {
   name: string;
   description: string | null;
   useInMatriz?: boolean;
+  useInReceita?: boolean;
 }): Promise<ActionResult> {
   try {
     const tenant = await requireAdmin();
@@ -98,10 +99,12 @@ export async function createDimensionType(input: {
         is_system: false,
         sort_order: (last?.sort_order ?? 0) + 1,
         use_in_matriz: input.useInMatriz ?? false,
+        ...(input.useInReceita ? { use_in_receita: true } : {}),
       })
       .select("id")
       .single();
     if (error) {
+      if (/use_in_receita/.test(error.message)) return { error: "Falta rodar a migration 0032 no Supabase (SQL Editor)." };
       if (error.code === "23505") return { error: "Já existe uma hierarquia com esse código." };
       return { error: error.message };
     }
@@ -130,6 +133,7 @@ export async function updateDimensionType(input: {
   name: string;
   description: string | null;
   useInMatriz?: boolean;
+  useInReceita?: boolean;
 }): Promise<ActionResult> {
   try {
     const tenant = await requireAdmin();
@@ -147,11 +151,12 @@ export async function updateDimensionType(input: {
     if (currentError) return { error: currentError.message };
     if (!current) return { error: "Hierarquia não encontrada." };
 
-    const updatePayload: { name: string; description: string | null; code?: string; use_in_matriz?: boolean } = {
+    const updatePayload: { name: string; description: string | null; code?: string; use_in_matriz?: boolean; use_in_receita?: boolean } = {
       name,
       description: input.description?.trim() || null,
     };
     if (input.useInMatriz !== undefined) updatePayload.use_in_matriz = input.useInMatriz;
+    if (input.useInReceita !== undefined) updatePayload.use_in_receita = input.useInReceita;
 
     // Os 3 códigos estruturais (conta, centro_custo, entidade) são usados como
     // literais em dezenas de lugares do sistema — nunca podem ser renomeados,
@@ -170,6 +175,7 @@ export async function updateDimensionType(input: {
       .eq("id", input.id)
       .eq("tenant_id", tenant.tenantId);
     if (error) {
+      if (/use_in_receita/.test(error.message)) return { error: "Falta rodar a migration 0032 no Supabase (SQL Editor)." };
       if (error.code === "23505") return { error: "Já existe uma hierarquia com esse código." };
       return { error: error.message };
     }

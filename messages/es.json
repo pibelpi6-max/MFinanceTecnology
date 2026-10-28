@@ -292,7 +292,10 @@
       "duplicateStructureConfirmBody": "¿Duplicar la estructura <b>{name}</b>?",
       "typeLabel": "Tipo",
       "usageCount": "Usada en {count} conjunto(s)",
-      "usageCountHint": "Cuántos Conjuntos de Estructuras usan esta estructura"
+      "usageCountHint": "Cuántos Conjuntos de Estructuras usan esta estructura",
+      "useInReceita": "Usar en Ingresos",
+      "useInReceitaHint": "Si se marca, las ventas del módulo Ingresos se registran por esta jerarquía.",
+      "useInReceitaYes": "Ingresos"
     },
     "conjuntos": {
       "title": "Conjuntos de Estructuras",
@@ -723,8 +726,6 @@
     "premOtherDimHint": "Esta premisa filtra por una jerarquía que las ventas de este presupuesto no llevan (ver \"Cada venta lleva\" en Lanzamientos); no tendrá efecto hasta que la marques. Jerarquía(s):",
     "premDeleteTitle": "Eliminar premisa",
     "premDeleteBody": "¿Eliminar \"{name}\" ({pct})? Los números registrados no cambian.",
-    "carriesLabel": "Cada venta lleva",
-    "carriesHint": "elige las jerarquías que llevan las ventas de este presupuesto",
     "launchingIn": "Cargando en",
     "viewing": "Viendo",
     "allItems": "Todos",

@@ -81,11 +81,14 @@ function buildTypeColumns(
       maxWidth: 170,
       noTooltip: true,
       filterable: true,
-      filterValueLabels: { yes: t("dimensions.useInMatrizYes"), no: t("dimensions.useInMatrizNo") },
-      filterValue: (d) => (d.use_in_matriz ? "yes" : "no"),
+      filterValueLabels: { both: `${t("dimensions.useInMatrizYes")} + ${t("dimensions.useInReceitaYes")}`, matriz: t("dimensions.useInMatrizYes"), receita: t("dimensions.useInReceitaYes"), no: t("dimensions.useInMatrizNo") },
+      filterValue: (d) => (d.use_in_matriz && d.use_in_receita ? "both" : d.use_in_matriz ? "matriz" : d.use_in_receita ? "receita" : "no"),
       render: (d) =>
-        d.use_in_matriz ? (
-          <span className="type-badge">{t("dimensions.useInMatrizYes")}</span>
+        d.use_in_matriz || d.use_in_receita ? (
+          <span className="flex flex-wrap gap-1">
+            {d.use_in_receita && <span className="type-badge">{t("dimensions.useInReceitaYes")}</span>}
+            {d.use_in_matriz && <span className="type-badge">{t("dimensions.useInMatrizYes")}</span>}
+          </span>
         ) : (
           <span className="text-gray-400">{t("dimensions.useInMatrizNo")}</span>
         ),
@@ -1016,8 +1019,11 @@ export function ConfiguracoesClient({
                       </td>
                       <td className="text-gray-600">{d.description || <span className="text-gray-400">{t("dimensions.noDescription")}</span>}</td>
                       <td className="text-gray-600">
-                        {d.use_in_matriz ? (
-                          <span className="type-badge">{t("dimensions.useInMatrizYes")}</span>
+                        {d.use_in_matriz || d.use_in_receita ? (
+                          <span className="flex flex-wrap gap-1">
+                            {d.use_in_receita && <span className="type-badge">{t("dimensions.useInReceitaYes")}</span>}
+                            {d.use_in_matriz && <span className="type-badge">{t("dimensions.useInMatrizYes")}</span>}
+                          </span>
                         ) : (
                           <span className="text-gray-400">{t("dimensions.useInMatrizNo")}</span>
                         )}

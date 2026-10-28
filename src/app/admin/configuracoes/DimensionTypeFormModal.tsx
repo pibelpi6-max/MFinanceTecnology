@@ -28,6 +28,7 @@ export function DimensionTypeFormModal({
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [useInMatriz, setUseInMatriz] = useState(false);
+  const [useInReceita, setUseInReceita] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,6 +40,7 @@ export function DimensionTypeFormModal({
     setName(editing?.name ?? "");
     setDescription(editing?.description ?? "");
     setUseInMatriz(editing?.use_in_matriz ?? false);
+    setUseInReceita(editing?.use_in_receita ?? false);
     setError(null);
   }, [open, editing]);
 
@@ -54,12 +56,14 @@ export function DimensionTypeFormModal({
           name: name.trim(),
           description: description.trim() || null,
           useInMatriz,
+          useInReceita,
         })
       : await createDimensionType({
           code: code.trim(),
           name: name.trim(),
           description: description.trim() || null,
           useInMatriz,
+          useInReceita,
         });
 
     setLoading(false);
@@ -131,6 +135,18 @@ export function DimensionTypeFormModal({
             {t("useInMatriz")}
           </label>
           <p className="mt-1 text-[11px] text-gray-400">{t("useInMatrizHint")}</p>
+        </div>
+        <div>
+          <label className="flex items-center gap-1.5 text-sm text-gray-700">
+            <input
+              type="checkbox"
+              checked={useInReceita}
+              onChange={(e) => setUseInReceita(e.target.checked)}
+              className="h-3.5 w-3.5 rounded border-gray-300 text-primary focus:ring-primary/30"
+            />
+            {t("useInReceita")}
+          </label>
+          <p className="mt-1 text-[11px] text-gray-400">{t("useInReceitaHint")}</p>
         </div>
         {error && (
           <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2">

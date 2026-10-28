@@ -7,20 +7,6 @@ export interface ReceitaEntry extends RevenueLine {
   extra: Record<string, string>;
 }
 
-/** Hierarquias que as vendas do orçamento carregam. Tolerante: sem a migration 0028 devolve []. */
-export async function getRevenueDimensionIds(tenantId: string, orcamentoId: string): Promise<string[]> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("orcamentos")
-    .select("revenue_dimension_type_ids")
-    .eq("tenant_id", tenantId)
-    .eq("id", orcamentoId)
-    .maybeSingle();
-  if (error || !data) return [];
-  const ids = (data as { revenue_dimension_type_ids?: string[] | null }).revenue_dimension_type_ids;
-  return Array.isArray(ids) ? ids : [];
-}
-
 export interface ReceitaData {
   entries: ReceitaEntry[];
   deductions: Deduction[];

@@ -2,10 +2,10 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getCurrentTenant } from "@/lib/tenant/getCurrentTenant";
 import { getOrcamentoById, getOrcamentosByTenant } from "@/lib/orcamentos/queries";
-import { getDimensionTypeByCode, getDimensionTree, getDimensionTypes } from "@/lib/dimensions/queries";
+import { getDimensionTypeByCode, getReceitaDimensionIds, getDimensionTree, getDimensionTypes } from "@/lib/dimensions/queries";
 import { DIMENSION_CODES } from "@/lib/dimensions/constants";
 import { buildDimensionHierarchy } from "@/lib/dimensions/hierarchy";
-import { getDeductionDefaults, getDeductionLabels, getDeductionRules, getItemKinds, getPremises, getReceitaData, getReferenceEntries, getRevenueDimensionIds, getTenantCurrencies } from "@/lib/receita/queries";
+import { getDeductionDefaults, getDeductionLabels, getDeductionRules, getItemKinds, getPremises, getReceitaData, getReferenceEntries, getTenantCurrencies } from "@/lib/receita/queries";
 import { BackToMapLink } from "@/components/orcamentos/BackToMapLink";
 import { ModuleTitle } from "@/components/orcamentos/ModuleTitle";
 import { getUserPreference } from "@/app/_actions/userPreferences";
@@ -51,7 +51,7 @@ export default async function ReceitaPage({ params, searchParams }: PageProps) {
     dimTypes.map((d, i) => [d.id, hierarchies[i].map((r) => ({ id: r.item.id, name: r.item.name, depth: r.depth, parentId: r.item.parentNodeId }))]),
   );
   const defaultTypeId = (dimTypes.find((d) => d.code === DIMENSION_CODES.ENTIDADE) ?? dimTypes[0])?.id ?? null;
-  const savedCarried = (await getRevenueDimensionIds(tenant.tenantId, orcamento.id)).filter((id) => dimTypes.some((d) => d.id === id));
+  const savedCarried = (await getReceitaDimensionIds(tenant.tenantId)).filter((id) => dimTypes.some((d) => d.id === id));
 
   const header = (
     <div className="admin-subheader">

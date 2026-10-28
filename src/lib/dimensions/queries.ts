@@ -19,6 +19,18 @@ export async function getDimensionTypes(
   return data ?? [];
 }
 
+/** Ids das hierarquias marcadas como "Utilizado em: Receita". Tolerante: sem a migration 0032 devolve []. */
+export async function getReceitaDimensionIds(tenantId: string): Promise<string[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("dimension_types")
+    .select("id")
+    .eq("tenant_id", tenantId)
+    .eq("use_in_receita", true);
+  if (error || !data) return [];
+  return data.map((d) => d.id as string);
+}
+
 export async function getDimensionTypeByCode(
   tenantId: string,
   code: string
