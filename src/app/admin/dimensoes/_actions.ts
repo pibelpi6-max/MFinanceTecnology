@@ -381,8 +381,9 @@ export async function cancelDimensionNode(input: {
     const childrenHint = "Há itens abaixo dele. Mova ou exclua os itens filhos primeiro.";
     if (version.valid_from_year >= input.year) {
       // O item começou neste ano (ou depois): encerrar "a partir de" este ano é nunca ter existido.
-      const del = await supabase.from("dimension_node_versions").delete().eq("id", input.versionId);
+      const del = await supabase.from("dimension_node_versions").delete().eq("id", input.versionId).select("id");
       if (del.error) return { error: del.error.code === "23503" ? childrenHint : del.error.message };
+      if ((del.data ?? []).length === 0) return { error: "Não foi possível excluir. Rode a migration 0025 (permissão de exclusão) no Supabase." };
       const { count } = await supabase
         .from("dimension_node_versions")
         .select("id", { count: "exact", head: true })
