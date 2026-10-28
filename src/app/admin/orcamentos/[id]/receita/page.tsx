@@ -32,8 +32,8 @@ export default async function ReceitaPage({ params, searchParams }: PageProps) {
     getDimensionTypeByCode(tenant.tenantId, DIMENSION_CODES.PRODUTO),
     getDimensionTypes(tenant.tenantId),
   ]);
-  // Hierarquias pelas quais a receita pode ser lançada/condicionada (Produto, Conta e Centro de Custo não se aplicam).
-  const excluded: string[] = [DIMENSION_CODES.PRODUTO, DIMENSION_CODES.CONTA, DIMENSION_CODES.CENTRO_CUSTO];
+  // Hierarquias pelas quais a receita pode ser lançada/condicionada (Produto tem coluna própria).
+  const excluded: string[] = [DIMENSION_CODES.PRODUTO];
   const dimTypes = allTypes.filter((d) => !excluded.includes(d.code));
   const dimType =
     dimTypes.find((d) => d.id === searchParams.dim) ??
@@ -49,7 +49,7 @@ export default async function ReceitaPage({ params, searchParams }: PageProps) {
   const ruleGroups = dimTypes.map((d, i) => ({
     typeId: d.id,
     name: d.name,
-    items: buildDimensionHierarchy(treesByType[i]).rows.map((r) => ({ id: r.item.id, name: r.item.name, depth: r.depth })),
+    items: buildDimensionHierarchy(treesByType[i]).rows.map((r) => ({ id: r.item.id, name: r.item.name, parentId: r.item.parentNodeId })),
   }));
 
   const header = (
