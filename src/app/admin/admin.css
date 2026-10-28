@@ -1239,8 +1239,8 @@ a.orc-module:hover { border-color: #3E6FE0; box-shadow: 0 6px 16px rgba(62,111,2
 .rec-panel { display: flex; flex-direction: column; gap: 12px; max-width: 760px; align-items: flex-start; }
 .rec-hint { color: #6b7088; font-size: 13px; margin: 0; }
 .rec-ded-row { display: flex; gap: 8px; align-items: center; }
-.rec-ded-row input:first-child { width: 220px; }
-.rec-ded-row input:nth-child(2) { width: 90px; text-align: right; }
+.rec-ded-row input:nth-of-type(1) { width: 220px; }
+.rec-ded-row input:nth-of-type(2) { width: 90px; text-align: right; }
 .rec-link { background: none; border: none; color: #b3261e; cursor: pointer; font-size: 12.5px; }
 .rec-presets { display: flex; gap: 6px; flex-wrap: wrap; }
 .rec-fx-head { display: flex; gap: 12px; align-items: flex-end; }
@@ -1511,3 +1511,5 @@ select.rec-kind option:checked { background: #fff; color: #1C2033; }
 .rec-rule-btn.is-set { border-style: solid; border-color: #F59E0B; background: #FFF4E0; color: #B45309; font-weight: 600; }
 .rec-rules--modal { margin-left: 0; max-width: none; }
 .rec-rules--modal .rec-rule-row { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.2fr) 110px 36px; }
+
+.rec-ded-row .rec-rule-btn { width: 34px; padding: 0; justify-content: center; margin-left: 0; flex: none; }
