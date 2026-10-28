@@ -742,7 +742,7 @@
     "globalCurrencies": "Monedas",
     "currencyName": "Nombre",
     "currencyNamePlaceholder": "Ej.: Dólar estadounidense",
-    "currencyAdd": "Agregar moneda",
+    "currencyAdd": "Agregar",
     "parGroupGeneral": "General",
     "parGroupRevenue": "Ingresos",
     "parGroupCosts": "Costos",
@@ -751,7 +751,10 @@
     "parNavLabel": "Parámetros por módulo",
     "productService": "Producto/Servicio",
     "parGroupBudget": "Este presupuesto",
-    "fxSectionTitle": "Tasas mensuales de este presupuesto"
+    "fxSectionTitle": "Tasas mensuales de este presupuesto",
+    "currencyBaseHint": "Escribe la sigla (ej.: USD) y agrégala. Luego informa la tasa de cada mes.",
+    "currencyInvalid": "Sigla inválida: usa 3 letras (ej.: USD).",
+    "fxRepeatAll": "Repetir enero en los 12 meses"
   },
   "erpCodes": {
     "title": "Códigos del ERP",
