@@ -749,7 +749,8 @@
     "parInputs": "Insumos",
     "parSoon": "pronto",
     "parNavLabel": "Parámetros por módulo",
-    "productService": "Producto/Servicio"
+    "productService": "Producto/Servicio",
+    "parGroupBudget": "Este presupuesto"
   },
   "erpCodes": {
     "title": "Códigos del ERP",

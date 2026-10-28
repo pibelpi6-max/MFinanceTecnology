@@ -61,7 +61,7 @@ interface Props {
 }
 
 type Tab = "params" | "assumptions" | "entry" | "analysis";
-type ParamTab = "products" | "deductions" | "fx";
+type ParamTab = "products" | "deductions";
 
 const TOTAL_KEY = "__total";
 const MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
@@ -80,7 +80,7 @@ export function ReceitaClient(p: Props) {
   const search = useSearchParams();
   const [pending, startTransition] = useTransition();
   const [tab, setTab] = useState<Tab>("entry");
-  const [paramTab, setParamTab] = useState<ParamTab>("fx");
+  const [paramTab, setParamTab] = useState<ParamTab>("deductions");
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -605,7 +605,7 @@ export function ReceitaClient(p: Props) {
       {tab === "params" && (
         <>
           <div className="rec-metrics rec-subtabs">
-            {([["fx", t("tabFx")], ["deductions", t("tabDeductions")], ["products", t("paramProducts")]] as [ParamTab, string][]).map(([k, label]) => (
+            {([["deductions", t("tabDeductions")], ["products", t("paramProducts")]] as [ParamTab, string][]).map(([k, label]) => (
               <button key={k} className={paramTab === k ? "active" : ""} onClick={() => setParamTab(k)}>
                 <ParamIcon id={k} />
                 {label}
@@ -629,7 +629,6 @@ export function ReceitaClient(p: Props) {
           {paramTab === "deductions" && (
             <DeductionDefaultsPanel orcamentoId={p.orcamentoId} defaults={p.deductionDefaults ?? []} rules={p.deductionRules ?? []} groups={p.ruleGroups} products={p.products} onError={setError} />
           )}
-          {paramTab === "fx" && <FxPanel orcamentoId={p.orcamentoId} rates={p.rates} companyCurrencies={p.companyCurrencies ?? []} onError={setError} />}
         </>
       )}
 
@@ -948,7 +947,7 @@ function DeductionDefaultsPanel({ orcamentoId, defaults, rules, groups, products
   );
 }
 
-function FxPanel({ orcamentoId, rates, companyCurrencies, onError }: { orcamentoId: string; rates: RateTable; companyCurrencies: string[]; onError: (s: string | null) => void }) {
+export function FxPanel({ orcamentoId, rates, companyCurrencies, onError }: { orcamentoId: string; rates: RateTable; companyCurrencies: string[]; onError: (s: string | null) => void }) {
   const t = useTranslations("receita");
   const router = useRouter();
   const [currency, setCurrency] = useState("");

@@ -749,7 +749,8 @@
     "parInputs": "Inputs",
     "parSoon": "soon",
     "parNavLabel": "Parameters by module",
-    "productService": "Product/Service"
+    "productService": "Product/Service",
+    "parGroupBudget": "This budget"
   },
   "erpCodes": {
     "title": "ERP codes",

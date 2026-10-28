@@ -5,7 +5,7 @@ import { getOrcamentoById } from "@/lib/orcamentos/queries";
 import { getDimensionTypeByCode, getDimensionTree } from "@/lib/dimensions/queries";
 import { DIMENSION_CODES } from "@/lib/dimensions/constants";
 import { buildDimensionHierarchy } from "@/lib/dimensions/hierarchy";
-import { getItemKinds, getTenantCurrencies } from "@/lib/receita/queries";
+import { getCurrencyRates, getItemKinds, getTenantCurrencies } from "@/lib/receita/queries";
 import { BackToMapLink } from "@/components/orcamentos/BackToMapLink";
 import { ModuleTitle } from "@/components/orcamentos/ModuleTitle";
 import { getUserPreference } from "@/app/_actions/userPreferences";
@@ -22,10 +22,11 @@ export default async function ParametrosPage({ params }: { params: { id: string 
   const tOrc = await getTranslations("orcamentos");
 
   const produtoType = await getDimensionTypeByCode(tenant.tenantId, DIMENSION_CODES.PRODUTO);
-  const [nodes, kinds, currencies, prefs] = await Promise.all([
+  const [nodes, kinds, currencies, rates, prefs] = await Promise.all([
     produtoType ? getDimensionTree(tenant.tenantId, produtoType.id, orcamento.year, orcamento.conjunto_estrutura_id, true) : Promise.resolve([]),
     getItemKinds(tenant.tenantId),
     getTenantCurrencies(tenant.tenantId),
+    getCurrencyRates(tenant.tenantId, orcamento.id, orcamento.year),
     getUserPreference<TablePrefs>("parametros_produtos_cols").catch(() => null),
   ]);
   const hierarchy = buildDimensionHierarchy(nodes);
@@ -63,6 +64,7 @@ export default async function ParametrosPage({ params }: { params: { id: string 
               products={products}
               productPrefs={prefs ?? undefined}
               currencies={currencies}
+              rates={rates}
             />
           )}
         </div>
