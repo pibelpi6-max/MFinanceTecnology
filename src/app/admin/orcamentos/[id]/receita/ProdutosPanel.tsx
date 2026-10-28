@@ -195,7 +195,7 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
             <input value={editCode} onChange={(e) => setEditCode(e.target.value)} onKeyDown={onKey} />
           </label>
           <label className="rec-f-name">
-            {t("product")}
+            {isItem && editKind === "servico" ? t("kindService") : t("product")}
             <input autoFocus value={editName} onChange={(e) => setEditName(e.target.value)} onKeyDown={onKey} />
           </label>
         </div>
