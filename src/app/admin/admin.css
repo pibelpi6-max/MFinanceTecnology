@@ -1449,10 +1449,11 @@ select.rec-kind option:checked { background: #fff; color: #1C2033; }
 
 /* Seletor Produto/Serviço com as mesmas cores dos selos da tabela */
 .rec-edit .rec-seg-thumb { transition: transform .22s cubic-bezier(.4, 0, .2, 1), background-color .22s ease; box-shadow: none; }
-.rec-edit .rec-seg[data-on="produto"] .rec-seg-thumb { background: #e9efff; }
-.rec-edit .rec-seg[data-on="servico"] .rec-seg-thumb { background: #fff1e0; }
+.rec-edit .rec-seg[data-on="produto"] .rec-seg-thumb { background: #fff; box-shadow: 0 1px 3px rgba(28, 32, 51, .15); }
+.rec-edit .rec-seg[data-on="servico"] .rec-seg-thumb { box-shadow: 0 1px 3px rgba(28, 32, 51, .15); }
+.rec-edit .rec-seg[data-on="servico"] .rec-seg-thumb { background: #fff; }
 .rec-edit .rec-seg[data-on="produto"] button.on { color: #3E6FE0; }
-.rec-edit .rec-seg[data-on="servico"] button.on { color: #a45a00; }
+.rec-edit .rec-seg[data-on="servico"] button.on { color: #3E6FE0; }
 
 /* Câmbio: botão de repetir em cada mês e seletor de moedas */
 .rec-fx-cell { position: relative; display: block; }
