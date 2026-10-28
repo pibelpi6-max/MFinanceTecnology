@@ -223,12 +223,28 @@ export function ConfiguracoesClient({
   const [editNodeLoading, setEditNodeLoading] = useState(false);
   const [editNodeError, setEditNodeError] = useState<string | null>(null);
 
+  // Item recém-criado (junto com a estrutura) que deve abrir já em edição assim que chegar na árvore.
+  const [pendingEditNodeId, setPendingEditNodeId] = useState<string | null>(null);
+
   function startInlineEditNode(node: DimensionNodeRow) {
     setEditingNodeId(node.id);
     setEditNodeCode(node.code);
     setEditNodeName(node.name);
     setEditNodeError(null);
   }
+
+  useEffect(() => {
+    if (!pendingEditNodeId) return;
+    for (const list of Object.values(nodesByStructure)) {
+      const node = list.find((n) => n.id === pendingEditNodeId);
+      if (node) {
+        startInlineEditNode(node);
+        setPendingEditNodeId(null);
+        return;
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingEditNodeId, nodesByStructure]);
 
   function cancelInlineEditNode() {
     setEditingNodeId(null);
@@ -1101,11 +1117,26 @@ export function ConfiguracoesClient({
           mode={structureModal?.mode ?? "create"}
           source={structureModal?.source ?? null}
           year={year}
-          onSaved={(newStructureId) => {
-            if (structureModal) {
-              setExpandedStructureId((prev) => ({ ...prev, [structureModal.type.id]: newStructureId }));
+          onSaved={async (newStructureId) => {
+            const current = structureModal;
+            if (current) {
+              setExpandedStructureId((prev) => ({ ...prev, [current.type.id]: newStructureId }));
             }
             setStructureModal(null);
+            // Estrutura nova já nasce com um primeiro item, aberto para o usuário dar o nome.
+            if (current?.mode === "create") {
+              const first = await createDimensionNode({
+                dimensionTypeId: current.type.id,
+                structureId: newStructureId,
+                code: generateItemCode(
+                  new Set((structuresByType[current.type.id] ?? []).flatMap((st) => (nodesByStructure[st.id] ?? []).map((n) => n.code))),
+                ),
+                name: td("new"),
+                parentNodeId: null,
+                year,
+              });
+              if (first.id) setPendingEditNodeId(first.id);
+            }
             router.refresh();
           }}
         />

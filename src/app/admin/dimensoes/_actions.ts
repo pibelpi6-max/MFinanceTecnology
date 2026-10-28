@@ -8,6 +8,8 @@ import { BATCH_REF_PREFIX, type ImportRunSummary } from "@/lib/import/types";
 interface ActionResult {
   success?: true;
   error?: string;
+  /** Id do registro criado, quando a ação cria um. */
+  id?: string;
 }
 
 async function requireTenant() {
@@ -131,7 +133,7 @@ export async function createDimensionNode(input: {
 
     revalidatePath("/admin/dimensoes");
     revalidatePath("/admin/configuracoes");
-    return { success: true };
+    return { success: true, id: node.id };
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Erro inesperado" };
   }
