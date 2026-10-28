@@ -47,3 +47,6 @@ input:focus, input:focus-visible, select:focus, select:focus-visible, textarea:f
   border-color: #3E6FE0;
   box-shadow: 0 0 0 3px rgba(62, 111, 224, .15);
 }
+
+/* Campos numéricos: valor alinhado à direita em todo o sistema */
+input[inputmode="decimal"], input[inputmode="numeric"], input[type="number"] { text-align: right; }
