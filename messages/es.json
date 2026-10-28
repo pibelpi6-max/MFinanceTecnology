@@ -607,7 +607,7 @@
     "calcGross": "= Precio × Volumen",
     "calcDeduction": "= Bruta × %",
     "calcNet": "= Bruta − Deducciones",
-    "tabParams": "Parámetros",
+    "tabParams": "Deducciones",
     "tabAnalysis": "Análisis",
     "paramProducts": "Deducciones por producto",
     "analysisHint": "Vista calculada (solo lectura): Ingreso bruto = Precio × Volumen; Ingreso neto = Bruto − Deducciones.",

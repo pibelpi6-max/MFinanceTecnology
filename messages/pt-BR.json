@@ -607,7 +607,7 @@
     "calcGross": "= Preço × Volume",
     "calcDeduction": "= Bruta × %",
     "calcNet": "= Bruta − Deduções",
-    "tabParams": "Parâmetros",
+    "tabParams": "Deduções",
     "tabAnalysis": "Análises",
     "paramProducts": "Deduções por produto",
     "analysisHint": "Visão calculada (somente leitura): Receita bruta = Preço × Volume; Receita líquida = Bruta − Deduções.",
