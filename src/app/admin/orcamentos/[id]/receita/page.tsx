@@ -5,7 +5,7 @@ import { getOrcamentoById } from "@/lib/orcamentos/queries";
 import { getDimensionTypeByCode, getDimensionTree, getDimensionTypes } from "@/lib/dimensions/queries";
 import { DIMENSION_CODES } from "@/lib/dimensions/constants";
 import { buildDimensionHierarchy } from "@/lib/dimensions/hierarchy";
-import { getDeductionDefaults, getDeductionLabels, getDeductionRules, getItemKinds, getPremises, getReceitaData } from "@/lib/receita/queries";
+import { getDeductionDefaults, getDeductionLabels, getDeductionRules, getItemKinds, getPremises, getReceitaData, getRevenueDimensionIds } from "@/lib/receita/queries";
 import { BackToMapLink } from "@/components/orcamentos/BackToMapLink";
 import { ModuleTitle } from "@/components/orcamentos/ModuleTitle";
 import { getUserPreference } from "@/app/_actions/userPreferences";
@@ -15,7 +15,7 @@ import { ReceitaClient, type ProductRow } from "./ReceitaClient";
 
 interface PageProps {
   params: { id: string };
-  searchParams: { entidade?: string; moeda?: string; dim?: string };
+  searchParams: { moeda?: string };
 }
 
 export default async function ReceitaPage({ params, searchParams }: PageProps) {
@@ -35,22 +35,23 @@ export default async function ReceitaPage({ params, searchParams }: PageProps) {
   // Hierarquias pelas quais a receita pode ser lançada/condicionada (Produto tem coluna própria).
   const excluded: string[] = [DIMENSION_CODES.PRODUTO];
   const dimTypes = allTypes.filter((d) => !excluded.includes(d.code));
-  const dimType =
-    dimTypes.find((d) => d.id === searchParams.dim) ??
-    dimTypes.find((d) => d.code === DIMENSION_CODES.ENTIDADE) ??
-    dimTypes[0] ??
-    null;
   const conjunto = orcamento.conjunto_estrutura_id;
   const [productNodes, treesByType] = await Promise.all([
     produtoType ? getDimensionTree(tenant.tenantId, produtoType.id, orcamento.year, conjunto) : Promise.resolve([]),
     Promise.all(dimTypes.map((d) => getDimensionTree(tenant.tenantId, d.id, orcamento.year, conjunto))),
   ]);
-  const entityNodes = dimType ? treesByType[dimTypes.indexOf(dimType)] : [];
+  const hierarchies = treesByType.map((nodes) => buildDimensionHierarchy(nodes).rows);
   const ruleGroups = dimTypes.map((d, i) => ({
     typeId: d.id,
     name: d.name,
-    items: buildDimensionHierarchy(treesByType[i]).rows.map((r) => ({ id: r.item.id, name: r.item.name, parentId: r.item.parentNodeId })),
+    items: hierarchies[i].map((r) => ({ id: r.item.id, name: r.item.name, parentId: r.item.parentNodeId })),
   }));
+  // Itens de cada hierarquia (com nível) para os seletores de recorte e o "Detalhar por".
+  const dimNodes = Object.fromEntries(
+    dimTypes.map((d, i) => [d.id, hierarchies[i].map((r) => ({ id: r.item.id, name: r.item.name, depth: r.depth, parentId: r.item.parentNodeId }))]),
+  );
+  const defaultTypeId = (dimTypes.find((d) => d.code === DIMENSION_CODES.ENTIDADE) ?? dimTypes[0])?.id ?? null;
+  const savedCarried = (await getRevenueDimensionIds(tenant.tenantId, orcamento.id)).filter((id) => dimTypes.some((d) => d.id === id));
 
   const header = (
     <div className="admin-subheader">
@@ -94,14 +95,6 @@ export default async function ReceitaPage({ params, searchParams }: PageProps) {
     versionId: r.item.versionId,
     validFromYear: r.item.validFromYear,
   }));
-  const entities = buildDimensionHierarchy(entityNodes).rows.map((r) => ({ id: r.item.id, name: r.item.name, depth: r.depth, parentId: r.item.parentNodeId }));
-  const entityId =
-    searchParams.entidade === "all" || entities.some((e) => e.id === searchParams.entidade)
-      ? (searchParams.entidade as string)
-      : entities.length > 0
-        ? entities[0].id
-        : "all";
-
   const premises = await getPremises(tenant.tenantId, orcamento.id);
   const data = await getReceitaData(tenant.tenantId, orcamento.id, orcamento.year);
   const displayCurrency = data.currencies.includes(searchParams.moeda ?? "") ? (searchParams.moeda as string) : "BRL";
@@ -120,12 +113,12 @@ export default async function ReceitaPage({ params, searchParams }: PageProps) {
             deductionDefaults={deductionDefaults}
             deductionRules={deductionRules}
             products={products}
-            entities={entities}
             dimensions={dimTypes.map((d) => ({ id: d.id, name: d.name }))}
-            dimId={dimType?.id ?? null}
+            dimNodes={dimNodes}
+            savedCarried={savedCarried}
+            defaultTypeId={defaultTypeId}
             ruleGroups={ruleGroups}
             premises={premises}
-            entityId={entityId}
             displayCurrency={displayCurrency}
             currencies={data.currencies}
             entries={data.entries}

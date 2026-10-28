@@ -1555,3 +1555,16 @@ select.rec-kind option:checked { background: #fff; color: #1C2033; }
 .rec-prem-form .rec-seg button { position: relative; z-index: 1; height: 34px; font-size: 14px; border-radius: 8px; background: transparent; box-shadow: none; transition: color .2s ease; }
 .rec-prem-form .rec-seg button.on { background: transparent; box-shadow: none; color: #fff; font-weight: 600; }
 .rec-prem-form .rec-seg-thumb { top: 3px; bottom: 3px; left: 3px; width: calc(50% - 3px); border-radius: 8px; background: #3E6FE0; box-shadow: none; }
+
+/* Receita > Lançamentos: hierarquias carregadas pela venda e recorte em tela */
+.rec-slice { display: flex; flex-direction: column; gap: 12px; padding: 14px 16px; border: 1px solid #E6E8F0; border-radius: 14px; background: #FAFBFE; margin-bottom: 12px; }
+.rec-slice-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.rec-slice-row--end { align-items: flex-end; gap: 14px; }
+.rec-slice-lbl { font-size: 13px; color: #5B6178; min-width: 120px; }
+.rec-slice-hint { font-size: 12.5px; color: #8A90A6; }
+.rec-slice-now { font-size: 13px; color: #1C2033; padding-bottom: 8px; }
+.rec-slice label { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: #5B6178; }
+.rec-slice select { height: 38px; min-width: 190px; border: 1px solid #D5DAEA; border-radius: 10px; background: #fff; padding: 0 10px; font-size: 14px; color: #1C2033; }
+.rec-chip { padding: 5px 14px; border-radius: 999px; border: 1px solid #D5DAEA; background: #fff; color: #5B6178; font-size: 13px; cursor: pointer; font-family: inherit; }
+.rec-chip.on { background: #3E6FE0; border-color: #3E6FE0; color: #fff; font-weight: 600; }
+.rec-chip:disabled { opacity: .6; cursor: default; }

@@ -63,6 +63,11 @@ describe("condições especiais por estrutura", () => {
   const base = { productId: "p1", code: "", label: "ICMS", pct: 18 };
   const r = (entityId: string | null, productId: string | null, pct: number): DeductionRule => ({ label: "ICMS", entityId, productId, pct });
 
+  it("a venda pode carregar várias dimensões: a condição vale em qualquer uma delas", () => {
+    expect(effectivePct(base, [r("varejo", null, 12)], { ...ctx, entityParents: { ...ctx.entityParents, varejo: null } }, ["sp", "varejo"], "p1")).toBe(12);
+    expect(effectivePct(base, [r("ba", null, 12)], ctx, ["sp", "varejo"], "p1")).toBe(18);
+  });
+
   it("sem condição vale o padrão do item", () => {
     expect(effectivePct(base, [], ctx, "sp", "p1")).toBe(18);
     expect(effectivePct(base, [r("ba", null, 20)], ctx, "sp", "p1")).toBe(18);

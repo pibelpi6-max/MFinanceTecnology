@@ -3,6 +3,22 @@ import type { Deduction, RateTable, RevenueLine } from "./calc";
 
 export interface ReceitaEntry extends RevenueLine {
   entityId: string | null;
+  /** Demais dimensões da venda: id do tipo de hierarquia -> id do item. */
+  extra: Record<string, string>;
+}
+
+/** Hierarquias que as vendas do orçamento carregam. Tolerante: sem a migration 0028 devolve []. */
+export async function getRevenueDimensionIds(tenantId: string, orcamentoId: string): Promise<string[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("orcamentos")
+    .select("revenue_dimension_type_ids")
+    .eq("tenant_id", tenantId)
+    .eq("id", orcamentoId)
+    .maybeSingle();
+  if (error || !data) return [];
+  const ids = (data as { revenue_dimension_type_ids?: string[] | null }).revenue_dimension_type_ids;
+  return Array.isArray(ids) ? ids : [];
 }
 
 export interface ReceitaData {
@@ -17,11 +33,10 @@ export async function getReceitaData(tenantId: string, orcamentoId: string, year
   const [e, d, r] = await Promise.all([
     supabase
       .from("revenue_entries")
-      .select("product_node_id, entity_node_id, month, currency, volume, unit_price")
+      .select("product_node_id, entity_node_id, extra_dimensions, month, currency, volume, unit_price")
       .eq("tenant_id", tenantId)
       .eq("orcamento_id", orcamentoId)
-      .eq("year", year)
-      .eq("extra_dimensions", "{}"),
+      .eq("year", year),
     supabase
       .from("revenue_deductions")
       .select("product_node_id, code, label, pct, sort_order")
@@ -42,6 +57,7 @@ export async function getReceitaData(tenantId: string, orcamentoId: string, year
   const entries: ReceitaEntry[] = (e.data ?? []).map((x) => ({
     productId: x.product_node_id,
     entityId: x.entity_node_id,
+    extra: (x.extra_dimensions && typeof x.extra_dimensions === "object" ? x.extra_dimensions : {}) as Record<string, string>,
     month: x.month,
     currency: x.currency,
     volume: Number(x.volume),
