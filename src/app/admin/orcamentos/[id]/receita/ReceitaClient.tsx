@@ -1077,12 +1077,9 @@ function PremissasPanel({ orcamentoId, premises, products, groups, carriedIds, o
     <div className="rec-panel">
       <div className="rec-prem-head">
         <Button variant="accent-blue" size="sm" className="px-3" onClick={() => open()}>+ {t("premNew")}</Button>
-        <span className="rec-hint" style={{ margin: 0 }}>{t("premCount", { count: premises.length })}</span>
       </div>
 
-      {premises.length === 0 ? (
-        <p className="rec-hint">{t("premEmpty")}</p>
-      ) : (
+      {premises.length === 0 ? null : (
         <div className="rec-prem-table">
           <div className="rec-prem-row rec-prem-headrow">
             <span>{t("colPremise")}</span><span>{t("colBase")}</span><span>{t("colScope")}</span><span>{t("colFrom")}</span><span>{t("colActive")}</span><span />
