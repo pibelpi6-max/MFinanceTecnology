@@ -413,7 +413,7 @@
     "matrizFields": {
       "title": "Lanzamientos de la Matriz Presupuestaria",
       "description": "Cada fila se convierte en un valor presupuestado para la combinación de entidad, centro de costo, cuenta, año y mes. Si ya existe un valor para la misma combinación, se reemplaza.",
-      "entidade": "Entidad",
+      "departamentos": "Departamentos",
       "centroCusto": "Centro de Costo",
       "conta": "Cuenta",
       "ano": "Año",
@@ -425,7 +425,7 @@
     "realizadoFields": {
       "title": "Gastos Realizados",
       "description": "Cada fila se convierte en un nuevo gasto realizado (no reemplaza lanzamientos existentes).",
-      "entidade": "Entidad",
+      "departamentos": "Departamentos",
       "centroCusto": "Centro de Costo",
       "conta": "Cuenta",
       "ano": "Año",
@@ -439,7 +439,7 @@
       "description": "Cada fila se convierte en un paquete nuevo, siempre creado como borrador (el estado inicial no se puede definir en la importación).",
       "nome": "Nombre",
       "centroCusto": "Centro de Costo",
-      "entidade": "Entidad"
+      "departamentos": "Departamentos"
     }
   },
   "orcamentos": {

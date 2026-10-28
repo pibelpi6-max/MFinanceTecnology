@@ -50,7 +50,7 @@ export function ImportPacotesClient({
           label: t(DIMENSION_CODES.ENTIDADE),
           type: "node-ref",
           required: false,
-          aliases: [DIMENSION_CODES.ENTIDADE, "unidade"],
+          aliases: [DIMENSION_CODES.ENTIDADE, "entidade", "unidade"],
           options: entityNodes.map((n) => ({ value: n.id, label: n.name, code: n.code })),
         },
       ],

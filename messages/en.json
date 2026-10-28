@@ -413,7 +413,7 @@
     "matrizFields": {
       "title": "Budget Matrix entries",
       "description": "Each row becomes a budgeted value for the entity + cost center + account + year + month combination. An existing value for the same combination is replaced.",
-      "entidade": "Entity",
+      "departamentos": "Departments",
       "centroCusto": "Cost Center",
       "conta": "Account",
       "ano": "Year",
@@ -425,7 +425,7 @@
     "realizadoFields": {
       "title": "Actual Expenses",
       "description": "Each row becomes a new expense entry (existing entries are not replaced).",
-      "entidade": "Entity",
+      "departamentos": "Departments",
       "centroCusto": "Cost Center",
       "conta": "Account",
       "ano": "Year",
@@ -439,7 +439,7 @@
       "description": "Each row becomes a new package, always created as draft (the initial status cannot be set by the import).",
       "nome": "Name",
       "centroCusto": "Cost Center",
-      "entidade": "Entity"
+      "departamentos": "Departments"
     }
   },
   "orcamentos": {
