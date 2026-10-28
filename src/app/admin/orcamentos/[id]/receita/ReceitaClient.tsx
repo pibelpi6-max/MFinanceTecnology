@@ -15,6 +15,7 @@ import { TreeMultiSelect, type TreeMultiSelectLabels, type TreeSelectGroup } fro
 import { deletePremise, savePremise, setPremiseActive, saveDeductionDefaults, saveDeductionRules, saveRevenueEntries } from "./_actions";
 import { ReceitaCharts } from "./ReceitaCharts";
 import type { TablePrefs } from "@/components/ui/DataTable/types";
+import { TreeSelect } from "@/components/ui/tree/TreeSelect";
 import { ProdutosPanel } from "./ProdutosPanel";
 import { ReceitaGrid, type GridChange, type GridCol, type GridRow } from "./ReceitaGrid";
 
@@ -574,7 +575,7 @@ export function ReceitaClient(p: Props) {
         <div className="rec-slice-row rec-slice-row--end">
           <span className="rec-slice-lbl">{readOnly ? t("viewing") : t("launchingIn")}</span>
           {order.map((id) => (
-            <label
+            <div
               key={id}
               className={`rec-slice-dim${dragId === id ? " is-drag" : ""}`}
               onDragOver={(e) => { if (dragId && dragId !== id) e.preventDefault(); }}
@@ -584,19 +585,20 @@ export function ReceitaClient(p: Props) {
                 className="rec-slice-grip"
                 draggable
                 title={t("dragToReorder")}
-                onDragStart={(e) => { setDragId(id); e.dataTransfer.effectAllowed = "move"; const box = (e.currentTarget as HTMLElement).closest("label"); if (box) e.dataTransfer.setDragImage(box, 20, 20); }}
+                onDragStart={(e) => { setDragId(id); e.dataTransfer.effectAllowed = "move"; const box = (e.currentTarget as HTMLElement).closest(".rec-slice-dim"); if (box) e.dataTransfer.setDragImage(box, 20, 20); }}
                 onDragEnd={() => setDragId(null)}
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden><circle cx="9" cy="6" r="1.8" /><circle cx="15" cy="6" r="1.8" /><circle cx="9" cy="12" r="1.8" /><circle cx="15" cy="12" r="1.8" /><circle cx="9" cy="18" r="1.8" /><circle cx="15" cy="18" r="1.8" /></svg>
                 {p.dimensions.find((d) => d.id === id)?.name}
               </span>
-              <select value={sel[id]} onChange={(e) => setSel(id, e.target.value)} disabled={dirty}>
-                <option value="all">{t("allItems")}</option>
-                {(p.dimNodes[id] ?? []).map((n) => (
-                  <option key={n.id} value={n.id}>{`${"\u00A0\u00A0".repeat(n.depth)}${n.name}`}</option>
-                ))}
-              </select>
-            </label>
+              <TreeSelect
+                nodes={(p.dimNodes[id] ?? []).map((n) => ({ id: n.id, name: n.name, parentId: n.parentId }))}
+                value={sel[id]}
+                onChange={(v) => setSel(id, v)}
+                allLabel={t("allItems")}
+                disabled={dirty}
+              />
+            </div>
           ))}
         </div>
       )}

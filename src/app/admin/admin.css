@@ -1563,7 +1563,7 @@ select.rec-kind option:checked { background: #fff; color: #1C2033; }
 .rec-slice-lbl { font-size: 13px; color: #5B6178; min-width: 120px; }
 .rec-slice-hint { font-size: 12.5px; color: #8A90A6; }
 .rec-slice-now { font-size: 13px; color: #1C2033; padding-bottom: 8px; }
-.rec-slice label { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: #5B6178; }
+.rec-slice label, .rec-slice .rec-slice-dim { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: #5B6178; }
 .rec-slice select { height: 38px; min-width: 190px; border: 1px solid #D5DAEA; border-radius: 10px; background: #fff; padding: 0 10px; font-size: 14px; color: #1C2033; }
 .rec-chip { padding: 5px 14px; border-radius: 999px; border: 1px solid #D5DAEA; background: #fff; color: #5B6178; font-size: 13px; cursor: pointer; font-family: inherit; }
 .rec-chip.on { background: #3E6FE0; border-color: #3E6FE0; color: #fff; font-weight: 600; }
@@ -1678,3 +1678,17 @@ input[inputmode="decimal"], input[inputmode="numeric"], input[type="number"] { t
 .rec-slice-grip svg { color: #A3A9BD; }
 .rec-slice-dim.is-drag { opacity: .45; }
 .rec-slice-dim:has(.rec-slice-grip:active) .rec-slice-grip svg { color: #3E6FE0; }
+
+.tsel { position: relative; min-width: 190px; }
+.tsel-btn { width: 100%; height: 38px; display: flex; align-items: center; justify-content: space-between; gap: 8px; border: 1px solid #D5DAEA; border-radius: 10px; background: #fff; padding: 0 10px; font-size: 14px; color: #1C2033; cursor: pointer; text-align: left; }
+.tsel-btn:disabled { opacity: .6; cursor: default; }
+.tsel-btn svg { color: #8A90A6; flex: none; }
+.tsel-pop { position: absolute; z-index: 40; top: calc(100% + 4px); left: 0; min-width: 100%; max-height: 320px; overflow: auto; padding: 4px; background: #fff; border: 1px solid #D5DAEA; border-radius: 10px; box-shadow: 0 8px 24px rgba(28,32,51,.12); }
+.tsel-row { display: flex; align-items: center; gap: 4px; padding: 7px 10px; border-radius: 8px; font-size: 14px; color: #1C2033; cursor: pointer; white-space: nowrap; }
+.tsel-row:hover { background: #F2F5FD; }
+.tsel-row.on { background: #E9EFFF; color: #3E6FE0; font-weight: 600; }
+.tsel-sp { display: inline-block; width: 18px; flex: none; }
+.tsel-chev { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border: 0; background: transparent; color: #6b7088; cursor: pointer; border-radius: 4px; padding: 0; flex: none; }
+.tsel-chev:hover { background: #dfe6fb; color: #3E6FE0; }
+.tsel-chev svg { transition: transform .15s; }
+.tsel-chev.open svg { transform: rotate(90deg); }
