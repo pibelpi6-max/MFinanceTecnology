@@ -754,7 +754,8 @@
     "fxRepeatAll": "Repeat January for all 12 months",
     "parProductsSub": "General registry of products and services. Applies to all budgets and years.",
     "parCurrenciesSub": "Company currencies and the monthly rate of each one to convert to BRL. Rates apply to this budget.",
-    "dragToReorder": "Drag to change the level order"
+    "search": "Search",
+    "noResults": "No results"
   },
   "erpCodes": {
     "title": "ERP codes",

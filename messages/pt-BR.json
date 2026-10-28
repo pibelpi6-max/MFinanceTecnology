@@ -754,7 +754,8 @@
     "fxRepeatAll": "Repetir janeiro nos 12 meses",
     "parProductsSub": "Cadastro geral de produtos e serviços. Vale para todos os orçamentos e anos.",
     "parCurrenciesSub": "Moedas da empresa e a taxa mensal de cada uma para converter em BRL. As taxas valem para este orçamento.",
-    "dragToReorder": "Arraste para mudar a ordem dos níveis"
+    "search": "Buscar",
+    "noResults": "Nenhum resultado"
   },
   "erpCodes": {
     "title": "Códigos do ERP",
