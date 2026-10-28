@@ -335,7 +335,7 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
       render: (r) => <code className="settings-code">{r.code}</code>,
     },
     {
-      key: "name", label: t("product"), maxWidth: 420, getText: (r) => r.name, filterable: true,
+      key: "name", label: t("productService"), maxWidth: 420, getText: (r) => r.name, filterable: true,
       render: (r) => <span className={r.isLeaf ? "text-gray-800" : "font-semibold text-gray-900"}>{r.name}</span>,
     },
     {

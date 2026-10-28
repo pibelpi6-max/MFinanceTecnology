@@ -748,7 +748,8 @@
     "parGroupCosts": "Costs",
     "parInputs": "Inputs",
     "parSoon": "soon",
-    "parNavLabel": "Parameters by module"
+    "parNavLabel": "Parameters by module",
+    "productService": "Product/Service"
   },
   "erpCodes": {
     "title": "ERP codes",
