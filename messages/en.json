@@ -607,7 +607,7 @@
     "calcGross": "= Price × Volume",
     "calcDeduction": "= Gross × %",
     "calcNet": "= Gross − Deductions",
-    "tabParams": "Parameters",
+    "tabParams": "Deductions",
     "tabAnalysis": "Analyses",
     "paramProducts": "Deductions by product",
     "analysisHint": "Calculated view (read-only): Gross revenue = Price × Volume; Net revenue = Gross − Deductions.",
