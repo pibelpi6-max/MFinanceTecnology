@@ -1626,3 +1626,10 @@ select.rec-kind option:checked { background: #fff; color: #1C2033; }
 .rec-edit--compact .rec-f-family { grid-column: 3; }
 @media (max-width: 800px) { .rec-edit--compact .rec-edit-main { grid-template-columns: 1fr; } .rec-edit--compact .rec-f-code, .rec-edit--compact .rec-f-name, .rec-edit--compact .rec-f-family { grid-column: 1; } }
 .rec-edit--compact .rec-edit-foot { border-top: 1px solid #e6e8f0; }
+
+/* Foco dos campos: borda azul suave no lugar do contorno preto do navegador */
+input:focus, input:focus-visible, select:focus, select:focus-visible, textarea:focus, textarea:focus-visible {
+  outline: none !important;
+  border-color: #3E6FE0;
+  box-shadow: 0 0 0 3px rgba(62, 111, 224, .15);
+}

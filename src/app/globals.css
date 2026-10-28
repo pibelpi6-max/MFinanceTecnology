@@ -40,3 +40,10 @@
 .datatable-native-scrollbar:not(.hide-scrollbar)::-webkit-scrollbar-thumb:active {
   background: #4f7f9c;
 }
+
+/* Foco dos campos: borda azul suave no lugar do contorno preto do navegador */
+input:focus, input:focus-visible, select:focus, select:focus-visible, textarea:focus, textarea:focus-visible {
+  outline: none !important;
+  border-color: #3E6FE0;
+  box-shadow: 0 0 0 3px rgba(62, 111, 224, .15);
+}
