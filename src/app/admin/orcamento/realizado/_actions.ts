@@ -1,5 +1,6 @@
 "use server";
 
+import { DIMENSION_CODES } from "@/lib/dimensions/constants";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentTenant } from "@/lib/tenant/getCurrentTenant";
@@ -115,7 +116,7 @@ export async function importExpenseEntries(input: {
     const month = Number(v.mes);
     const amount = Number(v.valor);
 
-    if (!v.entidade || !v.centro_custo || !v.conta || !Number.isFinite(year) || !Number.isFinite(month) || !(amount > 0)) {
+    if (!v[DIMENSION_CODES.ENTIDADE] || !v.centro_custo || !v.conta || !Number.isFinite(year) || !Number.isFinite(month) || !(amount > 0)) {
       errors.push({ rowIndex, message: "Linha incompleta, com valores inválidos ou valor zerado." });
       continue;
     }
@@ -124,7 +125,7 @@ export async function importExpenseEntries(input: {
       tenant_id: tenant.tenantId,
       year,
       month,
-      entity_node_id: v.entidade,
+      entity_node_id: v[DIMENSION_CODES.ENTIDADE],
       account_node_id: v.conta,
       cost_center_node_id: v.centro_custo,
       amount,

@@ -7,7 +7,7 @@
 export const DIMENSION_CODES = {
   CONTA: "conta",
   CENTRO_CUSTO: "centro_custo",
-  ENTIDADE: "entidade",
+  ENTIDADE: "departamentos",
   /** Usada pelo módulo de Receita (não protegida: pode ser criada/renomeada em Parâmetros). */
   PRODUTO: "produto",
 } as const;

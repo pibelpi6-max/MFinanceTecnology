@@ -1,5 +1,6 @@
 "use server";
 
+import { DIMENSION_CODES } from "@/lib/dimensions/constants";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentTenant } from "@/lib/tenant/getCurrentTenant";
@@ -103,7 +104,7 @@ export async function importMatrixEntries(input: {
     const month = Number(v.mes);
     const amount = Number(v.valor);
 
-    if (!v.entidade || !v.centro_custo || !v.conta || !Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(amount)) {
+    if (!v[DIMENSION_CODES.ENTIDADE] || !v.centro_custo || !v.conta || !Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(amount)) {
       errors.push({ rowIndex, message: "Linha incompleta ou com valores inválidos." });
       continue;
     }
@@ -113,7 +114,7 @@ export async function importMatrixEntries(input: {
         tenant_id: tenant.tenantId,
         year,
         month,
-        entity_node_id: v.entidade,
+        entity_node_id: v[DIMENSION_CODES.ENTIDADE],
         cost_center_node_id: v.centro_custo,
         account_node_id: v.conta,
         // A importação por planilha ainda não coleta valores de eixo

@@ -1,5 +1,6 @@
 "use server";
 
+import { DIMENSION_CODES } from "@/lib/dimensions/constants";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentTenant } from "@/lib/tenant/getCurrentTenant";
@@ -212,7 +213,7 @@ export async function importPackages(input: {
         year: input.year,
         name,
         cost_center_node_id: v.centro_custo || null,
-        entity_node_id: v.entidade || null,
+        entity_node_id: v[DIMENSION_CODES.ENTIDADE] || null,
         owner_user_id: tenant.userId,
         status: "rascunho",
         orcamento_id: input.orcamentoId,

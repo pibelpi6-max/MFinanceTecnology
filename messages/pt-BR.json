@@ -413,7 +413,7 @@
     "matrizFields": {
       "title": "Lançamentos da Matriz Orçamentária",
       "description": "Cada linha vira um valor orçado para a combinação de entidade, centro de custo, conta, ano e mês. Se já existir um valor pra mesma combinação, ele é substituído.",
-      "entidade": "Entidade",
+      "departamentos": "Departamentos",
       "centroCusto": "Centro de Custo",
       "conta": "Conta",
       "ano": "Ano",
@@ -425,7 +425,7 @@
     "realizadoFields": {
       "title": "Despesas Realizadas",
       "description": "Cada linha vira uma despesa realizada nova (não substitui lançamentos existentes).",
-      "entidade": "Entidade",
+      "departamentos": "Departamentos",
       "centroCusto": "Centro de Custo",
       "conta": "Conta",
       "ano": "Ano",
@@ -439,7 +439,7 @@
       "description": "Cada linha vira um pacote novo, sempre criado como rascunho (o status inicial não pode ser definido pela importação).",
       "nome": "Nome",
       "centroCusto": "Centro de Custo",
-      "entidade": "Entidade"
+      "departamentos": "Departamentos"
     }
   },
   "orcamentos": {
