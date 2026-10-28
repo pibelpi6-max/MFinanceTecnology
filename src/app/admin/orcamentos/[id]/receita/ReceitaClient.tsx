@@ -9,10 +9,10 @@ import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import {
   EMPTY_MONTH, applyPremises, avgPrice, computeByProduct, rateFor, sumMonths,
-  type Deduction, type MonthResult, type RateTable, type RevenueLine, type DeductionRule,
+  lineage, type Deduction, type MonthResult, type RateTable, type RevenueLine, type DeductionRule,
 } from "@/lib/receita/calc";
 import { TreeMultiSelect, type TreeMultiSelectLabels, type TreeSelectGroup } from "@/components/ui/tree/TreeMultiSelect";
-import { deletePremise, savePremise, saveCurrencyRates, setPremiseActive, saveDeductionDefaults, saveDeductionRules, saveRevenueEntries } from "./_actions";
+import { deletePremise, savePremise, saveCurrencyRates, setPremiseActive, saveDeductionDefaults, saveDeductionRules, saveRevenueEntries, saveRevenueDimensions } from "./_actions";
 import { ReceitaCharts } from "./ReceitaCharts";
 import type { TablePrefs } from "@/components/ui/DataTable/types";
 import { ProdutosPanel } from "./ProdutosPanel";
@@ -39,16 +39,18 @@ interface Props {
   deductionLabels?: string[];
   deductionDefaults?: { label: string; pct: number }[];
   products: ProductRow[];
-  entities: { id: string; name: string; depth?: number; parentId?: string | null }[];
   dimensions: { id: string; name: string }[];
-  dimId: string | null;
+  /** Itens de cada hierarquia (com nível), para os seletores de recorte. */
+  dimNodes: Record<string, { id: string; name: string; depth: number; parentId: string | null }[]>;
+  /** Hierarquias salvas no orçamento ("cada venda leva"); vazio = detectar pelos lançamentos. */
+  savedCarried: string[];
+  defaultTypeId: string | null;
   ruleGroups: TreeSelectGroup[];
   premises?: PremiseRow[];
   deductionRules?: DeductionRule[];
-  entityId: string; // "all" = consolidado (somente leitura)
   displayCurrency: string;
   currencies: string[];
-  entries: (RevenueLine & { entityId: string | null })[];
+  entries: (RevenueLine & { entityId: string | null; extra: Record<string, string> })[];
   deductions: Deduction[];
   rates: RateTable;
 }
@@ -78,8 +80,50 @@ export function ReceitaClient(p: Props) {
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
-  const readOnly = p.entityId === "all" && p.entities.length > 0;
-  const entityKey = p.entities.length === 0 ? null : p.entityId === "all" ? null : p.entityId;
+  // ---- Hierarquias que cada venda carrega e o recorte em tela ----
+  const nodeType = useMemo(() => {
+    const m: Record<string, string> = {};
+    for (const g of p.ruleGroups) for (const it of g.items) m[it.id] = g.typeId;
+    return m;
+  }, [p.ruleGroups]);
+  const nodeParents = useMemo(() => {
+    const m: Record<string, string | null> = {};
+    for (const g of p.ruleGroups) for (const it of g.items) m[it.id] = it.parentId ?? null;
+    return m;
+  }, [p.ruleGroups]);
+  const dimOrder = useMemo(() => p.dimensions.map((d) => d.id), [p.dimensions]);
+  const entriesDims = useMemo(
+    () =>
+      p.entries.map((e) => {
+        const dims: Record<string, string> = { ...e.extra };
+        if (e.entityId && nodeType[e.entityId]) dims[nodeType[e.entityId]] = e.entityId;
+        return { e, dims };
+      }),
+    [p.entries, nodeType]
+  );
+  const carried = useMemo(() => {
+    if (p.savedCarried.length > 0) return dimOrder.filter((id) => p.savedCarried.includes(id));
+    const used = new Set<string>();
+    for (const x of entriesDims) for (const k of Object.keys(x.dims)) used.add(k);
+    const ids = dimOrder.filter((id) => used.has(id));
+    if (ids.length > 0) return ids;
+    return p.defaultTypeId ? [p.defaultTypeId] : [];
+  }, [p.savedCarried, dimOrder, entriesDims, p.defaultTypeId]);
+  const selOf = (typeId: string): string => {
+    const v = search.get(`s_${typeId}`);
+    const nodes = p.dimNodes[typeId] ?? [];
+    if (v === "all") return "all";
+    if (v && nodes.some((n) => n.id === v)) return v;
+    return nodes[0]?.id ?? "all";
+  };
+  const sel: Record<string, string> = Object.fromEntries(carried.map((id) => [id, selOf(id)]));
+  const selKey = carried.map((id) => sel[id]).join("|");
+  // Consolidado (algum "Todos") é só leitura; para lançar, um item em cada hierarquia.
+  const readOnly = carried.length > 0 && carried.some((id) => sel[id] === "all");
+  const entityKey = carried.length === 0 || readOnly ? null : sel[carried[0]];
+  const extraKey: Record<string, string> = readOnly ? {} : Object.fromEntries(carried.slice(1).map((id) => [id, sel[id]]));
+  const sliceDims: Record<string, string> = readOnly ? {} : Object.fromEntries(carried.map((id) => [id, sel[id]]));
+  const dimsKey = (d: Record<string, string> | undefined) => JSON.stringify(Object.entries(d ?? {}).sort(([a], [b]) => (a < b ? -1 : 1)));
 
   const monthLabelsAll = MONTHS.map((m) => new Intl.DateTimeFormat(locale, { month: "short" }).format(new Date(2000, m - 1, 1)));
 
@@ -92,8 +136,16 @@ export function ReceitaClient(p: Props) {
   // ---- Linhas do recorte atual (entidade) ----
   const baseLines = useMemo(
     () =>
-      p.entries.filter((e) => (p.entityId === "all" ? true : p.entities.length === 0 ? true : e.entityId === p.entityId)),
-    [p.entries, p.entityId, p.entities.length]
+      entriesDims
+        .filter(({ dims }) => {
+          if (carried.length === 0) return true;
+          // Para lançar: exatamente o recorte escolhido. Consolidado: soma tudo que cai dentro (por linhagem).
+          if (!readOnly) return carried.every((id) => dims[id] === sel[id]) && Object.keys(dims).every((k) => carried.includes(k));
+          return carried.every((id) => sel[id] === "all" || (!!dims[id] && lineage(dims[id], nodeParents).includes(sel[id])));
+        })
+        .map(({ e, dims }) => ({ ...e, dims })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [entriesDims, carried, readOnly, selKey, nodeParents]
   );
 
   // edits[product][month] = {v,pr}
@@ -107,11 +159,11 @@ export function ReceitaClient(p: Props) {
   // Linhas efetivas = banco + edições pendentes
   const lines: RevenueLine[] = useMemo(() => {
     const map = new Map<string, RevenueLine>();
-    for (const l of baseLines) map.set(`${l.productId}:${l.entityId ?? ""}:${l.month}`, { ...l, currency: currencyEdits[l.productId] ?? l.currency });
+    for (const l of baseLines) map.set(`${l.productId}:${dimsKey(l.dims)}:${l.month}`, { ...l, currency: currencyEdits[l.productId] ?? l.currency });
     for (const [pid, months] of Object.entries(edits)) {
       for (const [m, e] of Object.entries(months)) {
-        const k = `${pid}:${entityKey ?? ""}:${m}`;
-        const cur = map.get(k) ?? { productId: pid, entityId: entityKey, month: Number(m), currency: currencyEdits[pid] ?? "BRL", volume: 0, unitPrice: 0 };
+        const k = `${pid}:${dimsKey(sliceDims)}:${m}`;
+        const cur = map.get(k) ?? { productId: pid, entityId: entityKey, dims: sliceDims, month: Number(m), currency: currencyEdits[pid] ?? "BRL", volume: 0, unitPrice: 0 };
         map.set(k, {
           ...cur,
           currency: currencyEdits[pid] ?? cur.currency,
@@ -121,18 +173,15 @@ export function ReceitaClient(p: Props) {
       }
     }
     return Array.from(map.values());
-  }, [baseLines, edits, currencyEdits, entityKey]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [baseLines, edits, currencyEdits, entityKey, selKey]);
 
   const ruleCtx = useMemo(() => ({
-    entityParents: Object.fromEntries(p.entities.map((e) => [e.id, e.parentId ?? null])),
+    entityParents: nodeParents,
     productParents: Object.fromEntries(p.products.map((x) => [x.id, x.parentId ?? null])),
-  }), [p.entities, p.products]);
+  }), [nodeParents, p.products]);
   // Premissas guardadas: aplicadas por cima do lançado (o lançado não muda).
-  const premiseCtx = useMemo(() => {
-    const nodeParents: Record<string, string | null> = {};
-    for (const g of p.ruleGroups) for (const it of g.items) nodeParents[it.id] = it.parentId ?? null;
-    return { ...ruleCtx, entityTypeId: p.dimId, nodeParents };
-  }, [ruleCtx, p.ruleGroups, p.dimId]);
+  const premiseCtx = useMemo(() => ({ ...ruleCtx, entityTypeId: null, nodeParents }), [ruleCtx, nodeParents]);
   const activePremises = useMemo(
     () => (p.premises ?? []).filter((x) => x.isActive).map((x) => ({ kind: x.kind, pct: x.pct, fromMonth: x.fromMonth, base: x.base, productIds: x.productIds, dimensionFilters: x.dimensionFilters })),
     [p.premises],
@@ -219,11 +268,24 @@ export function ReceitaClient(p: Props) {
     router.push(`${pathname}?${sp.toString()}`);
   }
 
-  function setDim(id: string) {
-    const sp = new URLSearchParams(search.toString());
-    sp.set("dim", id);
-    sp.delete("entidade");
-    router.push(`${pathname}?${sp.toString()}`);
+  function setSel(typeId: string, value: string) {
+    setParam(`s_${typeId}`, value);
+  }
+
+  const [detailType, setDetailType] = useState<string>("");
+  const [dimBusy, setDimBusy] = useState(false);
+  function toggleCarried(typeId: string) {
+    const has = carried.includes(typeId);
+    if (has && carried.length === 1) return;
+    const next = dimOrder.filter((id) => (id === typeId ? !has : carried.includes(id)));
+    setError(null);
+    setDimBusy(true);
+    startTransition(async () => {
+      const r = await saveRevenueDimensions({ orcamentoId: p.orcamentoId, typeIds: next });
+      setDimBusy(false);
+      if (r.error) return setError(r.error);
+      router.refresh();
+    });
   }
 
   function toggleProduct(id: string) {
@@ -246,6 +308,15 @@ export function ReceitaClient(p: Props) {
   const getInput = (pid: string, month: number, field: "v" | "pr"): string => {
     const e = edits[pid]?.[month]?.[field];
     if (e !== undefined) return e;
+    if (readOnly) {
+      // Consolidado: soma dos recortes (preço = média ponderada pelo volume).
+      const ls = premisedLines.filter((x) => x.productId === pid && x.month === month);
+      if (ls.length === 0) return "";
+      const vol = ls.reduce((a, x) => a + x.volume, 0);
+      if (field === "v") return fmtInput(vol);
+      const pr = vol > 0 ? ls.reduce((a, x) => a + x.unitPrice * x.volume, 0) / vol : ls.reduce((a, x) => a + x.unitPrice, 0) / ls.length;
+      return fmtInput(Math.round(pr * 10000) / 10000);
+    }
     const l = baseLines.find((x) => x.productId === pid && x.month === month);
     return l ? fmtInput(field === "v" ? l.volume : l.unitPrice) : "";
   };
@@ -269,8 +340,32 @@ export function ReceitaClient(p: Props) {
     return memo;
   }, [childrenOf, p.products]);
 
+  // "Detalhar por": volume de cada produto/família aberto nos itens de uma hierarquia (só no consolidado).
+  const detail = useMemo(() => {
+    if (!detailType || tab !== "entry" || !readOnly) return null;
+    const vols = new Map<string, Record<number, number>>();
+    const present = new Map<string, Set<string>>();
+    for (const l of premisedLines) {
+      const n = l.dims?.[detailType];
+      if (!n) continue;
+      let cur: string | null = l.productId;
+      while (cur) {
+        const key = `d|${cur}|${n}`;
+        const v = vols.get(key) ?? {};
+        v[l.month] = (v[l.month] ?? 0) + l.volume;
+        vols.set(key, v);
+        const set = present.get(cur) ?? new Set<string>();
+        set.add(n);
+        present.set(cur, set);
+        cur = ruleCtx.productParents[cur] ?? null;
+      }
+    }
+    return { vols, present };
+  }, [detailType, tab, readOnly, premisedLines, ruleCtx.productParents]);
+
   const unifiedRows: GridRow[] = useMemo(() => {
-    const rows: GridRow[] = visibleRows.map((r) => ({
+    const rows: GridRow[] = visibleRows.flatMap((r) => {
+      const main: GridRow = {
       key: r.id,
       depth: r.depth,
       label: r.name,
@@ -279,11 +374,18 @@ export function ReceitaClient(p: Props) {
       currency: r.isLeaf
         ? { value: currencyOf(r.id), options: p.currencies, onChange: (c: string) => { setSaved(false); setCurrencyEdits((s) => ({ ...s, [r.id]: c })); } }
         : undefined,
-    }));
+      };
+      const nodes = detail?.present.get(r.id);
+      if (!detail || !nodes) return [main];
+      const sub: GridRow[] = (p.dimNodes[detailType] ?? [])
+        .filter((n) => nodes.has(n.id))
+        .map((n) => ({ key: `d|${r.id}|${n.id}`, depth: r.depth + 1, label: n.name, detail: true }));
+      return [main, ...sub];
+    });
     rows.push({ key: TOTAL_KEY, depth: 0, label: t("total"), strong: true });
     return rows;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visibleRows, collapsed, currencyEdits, baseLines, p.currencies]);
+  }, [visibleRows, collapsed, currencyEdits, baseLines, p.currencies, detail, detailType]);
 
   const makeCols = (shown: Set<Measure>, period: Period): GridCol[] => {
     const periods: { label: string; months: number[]; month?: number }[] =
@@ -311,7 +413,7 @@ export function ReceitaClient(p: Props) {
       defs.push({
         key: "pr", label: t("secPrice"), measure: "pr",
         text: (row, months, month) => {
-          if (!row.pid) return "";
+          if (!row.pid || row.detail) return "";
           return month ? getInput(row.pid, month, "pr") : avgInput(row.pid, months);
         },
       });
@@ -320,6 +422,8 @@ export function ReceitaClient(p: Props) {
       defs.push({
         key: "v", label: t("secVolume"), measure: "v",
         text: (row, months, month) => {
+          const dv = detail?.vols.get(row.key);
+          if (dv) return qty.format(sum(months, (m) => dv[m] ?? 0));
           if (row.pid && month) return getInput(row.pid, month, "v");
           return qty.format(sum(months, (m) => agg(row.key)?.[m]?.volume ?? 0));
         },
@@ -367,7 +471,7 @@ export function ReceitaClient(p: Props) {
     }
     return cols;
   };
-  const colDeps = [aggregated, totals, byProduct, leavesUnder, edits, baseLines, p.deductions, p.displayCurrency, p.rates, money, qty];
+  const colDeps = [detail, aggregated, totals, byProduct, leavesUnder, edits, baseLines, p.deductions, p.displayCurrency, p.rates, money, qty];
   // Lançamento: só preço e volume por mês. Análise: tudo, com período à escolha.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const entryCols = useMemo(() => makeCols(new Set<Measure>(["pr", "v"]), "month"), colDeps);
@@ -399,7 +503,7 @@ export function ReceitaClient(p: Props) {
     const currencyByProduct: Record<string, string> = {};
     for (const l of lines) currencyByProduct[l.productId] = l.currency;
     startTransition(async () => {
-      const r = await saveRevenueEntries({ orcamentoId: p.orcamentoId, entityNodeId: entityKey, currencyByProduct, cells });
+      const r = await saveRevenueEntries({ orcamentoId: p.orcamentoId, entityNodeId: entityKey, extraDimensions: extraKey, currencyByProduct, cells });
       if (r.error) return setError(r.error);
       setEdits({});
       setCurrencyEdits({});
@@ -414,6 +518,58 @@ export function ReceitaClient(p: Props) {
     { id: "entry", label: t("tabEntry") },
     { id: "analysis", label: t("tabAnalysis") },
   ];
+  const sliceBar = (withCarried: boolean) => (
+    <div className="rec-slice">
+      {withCarried && p.dimensions.length > 1 && (
+        <div className="rec-slice-row">
+          <span className="rec-slice-lbl">{t("carriesLabel")}</span>
+          {p.dimensions.map((d) => (
+            <button
+              key={d.id}
+              type="button"
+              className={`rec-chip${carried.includes(d.id) ? " on" : ""}`}
+              aria-pressed={carried.includes(d.id)}
+              disabled={dirty || dimBusy}
+              onClick={() => toggleCarried(d.id)}
+            >
+              {carried.includes(d.id) ? "✓ " : ""}{d.name}
+            </button>
+          ))}
+          <span className="rec-slice-hint">{t("carriesHint")}</span>
+        </div>
+      )}
+      {carried.length > 0 && (
+        <div className="rec-slice-row rec-slice-row--end">
+          <span className="rec-slice-lbl">{readOnly ? t("viewing") : t("launchingIn")}</span>
+          {carried.map((id) => (
+            <label key={id}>
+              {p.dimensions.find((d) => d.id === id)?.name}
+              <select value={sel[id]} onChange={(e) => setSel(id, e.target.value)} disabled={dirty}>
+                <option value="all">{t("allItems")}</option>
+                {(p.dimNodes[id] ?? []).map((n) => (
+                  <option key={n.id} value={n.id}>{`${"\u00A0\u00A0".repeat(n.depth)}${n.name}`}</option>
+                ))}
+              </select>
+            </label>
+          ))}
+          {withCarried && readOnly && (
+            <label>
+              {t("detailBy")}
+              <select value={detailType} onChange={(e) => setDetailType(e.target.value)}>
+                <option value="">{t("noDetail")}</option>
+                {p.dimensions.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+              </select>
+            </label>
+          )}
+          {withCarried && !readOnly && (
+            <span className="rec-slice-now">
+              {t("valuesFor")} <strong>{carried.map((id) => (p.dimNodes[id] ?? []).find((n) => n.id === sel[id])?.name).filter(Boolean).join(" · ")}</strong>
+            </span>
+          )}
+        </div>
+      )}
+    </div>
+  );
   const monthLabels = monthLabelsAll;
   const grand = sumMonths(totals);
 
@@ -462,34 +618,14 @@ export function ReceitaClient(p: Props) {
       )}
 
       {tab === "assumptions" && (
-        <PremissasPanel orcamentoId={p.orcamentoId} premises={p.premises ?? []} products={p.products} groups={p.ruleGroups} entityTypeId={p.dimId} onError={setError} />
+        <PremissasPanel orcamentoId={p.orcamentoId} premises={p.premises ?? []} products={p.products} groups={p.ruleGroups} carriedIds={carried} onError={setError} />
       )}
 
       {tab === "entry" && (
         <>
-          <div className="rec-filters">
-            {p.dimensions.length > 1 && (
-              <label>
-                {t("launchBy")}
-                <select value={p.dimId ?? ""} onChange={(e) => setDim(e.target.value)} disabled={dirty}>
-                  {p.dimensions.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-                </select>
-              </label>
-            )}
-            {p.entities.length > 0 && (
-              <label>
-                {t("entity")}
-                <select value={p.entityId} onChange={(e) => setParam("entidade", e.target.value)} disabled={dirty}>
-                  <option value="all">{t("allEntities")}</option>
-                  {p.entities.map((e) => (
-                    <option key={e.id} value={e.id}>{e.name}</option>
-                  ))}
-                </select>
-              </label>
-            )}
-          </div>
+          {sliceBar(true)}
           <div className="rec-entry-bar">
-            <span>{readOnly ? t("selectEntityToEdit") : t("unifiedHint")}</span>
+            <span>{readOnly ? t("consolidatedHint") : t("unifiedHint")}</span>
             <div>
               <Button variant="ghost" size="sm" onClick={toggleFull}>{isFull ? t("exitFullscreen") : t("fullscreen")}</Button>
               {dirty && <Button variant="ghost" size="sm" onClick={() => { setEdits({}); setCurrencyEdits({}); }}>{t("discard")}</Button>}
@@ -511,26 +647,8 @@ export function ReceitaClient(p: Props) {
 
       {tab === "analysis" && (
         <>
+          {sliceBar(false)}
           <div className="rec-filters">
-            {p.dimensions.length > 1 && (
-              <label>
-                {t("launchBy")}
-                <select value={p.dimId ?? ""} onChange={(e) => setDim(e.target.value)} disabled={dirty}>
-                  {p.dimensions.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-                </select>
-              </label>
-            )}
-            {p.entities.length > 0 && (
-              <label>
-                {t("entity")}
-                <select value={p.entityId} onChange={(e) => setParam("entidade", e.target.value)} disabled={dirty}>
-                  <option value="all">{t("allEntities")}</option>
-                  {p.entities.map((e) => (
-                    <option key={e.id} value={e.id}>{e.name}</option>
-                  ))}
-                </select>
-              </label>
-            )}
             <label>
               {t("displayCurrency")}
               <select value={p.displayCurrency} onChange={(e) => setParam("moeda", e.target.value)}>
@@ -882,8 +1000,8 @@ type PremiseDraft = {
 const EMPTY_PREMISE: PremiseDraft = { id: null, kind: "volume_growth", pct: "", fromMonth: 1, base: "entered", productIds: [], dimensionFilters: {} };
 
 /** Premissas guardadas: lista + modal com recorte por produto/família e por dimensão (canal, unidade...). */
-function PremissasPanel({ orcamentoId, premises, products, groups, entityTypeId, onError }: {
-  orcamentoId: string; premises: PremiseRow[]; products: ProductRow[]; groups: TreeSelectGroup[]; entityTypeId: string | null; onError: (s: string | null) => void;
+function PremissasPanel({ orcamentoId, premises, products, groups, carriedIds, onError }: {
+  orcamentoId: string; premises: PremiseRow[]; products: ProductRow[]; groups: TreeSelectGroup[]; carriedIds: string[]; onError: (s: string | null) => void;
 }) {
   const t = useTranslations("receita");
   const locale = useLocale();
@@ -952,7 +1070,7 @@ function PremissasPanel({ orcamentoId, premises, products, groups, entityTypeId,
     for (const [tid, ids] of Object.entries(r.dimensionFilters)) for (const id of ids) out.push({ key: `${tid}${id}`, text: nameOf.get(id) ?? "?", dim: true });
     return out;
   };
-  const otherDim = (r: PremiseRow) => Object.keys(r.dimensionFilters).some((k) => k !== entityTypeId);
+  const otherDim = (r: PremiseRow) => Object.keys(r.dimensionFilters).some((k) => !carriedIds.includes(k));
 
   return (
     <div className="rec-panel">
@@ -1061,8 +1179,8 @@ function PremissasPanel({ orcamentoId, premises, products, groups, entityTypeId,
                 scope: summaryNames(draft),
               })}
             </p>
-            {Object.keys(draft.dimensionFilters).some((k) => (draft.dimensionFilters[k]?.length ?? 0) > 0 && k !== entityTypeId) && (
-              <p className="rec-hint">{t("premOtherDimHint")} {Object.entries(draft.dimensionFilters).filter(([k, v]) => v.length > 0 && k !== entityTypeId).map(([k]) => typeName(k)).join(", ")}.</p>
+            {Object.keys(draft.dimensionFilters).some((k) => (draft.dimensionFilters[k]?.length ?? 0) > 0 && !carriedIds.includes(k)) && (
+              <p className="rec-hint">{t("premOtherDimHint")} {Object.entries(draft.dimensionFilters).filter(([k, v]) => v.length > 0 && !carriedIds.includes(k)).map(([k]) => typeName(k)).join(", ")}.</p>
             )}
             <div style={{ minHeight: 220 }} />
           </div>

@@ -714,9 +714,18 @@
     "premScopeHint": "Sin marcar nada, aplica a todos.",
     "premSave": "Guardar premisa",
     "premSummary": "{kind} de {pct}% {unit} desde {month}, para: {scope}. Lo registrado no se modifica.",
-    "premOtherDimHint": "Esta premisa filtra por una jerarquía distinta de la elegida en \"Registrar por\"; solo tiene efecto en ventas registradas con esa dimensión. Jerarquía(s):",
+    "premOtherDimHint": "Esta premisa filtra por una jerarquía que las ventas de este presupuesto no llevan (ver \"Cada venta lleva\" en Lanzamientos); no tendrá efecto hasta que la marques. Jerarquía(s):",
     "premDeleteTitle": "Eliminar premisa",
-    "premDeleteBody": "¿Eliminar \"{name}\" ({pct})? Los números registrados no cambian."
+    "premDeleteBody": "¿Eliminar \"{name}\" ({pct})? Los números registrados no cambian.",
+    "carriesLabel": "Cada venta lleva",
+    "carriesHint": "elige las jerarquías que llevan las ventas de este presupuesto",
+    "launchingIn": "Cargando en",
+    "viewing": "Viendo",
+    "allItems": "Todos",
+    "valuesFor": "Los números de abajo valen para",
+    "consolidatedHint": "Consolidado: solo lectura. Para editar, elige un elemento en cada jerarquía.",
+    "detailBy": "Desglosar por",
+    "noDetail": "Sin desglose"
   },
   "erpCodes": {
     "title": "Códigos del ERP",

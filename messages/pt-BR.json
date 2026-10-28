@@ -714,9 +714,18 @@
     "premScopeHint": "Sem marcar nada, vale para todos.",
     "premSave": "Salvar premissa",
     "premSummary": "{kind} de {pct}% {unit} a partir de {month}, para: {scope}. O que você lançou não é alterado.",
-    "premOtherDimHint": "Esta premissa filtra por uma hierarquia diferente da escolhida em \"Lançar por\"; ela só tem efeito nas vendas lançadas com essa dimensão. Hierarquia(s):",
+    "premOtherDimHint": "Esta premissa filtra por uma hierarquia que as vendas deste orçamento não carregam (veja \"Cada venda leva\" em Lançamentos); ela não terá efeito até você marcá-la. Hierarquia(s):",
     "premDeleteTitle": "Excluir premissa",
-    "premDeleteBody": "Excluir \"{name}\" ({pct})? Os números lançados não mudam."
+    "premDeleteBody": "Excluir \"{name}\" ({pct})? Os números lançados não mudam.",
+    "carriesLabel": "Cada venda leva",
+    "carriesHint": "escolha as hierarquias que as vendas deste orçamento carregam",
+    "launchingIn": "Lançando em",
+    "viewing": "Vendo",
+    "allItems": "Todos",
+    "valuesFor": "Os números abaixo valem para",
+    "consolidatedHint": "Consolidado: só leitura. Para editar, escolha um item em cada hierarquia.",
+    "detailBy": "Detalhar por",
+    "noDetail": "Sem detalhe"
   },
   "erpCodes": {
     "title": "Códigos do ERP",

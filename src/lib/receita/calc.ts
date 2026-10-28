@@ -36,7 +36,7 @@ export interface RuleContext {
 }
 
 /** [id, pai, avô, ...]: a posição é a distância (0 = o próprio nó). */
-function lineage(id: string | null | undefined, parents: Record<string, string | null>): string[] {
+export function lineage(id: string | null | undefined, parents: Record<string, string | null>): string[] {
   const out: string[] = [];
   const seen = new Set<string>();
   let cur: string | null | undefined = id;
@@ -53,10 +53,11 @@ export function effectivePct(
   base: Deduction,
   rules: DeductionRule[],
   ctx: RuleContext,
-  entityId: string | null | undefined,
+  entityId: string | null | undefined | (string | null | undefined)[],
   productId: string,
 ): number {
-  const eLine = lineage(entityId, ctx.entityParents);
+  // A venda pode carregar várias dimensões: vale a linhagem de todas elas.
+  const eLine = Array.isArray(entityId) ? entityId.flatMap((id) => lineage(id, ctx.entityParents)) : lineage(entityId, ctx.entityParents);
   const pLine = lineage(productId, ctx.productParents);
   let best: { rank: [number, number, number]; pct: number } | null = null;
   for (const r of rules) {
@@ -113,7 +114,7 @@ export function computeByProduct(
   for (const l of lines) {
     const gross = grossOf(l, rates);
     const own = deductions.filter((d) => d.productId === l.productId);
-    const pct = rules.length === 0 ? own.reduce((s, d) => s + d.pct, 0) : own.reduce((s, d) => s + effectivePct(d, rules, ctx, l.entityId, l.productId), 0);
+    const pct = rules.length === 0 ? own.reduce((s, d) => s + d.pct, 0) : own.reduce((s, d) => s + effectivePct(d, rules, ctx, [l.entityId, ...Object.values(l.dims ?? {})], l.productId), 0);
     const ded = (gross * pct) / 100;
     const byMonth = (out[l.productId] ??= {});
     const cur = byMonth[l.month] ?? { ...EMPTY_MONTH };

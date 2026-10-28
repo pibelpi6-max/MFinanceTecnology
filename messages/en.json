@@ -714,9 +714,18 @@
     "premScopeHint": "Leave empty to apply to all.",
     "premSave": "Save assumption",
     "premSummary": "{kind} of {pct}% {unit} from {month}, for: {scope}. What you entered is not changed.",
-    "premOtherDimHint": "This assumption filters by a hierarchy different from the one chosen in \"Enter by\"; it only has effect on sales entered with that dimension. Hierarchy(ies):",
+    "premOtherDimHint": "This assumption filters by a hierarchy the sales of this budget do not carry (see \"Each sale carries\" in Entries); it has no effect until you tick it. Hierarchy(ies):",
     "premDeleteTitle": "Delete assumption",
-    "premDeleteBody": "Delete \"{name}\" ({pct})? Entered numbers do not change."
+    "premDeleteBody": "Delete \"{name}\" ({pct})? Entered numbers do not change.",
+    "carriesLabel": "Each sale carries",
+    "carriesHint": "choose the hierarchies the sales of this budget carry",
+    "launchingIn": "Entering for",
+    "viewing": "Viewing",
+    "allItems": "All",
+    "valuesFor": "The numbers below apply to",
+    "consolidatedHint": "Consolidated: read-only. To edit, pick one item in each hierarchy.",
+    "detailBy": "Break down by",
+    "noDetail": "No breakdown"
   },
   "erpCodes": {
     "title": "ERP codes",

@@ -11,6 +11,7 @@ interface Result {
   error?: string;
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const CURRENCY_RE = /^[A-Z]{3}$/;
 
 function refresh(orcamentoId: string) {
@@ -31,6 +32,8 @@ async function assertOrcamento(tenantId: string, orcamentoId: string): Promise<{
 export async function saveRevenueEntries(input: {
   orcamentoId: string;
   entityNodeId: string | null;
+  /** Demais dimensões da venda (id do tipo -> id do item). */
+  extraDimensions?: Record<string, string>;
   currencyByProduct: Record<string, string>;
   cells: { productId: string; month: number; volume: number; unitPrice: number }[];
 }): Promise<Result> {
@@ -41,6 +44,8 @@ export async function saveRevenueEntries(input: {
     if (!orc) return { error: "Orçamento não encontrado" };
     if (input.cells.length === 0) return { success: true };
 
+    const extra = input.extraDimensions ?? {};
+    if (Object.entries(extra).some(([k, v]) => !UUID_RE.test(k) || !UUID_RE.test(v))) return { error: "Dimensão inválida" };
     const rows = [];
     for (const c of input.cells) {
       const currency = input.currencyByProduct[c.productId] ?? "BRL";
@@ -56,7 +61,7 @@ export async function saveRevenueEntries(input: {
         month: c.month,
         product_node_id: c.productId,
         entity_node_id: input.entityNodeId,
-        extra_dimensions: {},
+        extra_dimensions: extra,
         currency,
         volume: c.volume,
         unit_price: c.unitPrice,
@@ -76,6 +81,7 @@ export async function saveRevenueEntries(input: {
         .eq("orcamento_id", input.orcamentoId)
         .eq("year", orc.year)
         .eq("product_node_id", pid)
+        .eq("extra_dimensions", JSON.stringify(extra))
         .neq("currency", cur);
       del = input.entityNodeId ? del.eq("entity_node_id", input.entityNodeId) : del.is("entity_node_id", null);
       const { error: delErr } = await del;
@@ -85,6 +91,28 @@ export async function saveRevenueEntries(input: {
       onConflict: "tenant_id,orcamento_id,year,month,product_node_id,entity_node_id,extra_dimensions,currency",
     });
     if (error) return { error: error.message };
+    refresh(input.orcamentoId);
+    return { success: true };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Erro ao salvar" };
+  }
+}
+
+export async function saveRevenueDimensions(input: { orcamentoId: string; typeIds: string[] }): Promise<Result> {
+  try {
+    const tenant = await getCurrentTenant();
+    if (!tenant) return { error: "Não autenticado" };
+    if (!(await assertOrcamento(tenant.tenantId, input.orcamentoId))) return { error: "Orçamento não encontrado" };
+    if (input.typeIds.some((id) => !UUID_RE.test(id))) return { error: "Hierarquia inválida" };
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from("orcamentos")
+      .update({ revenue_dimension_type_ids: input.typeIds })
+      .eq("tenant_id", tenant.tenantId)
+      .eq("id", input.orcamentoId);
+    if (error) {
+      return { error: /revenue_dimension_type_ids/.test(error.message) ? "Falta rodar a migration 0028 no Supabase (SQL Editor)." : error.message };
+    }
     refresh(input.orcamentoId);
     return { success: true };
   } catch (e) {

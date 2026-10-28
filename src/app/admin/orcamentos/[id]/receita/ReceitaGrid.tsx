@@ -19,6 +19,8 @@ export interface GridRow {
   pid?: string;
   currency?: { value: string; options: string[]; onChange: (c: string) => void };
   strong?: boolean;
+  /** Linha de detalhe por dimensão (somente leitura). */
+  detail?: boolean;
 }
 
 /** Coluna = uma medida (grupo) × um período (mês, trimestre, semestre ou total). */
