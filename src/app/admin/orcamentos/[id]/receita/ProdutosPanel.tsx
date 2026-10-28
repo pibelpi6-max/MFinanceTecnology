@@ -345,6 +345,7 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
           <span className={`rec-kind-btn rec-kind-${r.kind}`}>
             <KindIcon kind={r.kind} />
             {r.kind === "servico" ? t("kindService") : t("kindProduct")}
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="m6 9 6 6 6-6" /></svg>
           </span>
         ) : null,
     },
