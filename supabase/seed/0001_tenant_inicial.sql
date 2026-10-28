@@ -12,4 +12,4 @@ insert into dimension_types (tenant_id, code, name, is_system, sort_order)
 values
     ('00000000-0000-0000-0000-000000000001', 'centro_custo', 'Centro de Custo', true, 1),
     ('00000000-0000-0000-0000-000000000001', 'conta',        'Conta',           true, 2),
-    ('00000000-0000-0000-0000-000000000001', 'entidade',     'Entidade',        true, 3);
+    ('00000000-0000-0000-0000-000000000001', 'entidade',     'Departamentos',   true, 3);
