@@ -209,6 +209,21 @@ export async function getReferenceEntries(tenantId: string, orcamentoIds: string
   return out;
 }
 
+/** Taxas de câmbio do orçamento: rates[moeda][mês]. */
+export async function getCurrencyRates(tenantId: string, orcamentoId: string, year: number): Promise<RateTable> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("currency_rates")
+    .select("currency, month, rate")
+    .eq("tenant_id", tenantId)
+    .eq("orcamento_id", orcamentoId)
+    .eq("year", year);
+  const rates: RateTable = {};
+  if (error) return rates;
+  for (const x of data ?? []) (rates[x.currency] ??= {})[x.month] = Number(x.rate);
+  return rates;
+}
+
 export interface TenantCurrency {
   code: string;
   name: string;
