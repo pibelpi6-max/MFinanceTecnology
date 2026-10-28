@@ -317,6 +317,17 @@ export function ConfiguracoesClient({
 
   const [importModal, setImportModal] = useState<{ type: DimensionType; source: DimensionStructure } | null>(null);
 
+  // Clicar no pill "Estruturas" abre o tipo e já abre a primeira estrutura (2 primeiros níveis expandidos).
+  function toggleTypeExpanded(typeId: string) {
+    if (expandedTypeId === typeId) {
+      setExpandedTypeId(null);
+      return;
+    }
+    setExpandedTypeId(typeId);
+    const first = (structuresByType[typeId] ?? [])[0];
+    if (first && expandedStructureId[typeId] !== first.id) toggleStructureExpanded(typeId, first.id);
+  }
+
   function toggleStructureExpanded(typeId: string, structureId: string) {
     // Ao abrir uma estrutura, os dois primeiros níveis já vêm expandidos; o que está mais fundo começa recolhido.
     if (expandedStructureId[typeId] !== structureId) {
@@ -969,7 +980,7 @@ export function ConfiguracoesClient({
             columns={buildTypeColumns(
               t,
               expandedTypeId,
-              (id) => setExpandedTypeId((prev) => (prev === id ? null : id))
+              (id) => toggleTypeExpanded(id)
             )}
             prefsKey="configuracoes_tipos_cols"
             onEdit={(d) => setEditing(d)}
@@ -1015,7 +1026,7 @@ export function ConfiguracoesClient({
                         <button
                           type="button"
                           className={`settings-structure-btn${expanded ? " is-active" : ""}`}
-                          onClick={() => setExpandedTypeId(expanded ? null : d.id)}
+                          onClick={() => toggleTypeExpanded(d.id)}
                         >
                           {t("dimensions.structures")}
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2}>
