@@ -169,7 +169,7 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
     const presets = [...base, ...deductionLabels.filter((l) => !base.some((p) => p.toLowerCase() === l.toLowerCase()))]
       .filter((x) => !editDeds.some((d) => d.label.toLowerCase() === x.toLowerCase()));
     return (
-      <div className="rec-edit">
+      <div className={`rec-edit${hideDeductions ? " rec-edit--compact" : ""}`}>
         <div className="rec-edit-main">
           {isItem && (
             <div className="rec-edit-field">
