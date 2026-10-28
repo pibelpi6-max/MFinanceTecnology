@@ -15,7 +15,7 @@ import { TreeMultiSelect, type TreeMultiSelectLabels, type TreeSelectGroup } fro
 import { deletePremise, savePremise, setPremiseActive, saveDeductionDefaults, saveDeductionRules, saveRevenueEntries } from "./_actions";
 import { ReceitaCharts } from "./ReceitaCharts";
 import type { TablePrefs } from "@/components/ui/DataTable/types";
-import { TreeSelect } from "@/components/ui/tree/TreeSelect";
+import { TreeFilterChip } from "@/components/ui/tree/TreeFilterChip";
 import { ProdutosPanel } from "./ProdutosPanel";
 import { ReceitaGrid, type GridChange, type GridCol, type GridRow } from "./ReceitaGrid";
 
@@ -115,15 +115,20 @@ export function ReceitaClient(p: Props) {
     if (ids.length > 0) return ids;
     return p.defaultTypeId ? [p.defaultTypeId] : [];
   }, [p.savedCarried, dimOrder, entriesDims, p.defaultTypeId]);
-  const selOf = (typeId: string): string => {
-    const v = search.get(`s_${typeId}`);
+  /** Itens escolhidos na hierarquia ([] = todos; 1 = recorte exato; 2+ = consolidado). */
+  const selIdsOf = (typeId: string): string[] => {
+    const raw = search.get(`s_${typeId}`);
     const nodes = p.dimNodes[typeId] ?? [];
-    if (v === "all") return "all";
-    if (v && nodes.some((n) => n.id === v)) return v;
-    return nodes[0]?.id ?? "all";
+    if (raw === "all") return [];
+    if (raw) {
+      const ids = raw.split(",").filter((x) => nodes.some((n) => n.id === x));
+      if (ids.length > 0) return ids;
+    }
+    return nodes[0] ? [nodes[0].id] : [];
   };
-  const sel: Record<string, string> = Object.fromEntries(carried.map((id) => [id, selOf(id)]));
-  const selKey = carried.map((id) => sel[id]).join("|");
+  const selIds: Record<string, string[]> = Object.fromEntries(carried.map((id) => [id, selIdsOf(id)]));
+  const sel: Record<string, string> = Object.fromEntries(carried.map((id) => [id, selIds[id].length === 1 ? selIds[id][0] : "all"]));
+  const selKey = carried.map((id) => selIds[id].join("+")).join("|");
   // Consolidado (algum "Todos") é só leitura; para lançar, um item em cada hierarquia.
   const readOnly = carried.length > 0 && carried.some((id) => sel[id] === "all");
   const entityKey = carried.length === 0 || readOnly ? null : sel[carried[0]];
@@ -137,6 +142,7 @@ export function ReceitaClient(p: Props) {
   const groupDims = readOnly ? order.filter((id) => sel[id] === "all") : [];
   const groupKeyStr = groupDims.join(",");
   const [dragId, setDragId] = useState<string | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
   function reorder(from: string, to: string) {
     if (from === to) return;
     const next = order.filter((id) => id !== from);
@@ -160,7 +166,7 @@ export function ReceitaClient(p: Props) {
           if (carried.length === 0) return true;
           // Para lançar: exatamente o recorte escolhido. Consolidado: soma tudo que cai dentro (por linhagem).
           if (!readOnly) return carried.every((id) => dims[id] === sel[id]) && Object.keys(dims).every((k) => carried.includes(k));
-          return carried.every((id) => sel[id] === "all" || (!!dims[id] && lineage(dims[id], nodeParents).includes(sel[id])));
+          return carried.every((id) => selIds[id].length === 0 || (!!dims[id] && lineage(dims[id], nodeParents).some((x) => selIds[id].includes(x))));
         })
         .map(({ e, dims }) => ({ ...e, dims })),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -286,8 +292,8 @@ export function ReceitaClient(p: Props) {
     router.push(`${pathname}?${sp.toString()}`);
   }
 
-  function setSel(typeId: string, value: string) {
-    setParam(`s_${typeId}`, value);
+  function setSel(typeId: string, ids: string[]) {
+    setParam(`s_${typeId}`, ids.length === 0 ? "all" : ids.join(","));
   }
 
   function toggleProduct(id: string) {
@@ -575,30 +581,24 @@ export function ReceitaClient(p: Props) {
         <div className="rec-slice-row rec-slice-row--end">
           <span className="rec-slice-lbl">{readOnly ? t("viewing") : t("launchingIn")}</span>
           {order.map((id) => (
-            <div
+            <TreeFilterChip
               key={id}
-              className={`rec-slice-dim${dragId === id ? " is-drag" : ""}`}
-              onDragOver={(e) => { if (dragId && dragId !== id) e.preventDefault(); }}
-              onDrop={(e) => { e.preventDefault(); if (dragId) reorder(dragId, id); setDragId(null); }}
-            >
-              <span
-                className="rec-slice-grip"
-                draggable
-                title={t("dragToReorder")}
-                onDragStart={(e) => { setDragId(id); e.dataTransfer.effectAllowed = "move"; const box = (e.currentTarget as HTMLElement).closest(".rec-slice-dim"); if (box) e.dataTransfer.setDragImage(box, 20, 20); }}
-                onDragEnd={() => setDragId(null)}
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden><circle cx="9" cy="6" r="1.8" /><circle cx="15" cy="6" r="1.8" /><circle cx="9" cy="12" r="1.8" /><circle cx="15" cy="12" r="1.8" /><circle cx="9" cy="18" r="1.8" /><circle cx="15" cy="18" r="1.8" /></svg>
-                {p.dimensions.find((d) => d.id === id)?.name}
-              </span>
-              <TreeSelect
-                nodes={(p.dimNodes[id] ?? []).map((n) => ({ id: n.id, name: n.name, parentId: n.parentId }))}
-                value={sel[id]}
-                onChange={(v) => setSel(id, v)}
-                allLabel={t("allItems")}
-                disabled={dirty}
-              />
-            </div>
+              label={p.dimensions.find((d) => d.id === id)?.name ?? ""}
+              nodes={(p.dimNodes[id] ?? []).map((n) => ({ id: n.id, name: n.name, parentId: n.parentId }))}
+              value={selIds[id]}
+              onApply={(ids) => setSel(id, ids)}
+              labels={{ all: t("allItems"), search: t("search"), apply: t("apply"), noResults: t("noResults") }}
+              disabled={dirty}
+              dragState={dragId === id ? "dragging" : overId === id && dragId ? "over" : null}
+              dragProps={{
+                draggable: true,
+                onDragStart: (e) => { setDragId(id); e.dataTransfer.effectAllowed = "move"; },
+                onDragEnd: () => { setDragId(null); setOverId(null); },
+                onDragOver: (e) => { if (dragId && dragId !== id) { e.preventDefault(); setOverId(id); } },
+                onDragLeave: () => setOverId((o) => (o === id ? null : o)),
+                onDrop: (e) => { e.preventDefault(); if (dragId) reorder(dragId, id); setDragId(null); setOverId(null); },
+              }}
+            />
           ))}
         </div>
       )}
