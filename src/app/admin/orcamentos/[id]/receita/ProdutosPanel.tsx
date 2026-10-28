@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
@@ -57,6 +57,20 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
   const [editCode, setEditCode] = useState("");
   const [editKind, setEditKind] = useState<Kind>("produto");
   const [editDeds, setEditDeds] = useState<DedDraft[]>([]);
+  const dedsRef = useRef<HTMLDivElement>(null);
+  const [focusDed, setFocusDed] = useState<{ i: number; field: "label" | "pct" } | null>(null);
+  useEffect(() => {
+    if (!focusDed) return;
+    const row = dedsRef.current?.querySelectorAll(".rec-edit-row:not(.rec-edit-row-head)")[focusDed.i];
+    const el = row?.querySelectorAll<HTMLInputElement>("input")[focusDed.field === "label" ? 0 : 1];
+    el?.focus();
+    el?.select();
+    setFocusDed(null);
+  }, [focusDed]);
+  const addDed = (label: string, pct: string, field: "label" | "pct") => {
+    setFocusDed({ i: editDeds.length, field });
+    setEditDeds((d) => [...d, { label, pct }]);
+  };
   const [copyTo, setCopyTo] = useState<Kind | null>(null);
   const [snapshot, setSnapshot] = useState("");
   const [switchTo, setSwitchTo] = useState<ProductRow | null>(null);
@@ -156,7 +170,7 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
               <span>{t("totalDeductions")} <b>{fmtPct(total)}%</b></span>
             </div>
             {editDeds.length > 0 && (
-              <div className="rec-edit-table">
+              <div className="rec-edit-table" ref={dedsRef}>
                 <div className="rec-edit-row rec-edit-row-head"><span>{t("dedColName")}</span><span>{t("dedColPct")}</span><span /></div>
                 {editDeds.map((it, i) => (
                   <div className="rec-edit-row" key={i}>
@@ -175,9 +189,9 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
             <div className="rec-presets">
               <span className="rec-edit-hint">{t("dedAdd")}</span>
               {presets.map((x) => (
-                <button type="button" key={x} className="rec-chip" onClick={() => setEditDeds((d) => [...d, { label: x, pct: defaultPct(x) }])}>+ {x}</button>
+                <button type="button" key={x} className="rec-chip" onClick={() => addDed(x, defaultPct(x), "pct")}>+ {x}</button>
               ))}
-              <button type="button" className="rec-chip rec-chip-new" onClick={() => setEditDeds((d) => [...d, { label: "", pct: "" }])}>+ {t("other")}</button>
+              <button type="button" className="rec-chip rec-chip-new" onClick={() => addDed("", "", "label")}>+ {t("other")}</button>
             </div>
             <div className="rec-edit-apply">
               <span>{t("dedCopyTitle")}</span>
