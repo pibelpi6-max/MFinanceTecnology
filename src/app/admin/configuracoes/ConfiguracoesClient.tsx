@@ -496,6 +496,8 @@ export function ConfiguracoesClient({
       setAddNodeError(result.error);
       return;
     }
+    // O item novo abre direto em edição (nome) assim que chegar na árvore.
+    if (result.id) setPendingEditNodeId(result.id);
     router.refresh();
   }
 
