@@ -1663,3 +1663,7 @@ input[inputmode="decimal"], input[inputmode="numeric"], input[type="number"] { t
 .par-head { padding: 4px 10px 14px; }
 .par-head h2 { margin: 0; font-size: 20px; font-weight: 700; color: #1C2033; }
 .par-head p { margin: 4px 0 0; font-size: 13.5px; color: #5B6178; }
+
+.rec-fx-cell input { height: 38px; border: 1px solid #C9D0E0; border-radius: 8px; background: #fff; color: #1C2033; font-size: 14px; }
+.rec-fx-cell input::placeholder { color: #A3A9BD; }
+.rec-fx-cell input:hover { border-color: #A9B4D0; }
