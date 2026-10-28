@@ -146,10 +146,11 @@ async function getConjuntoStructureId(
 export async function getDimensionTreeByStructure(
   tenantId: string,
   structureId: string,
-  year: number
+  year: number,
+  anyYear = false
 ): Promise<DimensionNodeRow[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase
+  let q = supabase
     .from("dimension_nodes")
     .select(
       `id, code, sort_order,
@@ -158,19 +159,20 @@ export async function getDimensionTreeByStructure(
        )`
     )
     .eq("tenant_id", tenantId)
-    .eq("structure_id", structureId)
-    .lte("dimension_node_versions.valid_from_year", year)
-    .or(
-      `valid_until_year.is.null,valid_until_year.gte.${year}`,
-      { foreignTable: "dimension_node_versions" }
-    );
+    .eq("structure_id", structureId);
+  // Cadastros gerais (ex.: produtos) valem para todos os anos: ignora a vigência.
+  if (!anyYear) {
+    q = q
+      .lte("dimension_node_versions.valid_from_year", year)
+      .or(`valid_until_year.is.null,valid_until_year.gte.${year}`, { foreignTable: "dimension_node_versions" });
+  }
+  const { data, error } = await q;
 
   if (error) throw new Error(error.message);
 
   return (data ?? []).map((row) => {
-    const v = Array.isArray(row.dimension_node_versions)
-      ? row.dimension_node_versions[0]
-      : row.dimension_node_versions;
+    const versions = Array.isArray(row.dimension_node_versions) ? row.dimension_node_versions : [row.dimension_node_versions];
+    const v = anyYear ? [...versions].sort((a, b) => b.valid_from_year - a.valid_from_year)[0] : versions[0];
     return {
       id: row.id,
       versionId: v.id,
@@ -200,12 +202,13 @@ export async function getDimensionTree(
   tenantId: string,
   dimensionTypeId: string,
   year: number,
-  conjuntoEstruturaId?: string | null
+  conjuntoEstruturaId?: string | null,
+  anyYear = false
 ): Promise<DimensionNodeRow[]> {
   const structureId = conjuntoEstruturaId
     ? (await getConjuntoStructureId(conjuntoEstruturaId, dimensionTypeId)) ??
       (await getActiveStructureId(tenantId, dimensionTypeId))
     : await getActiveStructureId(tenantId, dimensionTypeId);
   if (!structureId) return [];
-  return getDimensionTreeByStructure(tenantId, structureId, year);
+  return getDimensionTreeByStructure(tenantId, structureId, year, anyYear);
 }

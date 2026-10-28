@@ -37,7 +37,7 @@ export default async function ReceitaPage({ params, searchParams }: PageProps) {
   const dimTypes = allTypes.filter((d) => !excluded.includes(d.code));
   const conjunto = orcamento.conjunto_estrutura_id;
   const [productNodes, treesByType] = await Promise.all([
-    produtoType ? getDimensionTree(tenant.tenantId, produtoType.id, orcamento.year, conjunto) : Promise.resolve([]),
+    produtoType ? getDimensionTree(tenant.tenantId, produtoType.id, orcamento.year, conjunto, true) : Promise.resolve([]),
     Promise.all(dimTypes.map((d) => getDimensionTree(tenant.tenantId, d.id, orcamento.year, conjunto))),
   ]);
   const hierarchies = treesByType.map((nodes) => buildDimensionHierarchy(nodes).rows);
@@ -80,8 +80,8 @@ export default async function ReceitaPage({ params, searchParams }: PageProps) {
   const [kinds, deductionLabels, deductionDefaults, deductionRules] = await Promise.all([
     getItemKinds(tenant.tenantId),
     getDeductionLabels(tenant.tenantId),
-    getDeductionDefaults(tenant.tenantId),
-    getDeductionRules(tenant.tenantId),
+    getDeductionDefaults(tenant.tenantId, orcamento.id),
+    getDeductionRules(tenant.tenantId, orcamento.id),
   ]);
   const hierarchy = buildDimensionHierarchy(productNodes);
   const products: ProductRow[] = hierarchy.rows.map((r) => ({
