@@ -1110,25 +1110,17 @@ function PremissasPanel({ orcamentoId, premises, products, groups, carriedIds, o
       )}
 
       {draft && (
-        <Modal
-          open
-          onClose={() => setDraft(null)}
-          title={draft.id ? t("premEdit") : t("premNew")}
-          size="lg"
-          footer={
-            <div className="flex justify-end gap-2">
-              <Button variant="ghost" size="sm" onClick={() => setDraft(null)} disabled={pending}>{t("prodCancel")}</Button>
-              <Button variant="primary" size="sm" isLoading={pending} loadingText={t("saving")} disabled={!Number.isFinite(pctNum(draft))} onClick={save}>{t("premSave")}</Button>
-            </div>
-          }
-        >
+        <div className="rec-prem-card">
+          <div className="rec-prem-card-head">
+            <strong>{draft.id ? t("premEdit") : t("premNew")}</strong>
+          </div>
           <div className="rec-prem-form">
             <div className="rec-prem-type">
               <div className="rec-field">{t("premType")}
                 <div className="rec-seg" data-on={draft.kind === "volume_growth" ? "produto" : "servico"} role="group" aria-label={t("premType")}>
                   <span className="rec-seg-thumb" aria-hidden />
-                  <button type="button" className={draft.kind === "volume_growth" ? "on" : ""} onClick={() => setDraft({ ...draft, kind: "volume_growth" })}>{t("kindVolume")}</button>
-                  <button type="button" className={draft.kind === "price_adjust" ? "on" : ""} onClick={() => setDraft({ ...draft, kind: "price_adjust" })}>{t("kindPrice")}</button>
+                  <button type="button" className={draft.kind === "volume_growth" ? "on" : ""} onClick={() => setDraft({ ...draft, kind: "volume_growth" })}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="m3 17 6-6 4 4 8-8M15 7h6v6" /></svg>{t("kindVolume")}</button>
+                  <button type="button" className={draft.kind === "price_adjust" ? "on" : ""} onClick={() => setDraft({ ...draft, kind: "price_adjust" })}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8Z" /><circle cx="7.5" cy="7.5" r="1.2" /></svg>{t("kindPrice")}</button>
                 </div>
               </div>
             </div>
@@ -1187,9 +1179,13 @@ function PremissasPanel({ orcamentoId, premises, products, groups, carriedIds, o
             {Object.keys(draft.dimensionFilters).some((k) => (draft.dimensionFilters[k]?.length ?? 0) > 0 && !carriedIds.includes(k)) && (
               <p className="rec-hint">{t("premOtherDimHint")} {Object.entries(draft.dimensionFilters).filter(([k, v]) => v.length > 0 && !carriedIds.includes(k)).map(([k]) => typeName(k)).join(", ")}.</p>
             )}
-            <div style={{ minHeight: 120 }} />
+            
           </div>
-        </Modal>
+          <div className="rec-prem-card-foot">
+            <Button variant="ghost" size="sm" onClick={() => setDraft(null)} disabled={pending}>{t("prodCancel")}</Button>
+            <Button variant="primary" size="sm" isLoading={pending} loadingText={t("saving")} disabled={!Number.isFinite(pctNum(draft))} onClick={save}>{t("premSave")}</Button>
+          </div>
+        </div>
       )}
 
       <ConfirmModal
