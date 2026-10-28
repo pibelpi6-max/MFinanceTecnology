@@ -19,7 +19,6 @@ interface OrcamentosClientProps {
   packageCounts: Record<string, number>;
   currentId: string | null;
   title: string;
-  subtitle: string;
 }
 
 function byOrder(a: Orcamento, b: Orcamento) {
@@ -41,7 +40,6 @@ export function OrcamentosClient({
   packageCounts,
   currentId,
   title,
-  subtitle,
 }: OrcamentosClientProps) {
   const router = useRouter();
   const t = useTranslations("orcamentos");
@@ -176,21 +174,20 @@ export function OrcamentosClient({
         <div>
           <h1 className="admin-page-title">{title}</h1>
         </div>
-        {isAdmin && (
-          <div className="admin-page-actions">
-            <Button size="sm" variant="accent-blue" className="px-3" onClick={() => setFormState({ editing: null })}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4}>
-                <path strokeLinecap="round" d="M12 5v14M5 12h14" />
-              </svg>
-              {t("new")}
-            </Button>
-          </div>
-        )}
       </div>
 
       <div className="admin-content">
         <div className="orc-panel">
-          <p className="orc-subtitle">{subtitle}</p>
+          {isAdmin && (
+            <div className="orc-toolbar">
+              <Button size="sm" variant="accent-blue" className="px-3" onClick={() => setFormState({ editing: null })}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4}>
+                  <path strokeLinecap="round" d="M12 5v14M5 12h14" />
+                </svg>
+                {t("new")}
+              </Button>
+            </div>
+          )}
 
           <div className="orc-chips">
             <button
