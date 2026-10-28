@@ -1673,3 +1673,8 @@ input[inputmode="decimal"], input[inputmode="numeric"], input[type="number"] { t
 .mo-rates-head { display: inline-block; margin: 0 0 10px 4px; padding: 4px 12px; border-radius: 999px; background: #fff; border: 1px solid #3E6FE0; color: #3E6FE0; font-size: 14px; font-weight: 700; }
 
 .mo-rates .mo-rates-head { display: block; width: fit-content; max-width: 100%; }
+
+.rec-slice-grip { display: inline-flex; align-items: center; gap: 6px; cursor: grab; user-select: none; }
+.rec-slice-grip svg { color: #A3A9BD; }
+.rec-slice-dim.is-drag { opacity: .45; }
+.rec-slice-dim:has(.rec-slice-grip:active) .rec-slice-grip svg { color: #3E6FE0; }

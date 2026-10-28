@@ -21,6 +21,9 @@ export interface GridRow {
   strong?: boolean;
   /** Linha de detalhe por dimensão (somente leitura). */
   detail?: boolean;
+  /** Linha dentro de um grupo de hierarquia (visão consolidada): id do grupo e produto (ou nada = total do grupo). */
+  gid?: string;
+  prod?: string;
 }
 
 /** Coluna = uma medida (grupo) × um período (mês, trimestre, semestre ou total). */

@@ -729,8 +729,6 @@
     "viewing": "Viendo",
     "allItems": "Todos",
     "consolidatedHint": "Consolidado: solo lectura. Para editar, elige un elemento en cada jerarquía.",
-    "detailBy": "Desglosar por",
-    "noDetail": "Sin desglose",
     "premMoreFilters": "Más filtros",
     "premFewerFilters": "Menos filtros",
     "baseOtherBudget": "Otro presupuesto",
@@ -755,7 +753,8 @@
     "currencyInvalid": "Sigla inválida: usa 3 letras (ej.: USD).",
     "fxRepeatAll": "Repetir enero en los 12 meses",
     "parProductsSub": "Registro general de productos y servicios. Vale para todos los presupuestos y años.",
-    "parCurrenciesSub": "Monedas de la empresa y la tasa mensual de cada una para convertir a BRL. Las tasas valen para este presupuesto."
+    "parCurrenciesSub": "Monedas de la empresa y la tasa mensual de cada una para convertir a BRL. Las tasas valen para este presupuesto.",
+    "dragToReorder": "Arrastra para cambiar el orden de los niveles"
   },
   "erpCodes": {
     "title": "Códigos del ERP",

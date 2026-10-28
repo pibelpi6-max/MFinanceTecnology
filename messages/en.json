@@ -729,8 +729,6 @@
     "viewing": "Viewing",
     "allItems": "All",
     "consolidatedHint": "Consolidated: read-only. To edit, pick one item in each hierarchy.",
-    "detailBy": "Break down by",
-    "noDetail": "No breakdown",
     "premMoreFilters": "More filters",
     "premFewerFilters": "Fewer filters",
     "baseOtherBudget": "Another budget",
@@ -755,7 +753,8 @@
     "currencyInvalid": "Invalid code: use 3 letters (e.g. USD).",
     "fxRepeatAll": "Repeat January for all 12 months",
     "parProductsSub": "General registry of products and services. Applies to all budgets and years.",
-    "parCurrenciesSub": "Company currencies and the monthly rate of each one to convert to BRL. Rates apply to this budget."
+    "parCurrenciesSub": "Company currencies and the monthly rate of each one to convert to BRL. Rates apply to this budget.",
+    "dragToReorder": "Drag to change the level order"
   },
   "erpCodes": {
     "title": "ERP codes",
