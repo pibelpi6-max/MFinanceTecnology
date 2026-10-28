@@ -86,7 +86,7 @@ export function MoedasPanel({ orcamentoId, currencies, rates, onError }: {
           onChange={(e) => setCode(e.target.value.toUpperCase())}
           onKeyDown={(e) => e.key === "Enter" && add()}
         />
-        <Button variant="accent-blue" size="sm" className="px-3" onClick={add} isLoading={pending} disabled={code.length !== 3}>
+        <Button variant="accent-blue" size="sm" className="px-3" onClick={add} isLoading={pending}>
           + {t("currencyAdd")}
         </Button>
       </div>
