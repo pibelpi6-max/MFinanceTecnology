@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getCurrentTenant } from "@/lib/tenant/getCurrentTenant";
 import { getOrcamentoById } from "@/lib/orcamentos/queries";
-import { getDimensionTypeByCode, getDimensionTree } from "@/lib/dimensions/queries";
+import { getDimensionTypeByCode, getDimensionTree, getDimensionTypes } from "@/lib/dimensions/queries";
 import { DIMENSION_CODES } from "@/lib/dimensions/constants";
 import { buildDimensionHierarchy } from "@/lib/dimensions/hierarchy";
 import { getDeductionDefaults, getDeductionLabels, getDeductionRules, getItemKinds, getReceitaData } from "@/lib/receita/queries";
@@ -15,7 +15,7 @@ import { ReceitaClient, type ProductRow } from "./ReceitaClient";
 
 interface PageProps {
   params: { id: string };
-  searchParams: { entidade?: string; moeda?: string };
+  searchParams: { entidade?: string; moeda?: string; dim?: string };
 }
 
 export default async function ReceitaPage({ params, searchParams }: PageProps) {
@@ -28,15 +28,29 @@ export default async function ReceitaPage({ params, searchParams }: PageProps) {
   const t = await getTranslations("receita");
   const tOrc = await getTranslations("orcamentos");
 
-  const [produtoType, entidadeType] = await Promise.all([
+  const [produtoType, allTypes] = await Promise.all([
     getDimensionTypeByCode(tenant.tenantId, DIMENSION_CODES.PRODUTO),
-    getDimensionTypeByCode(tenant.tenantId, DIMENSION_CODES.ENTIDADE),
+    getDimensionTypes(tenant.tenantId),
   ]);
+  // Hierarquias pelas quais a receita pode ser lançada/condicionada (Produto, Conta e Centro de Custo não se aplicam).
+  const excluded: string[] = [DIMENSION_CODES.PRODUTO, DIMENSION_CODES.CONTA, DIMENSION_CODES.CENTRO_CUSTO];
+  const dimTypes = allTypes.filter((d) => !excluded.includes(d.code));
+  const dimType =
+    dimTypes.find((d) => d.id === searchParams.dim) ??
+    dimTypes.find((d) => d.code === DIMENSION_CODES.ENTIDADE) ??
+    dimTypes[0] ??
+    null;
   const conjunto = orcamento.conjunto_estrutura_id;
-  const [productNodes, entityNodes] = await Promise.all([
+  const [productNodes, treesByType] = await Promise.all([
     produtoType ? getDimensionTree(tenant.tenantId, produtoType.id, orcamento.year, conjunto) : Promise.resolve([]),
-    entidadeType ? getDimensionTree(tenant.tenantId, entidadeType.id, orcamento.year, conjunto) : Promise.resolve([]),
+    Promise.all(dimTypes.map((d) => getDimensionTree(tenant.tenantId, d.id, orcamento.year, conjunto))),
   ]);
+  const entityNodes = dimType ? treesByType[dimTypes.indexOf(dimType)] : [];
+  const ruleGroups = dimTypes.map((d, i) => ({
+    typeId: d.id,
+    name: d.name,
+    items: buildDimensionHierarchy(treesByType[i]).rows.map((r) => ({ id: r.item.id, name: r.item.name, depth: r.depth })),
+  }));
 
   const header = (
     <div className="admin-subheader">
@@ -106,6 +120,9 @@ export default async function ReceitaPage({ params, searchParams }: PageProps) {
             deductionRules={deductionRules}
             products={products}
             entities={entities}
+            dimensions={dimTypes.map((d) => ({ id: d.id, name: d.name }))}
+            dimId={dimType?.id ?? null}
+            ruleGroups={ruleGroups}
             entityId={entityId}
             displayCurrency={displayCurrency}
             currencies={data.currencies}
