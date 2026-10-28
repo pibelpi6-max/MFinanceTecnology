@@ -725,7 +725,9 @@
     "valuesFor": "The numbers below apply to",
     "consolidatedHint": "Consolidated: read-only. To edit, pick one item in each hierarchy.",
     "detailBy": "Break down by",
-    "noDetail": "No breakdown"
+    "noDetail": "No breakdown",
+    "premMoreFilters": "More filters",
+    "premFewerFilters": "Fewer filters"
   },
   "erpCodes": {
     "title": "ERP codes",

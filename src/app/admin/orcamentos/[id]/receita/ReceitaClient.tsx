@@ -1007,6 +1007,7 @@ function PremissasPanel({ orcamentoId, premises, products, groups, carriedIds, o
   const locale = useLocale();
   const router = useRouter();
   const [draft, setDraft] = useState<PremiseDraft | null>(null);
+  const [moreFilters, setMoreFilters] = useState(false);
   const [deleting, setDeleting] = useState<PremiseRow | null>(null);
   const [pending, start] = useTransition();
   const treeLabels = treeLabelsOf(t);
@@ -1125,7 +1126,7 @@ function PremissasPanel({ orcamentoId, premises, products, groups, carriedIds, o
           }
         >
           <div className="rec-prem-form">
-            <div className="rec-prem-grid">
+            <div className="rec-prem-type">
               <div className="rec-field">{t("premType")}
                 <div className="rec-seg" data-on={draft.kind === "volume_growth" ? "produto" : "servico"} role="group" aria-label={t("premType")}>
                   <span className="rec-seg-thumb" aria-hidden />
@@ -1133,6 +1134,8 @@ function PremissasPanel({ orcamentoId, premises, products, groups, carriedIds, o
                   <button type="button" className={draft.kind === "price_adjust" ? "on" : ""} onClick={() => setDraft({ ...draft, kind: "price_adjust" })}>{t("kindPrice")}</button>
                 </div>
               </div>
+            </div>
+            <div className="rec-prem-grid">
               <label className="rec-field">{t("premPct")} ({draft.kind === "volume_growth" ? t("unitMonth") : t("unitOnce")})
                 <input inputMode="decimal" value={draft.pct} autoFocus placeholder="0,0" onChange={(e) => /^-?\d*[.,]?\d*$/.test(e.target.value) && setDraft({ ...draft, pct: e.target.value })} />
               </label>
@@ -1141,24 +1144,24 @@ function PremissasPanel({ orcamentoId, premises, products, groups, carriedIds, o
                   {MONTHS.map((m) => <option key={m} value={m}>{monthName(m)}</option>)}
                 </select>
               </label>
+              {draft.kind === "volume_growth" && (
+                <label className="rec-field">{t("premBase")}
+                  <select value={draft.base} onChange={(e) => setDraft({ ...draft, base: e.target.value as PremiseDraft["base"] })}>
+                    <option value="entered">{t("baseEntered")}</option>
+                    <option value="previous_month">{t("basePrevious")}</option>
+                  </select>
+                </label>
+              )}
             </div>
-            {draft.kind === "volume_growth" && (
-              <label className="rec-field" style={{ maxWidth: 380 }}>{t("premBase")}
-                <select value={draft.base} onChange={(e) => setDraft({ ...draft, base: e.target.value as PremiseDraft["base"] })}>
-                  <option value="entered">{t("baseEnteredLong")}</option>
-                  <option value="previous_month">{t("basePreviousLong")}</option>
-                </select>
-              </label>
-            )}
-            <div className="rec-field">
+            <div className="rec-prem-scope-head">
               <strong>{t("colScope")}</strong>
-              <span className="rec-hint" style={{ margin: 0 }}>{t("premScopeHint")}</span>
+              <span>{t("premScopeHint")}</span>
             </div>
             <div className="rec-prem-grid rec-prem-grid--scope">
               <div className="rec-field">{t("scopeProducts")}
                 <TreeMultiSelect groups={productGroups} value={draft.productIds} onChange={(ids) => setDraft({ ...draft, productIds: ids })} labels={{ ...treeLabels, all: t("allProducts") }} ariaLabel={t("scopeProducts")} />
               </div>
-              {groups.map((g) => (
+              {groups.filter((g) => carriedIds.includes(g.typeId) || (draft.dimensionFilters[g.typeId]?.length ?? 0) > 0 || moreFilters).map((g) => (
                 <div className="rec-field" key={g.typeId}>{g.name}
                   <TreeMultiSelect
                     groups={[g]}
@@ -1170,6 +1173,11 @@ function PremissasPanel({ orcamentoId, premises, products, groups, carriedIds, o
                 </div>
               ))}
             </div>
+            {groups.some((g) => !carriedIds.includes(g.typeId) && !(draft.dimensionFilters[g.typeId]?.length ?? 0)) && (
+              <button type="button" className="rec-link-btn rec-prem-more" onClick={() => setMoreFilters((v) => !v)}>
+                {moreFilters ? t("premFewerFilters") : t("premMoreFilters")}
+              </button>
+            )}
             <p className="rec-prem-summary">
               {t("premSummary", {
                 kind: kindText(draft.kind),
@@ -1182,7 +1190,7 @@ function PremissasPanel({ orcamentoId, premises, products, groups, carriedIds, o
             {Object.keys(draft.dimensionFilters).some((k) => (draft.dimensionFilters[k]?.length ?? 0) > 0 && !carriedIds.includes(k)) && (
               <p className="rec-hint">{t("premOtherDimHint")} {Object.entries(draft.dimensionFilters).filter(([k, v]) => v.length > 0 && !carriedIds.includes(k)).map(([k]) => typeName(k)).join(", ")}.</p>
             )}
-            <div style={{ minHeight: 220 }} />
+            <div style={{ minHeight: 120 }} />
           </div>
         </Modal>
       )}

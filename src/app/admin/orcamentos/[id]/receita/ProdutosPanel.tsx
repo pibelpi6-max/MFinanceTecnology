@@ -350,16 +350,19 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
       key: "kind", label: t("kindLabel"), width: 150, getText: kindText, filterable: true, noTooltip: true,
       render: (r) =>
         r.isLeaf && r.depth > 0 ? (
-          <select
-            className={`rec-kind rec-kind-select rec-kind-${r.kind}`}
-            value={r.kind}
-            disabled={pending}
-            aria-label={t("kindLabel")}
-            onChange={(e) => changeKind(r, e.target.value as Kind)}
-          >
-            <option value="produto">{t("kindProduct")}</option>
-            <option value="servico">{t("kindService")}</option>
-          </select>
+          <span className={`rec-kind-wrap rec-kind-wrap-${r.kind}`}>
+            <KindIcon kind={r.kind} />
+            <select
+              className={`rec-kind rec-kind-select rec-kind-${r.kind}`}
+              value={r.kind}
+              disabled={pending}
+              aria-label={t("kindLabel")}
+              onChange={(e) => changeKind(r, e.target.value as Kind)}
+            >
+              <option value="produto">{t("kindProduct")}</option>
+              <option value="servico">{t("kindService")}</option>
+            </select>
+          </span>
         ) : null,
     },
     {
@@ -476,5 +479,18 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
         onConfirm={confirmDelete}
       />
     </div>
+  );
+}
+
+/** Ícone do tipo do item: caixa (produto) ou chave (serviço). */
+function KindIcon({ kind }: { kind: "produto" | "servico" }) {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      {kind === "produto" ? (
+        <><path d="M21 8 12 3 3 8v8l9 5 9-5Z" /><path d="m3 8 9 5 9-5M12 13v8" /></>
+      ) : (
+        <path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4Z" />
+      )}
+    </svg>
   );
 }

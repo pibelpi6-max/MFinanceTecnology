@@ -1568,3 +1568,17 @@ select.rec-kind option:checked { background: #fff; color: #1C2033; }
 .rec-chip { padding: 5px 14px; border-radius: 999px; border: 1px solid #D5DAEA; background: #fff; color: #5B6178; font-size: 13px; cursor: pointer; font-family: inherit; }
 .rec-chip.on { background: #3E6FE0; border-color: #3E6FE0; color: #fff; font-weight: 600; }
 .rec-chip:disabled { opacity: .6; cursor: default; }
+
+/* Modal de premissa: tipo em linha própria, 3 campos na linha seguinte, filtros enxutos */
+.rec-prem-type .rec-seg { max-width: 440px; }
+.rec-prem-form .rec-seg button { white-space: nowrap; }
+.rec-prem-form .rec-prem-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; }
+.rec-prem-scope-head { display: flex; align-items: baseline; gap: 10px; font-size: 13px; color: #5B6178; }
+.rec-prem-scope-head strong { color: #1C2033; }
+.rec-prem-more { align-self: flex-start; }
+/* Tipo do item na tabela de produtos: ícone + pill */
+.rec-kind-wrap { position: relative; display: inline-flex; align-items: center; }
+.rec-kind-wrap > svg { position: absolute; left: 9px; pointer-events: none; z-index: 1; }
+.rec-kind-wrap select.rec-kind { padding-left: 27px; }
+.rec-kind-wrap-produto { color: #3E6FE0; }
+.rec-kind-wrap-servico { color: #a45a00; }
