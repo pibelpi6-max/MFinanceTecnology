@@ -21,7 +21,7 @@ const variantClasses: Record<ButtonVariant, string> = {
 // variantes que, como accent-blue, ficam quase invisíveis quando apenas esmaecidas.
 const disabledVariantClasses: Partial<Record<ButtonVariant, string>> = {
   "accent-blue":
-    "rounded-full bg-gray-100 border border-gray-300 text-gray-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400",
+    "rounded-full bg-white border border-[#3E6FE0]/30 text-[#3E6FE0]/60 dark:bg-gray-800 dark:border-[#3E6FE0]/30 dark:text-[#3E6FE0]/60",
 };
 const sizeClasses: Record<ButtonSize, string> = {
   sm: "px-3 py-1.5 text-xs",
