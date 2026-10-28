@@ -701,8 +701,8 @@ function DeductionDefaultsPanel({ orcamentoId, defaults, rules, entities, produc
 function FxPanel({ orcamentoId, rates, onError }: { orcamentoId: string; rates: RateTable; onError: (s: string | null) => void }) {
   const t = useTranslations("receita");
   const router = useRouter();
-  const [currency, setCurrency] = useState(Object.keys(rates)[0] ?? "USD");
-  const [vals, setVals] = useState<string[]>(() => MONTHS.map((m) => fmtInput(rates[Object.keys(rates)[0] ?? "USD"]?.[m] ?? 0)));
+  const [currency, setCurrency] = useState("");
+  const [vals, setVals] = useState<string[]>(() => MONTHS.map(() => ""));
   const [pending, start] = useTransition();
   const pick = (c: string) => { setCurrency(c); setVals(MONTHS.map((m) => fmtInput(rates[c]?.[m] ?? 0))); };
   const inputRef = useRef<HTMLInputElement>(null);
@@ -714,7 +714,7 @@ function FxPanel({ orcamentoId, rates, onError }: { orcamentoId: string; rates: 
       <div className="rec-fx-head">
         <label className="rec-field">
           {t("currency")}
-          <input ref={inputRef} value={currency} maxLength={3} placeholder="EUR" onChange={(e) => pick(e.target.value.toUpperCase())} />
+          <input ref={inputRef} value={currency} maxLength={3} onChange={(e) => pick(e.target.value.toUpperCase())} />
         </label>
         <div className="rec-presets">
           {known.map((c) => (
@@ -743,7 +743,7 @@ function FxPanel({ orcamentoId, rates, onError }: { orcamentoId: string; rates: 
         ))}
       </div>
       <Button
-        variant="primary" size="sm" isLoading={pending} loadingText={t("saving")}
+        variant="primary" size="sm" isLoading={pending} loadingText={t("saving")} disabled={currency.length !== 3}
         onClick={() => start(async () => {
           onError(null);
           const r = await saveCurrencyRates({ orcamentoId, currency, rates: vals.map(num) });
