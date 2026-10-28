@@ -24,6 +24,14 @@ import { TreeGuides } from "./TreeGuides";
  * omitida pra escondê-la — por exemplo, uma árvore read-only passaria só
  * `name`/`hasChildren`/`isOpen`/`onToggleExpand`, sem nenhuma das três.
  */
+// Referência estável: roda só quando o campo aparece, não a cada tecla digitada.
+function focusAndSelect(el: HTMLInputElement | null) {
+  if (el) {
+    el.focus();
+    el.select();
+  }
+}
+
 export interface TreeItemRowProps {
   /** Guias de indentação da árvore — mesmas props que `TreeGuides` espera. */
   ancestorContinues: boolean[];
@@ -147,7 +155,6 @@ export function TreeItemRow({
               if (e.key === "Escape") onCancelEdit();
             }}
             placeholder={codePlaceholder}
-            autoFocus
             disabled={editLoading}
             className="settings-item-edit-input settings-item-edit-input--code"
           />
@@ -160,6 +167,8 @@ export function TreeItemRow({
             }}
             placeholder={namePlaceholder}
             disabled={editLoading}
+            // Ao entrar em edição, o cursor vai para o nome já com o texto selecionado: é só digitar.
+            ref={focusAndSelect}
             className="settings-item-edit-input settings-item-edit-input--name"
           />
           <span className="settings-item-actions settings-item-actions--static">
