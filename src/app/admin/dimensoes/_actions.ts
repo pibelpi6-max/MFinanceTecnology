@@ -371,11 +371,33 @@ export async function cancelDimensionNode(input: {
   try {
     await requireTenant();
     const supabase = await createClient();
-    const { error } = await supabase
+    const { data: version, error: readError } = await supabase
       .from("dimension_node_versions")
-      .update({ valid_until_year: input.year - 1 })
-      .eq("id", input.versionId);
-    if (error) return { error: error.message };
+      .select("dimension_node_id, valid_from_year")
+      .eq("id", input.versionId)
+      .single();
+    if (readError || !version) return { error: readError?.message ?? "Item não encontrado" };
+
+    const childrenHint = "Há itens abaixo dele. Mova ou exclua os itens filhos primeiro.";
+    if (version.valid_from_year >= input.year) {
+      // O item começou neste ano (ou depois): encerrar "a partir de" este ano é nunca ter existido.
+      const del = await supabase.from("dimension_node_versions").delete().eq("id", input.versionId);
+      if (del.error) return { error: del.error.code === "23503" ? childrenHint : del.error.message };
+      const { count } = await supabase
+        .from("dimension_node_versions")
+        .select("id", { count: "exact", head: true })
+        .eq("dimension_node_id", version.dimension_node_id);
+      if ((count ?? 0) === 0) {
+        const delNode = await supabase.from("dimension_nodes").delete().eq("id", version.dimension_node_id);
+        if (delNode.error) return { error: delNode.error.code === "23503" ? childrenHint : delNode.error.message };
+      }
+    } else {
+      const { error } = await supabase
+        .from("dimension_node_versions")
+        .update({ valid_until_year: input.year - 1 })
+        .eq("id", input.versionId);
+      if (error) return { error: error.message };
+    }
 
     revalidatePath("/admin/dimensoes");
     revalidatePath("/admin/configuracoes");
