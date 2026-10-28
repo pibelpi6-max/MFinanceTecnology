@@ -583,8 +583,7 @@ function DeductionDefaultsPanel({ orcamentoId, defaults, onError }: {
   const router = useRouter();
   const [items, setItems] = useState(() => defaults.map((d) => ({ label: d.label, pct: fmtInput(d.pct) })));
   const [pending, start] = useTransition();
-  const [saved, setSaved] = useState(false);
-  const touch = (fn: (s: typeof items) => typeof items) => { setSaved(false); setItems(fn); };
+  const touch = (fn: (s: typeof items) => typeof items) => setItems(fn);
   const listRef = useRef<HTMLDivElement>(null);
   const [focusRow, setFocusRow] = useState<{ i: number; field: 0 | 1 } | null>(null);
   useEffect(() => {
@@ -618,10 +617,9 @@ function DeductionDefaultsPanel({ orcamentoId, defaults, onError }: {
           onClick={() => start(async () => {
             onError(null);
             const r = await saveDeductionDefaults({ orcamentoId, items: items.map((i) => ({ label: i.label, pct: num(i.pct) })) });
-            if (r.error) onError(r.error); else { setSaved(true); router.refresh(); }
+            if (r.error) onError(r.error); else router.refresh();
           })}
         >{t("save")}</Button>
-        {saved && <span className="rec-saved">{t("saved")}</span>}
       </div>
     </div>
   );
