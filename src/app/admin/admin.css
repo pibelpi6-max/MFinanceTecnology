@@ -1667,3 +1667,7 @@ input[inputmode="decimal"], input[inputmode="numeric"], input[type="number"] { t
 .rec-fx-cell input { height: 38px; border: 1px solid #C9D0E0; border-radius: 8px; background: #fff; color: #1C2033; font-size: 14px; }
 .rec-fx-cell input::placeholder { color: #A3A9BD; }
 .rec-fx-cell input:hover { border-color: #A9B4D0; }
+
+.mo-chips .rec-chip.rec-chip-on { background: #3E6FE0; border-color: #3E6FE0; }
+.mo-chips .rec-chip.rec-chip-on .mo-chip-btn, .mo-chips .rec-chip.rec-chip-on .mo-chip-x { color: #fff; font-weight: 600; }
+.mo-rates-head { display: inline-block; margin: 0 0 10px 4px; padding: 4px 12px; border-radius: 999px; background: #E9EFFF; color: #3E6FE0; font-size: 14px; font-weight: 700; }
