@@ -585,8 +585,18 @@ function DeductionDefaultsPanel({ orcamentoId, defaults, onError }: {
   const [pending, start] = useTransition();
   const [saved, setSaved] = useState(false);
   const touch = (fn: (s: typeof items) => typeof items) => { setSaved(false); setItems(fn); };
+  const listRef = useRef<HTMLDivElement>(null);
+  const [focusRow, setFocusRow] = useState<{ i: number; field: 0 | 1 } | null>(null);
+  useEffect(() => {
+    if (!focusRow) return;
+    const el = listRef.current?.querySelectorAll(".rec-ded-row")[focusRow.i]?.querySelectorAll<HTMLInputElement>("input")[focusRow.field];
+    el?.focus();
+    el?.select();
+    setFocusRow(null);
+  }, [focusRow]);
+  const addRow = (label: string, field: 0 | 1) => { setFocusRow({ i: items.length, field }); touch((s) => [...s, { label, pct: "" }]); };
   return (
-    <div className="rec-panel">
+    <div className="rec-panel" ref={listRef}>
       <p className="rec-hint">{t("dedDefaultsHint")}</p>
       {items.map((it, i) => (
         <div className="rec-ded-row" key={i}>
@@ -598,9 +608,9 @@ function DeductionDefaultsPanel({ orcamentoId, defaults, onError }: {
       ))}
       <div className="rec-presets">
         {PRESETS.filter((x) => !items.some((i) => i.label.toLowerCase() === x.toLowerCase())).map((x) => (
-          <button type="button" key={x} className="rec-chip" onClick={() => touch((s) => [...s, { label: x, pct: "" }])}>+ {x}</button>
+          <button type="button" key={x} className="rec-chip" onClick={() => addRow(x, 1)}>+ {x}</button>
         ))}
-        <button type="button" className="rec-chip" onClick={() => touch((s) => [...s, { label: "", pct: "" }])}>+ {t("other")}</button>
+        <button type="button" className="rec-chip" onClick={() => addRow("", 0)}>+ {t("other")}</button>
       </div>
       <div className="rec-actions" style={{ display: "flex", alignItems: "center", gap: 12 }}>
         <Button
