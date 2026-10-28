@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { getOrcamentoModule, orcamentoModuleHref } from "@/lib/orcamentos/modules";
@@ -52,11 +53,40 @@ const FEEDS = [
   "M427 768L641 425",
 ];
 
+type Group = "feeds" | "consumes" | "fixed" | "approval" | "params";
+const GROUPS: Group[] = ["feeds", "consumes", "fixed", "approval", "params"];
+const STORE_KEY = "dre-map-groups";
+
 export function DreDiagram({ orcamentoId, year }: { orcamentoId: string; year: number }) {
   const router = useRouter();
   const t = useTranslations("orcamentos");
+  // Quais conexões aparecem (para o mapa não ficar poluído); lembra a escolha neste navegador.
+  const [shown, setShown] = useState<Record<Group, boolean>>({ feeds: true, consumes: true, fixed: true, approval: true, params: true });
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(STORE_KEY);
+      if (raw) setShown((s) => ({ ...s, ...JSON.parse(raw) }));
+    } catch {
+      /* sem armazenamento: segue com tudo visível */
+    }
+  }, []);
+  const toggle = (g: Group) =>
+    setShown((s) => {
+      const n = { ...s, [g]: !s[g] };
+      try { window.localStorage.setItem(STORE_KEY, JSON.stringify(n)); } catch { /* ignora */ }
+      return n;
+    });
 
   return (
+    <>
+    <div className="dre-filters" role="group" aria-label={t("mapLinesLabel")}>
+      <span>{t("mapLinesLabel")}</span>
+      {GROUPS.map((g) => (
+        <button key={g} type="button" className={`rec-chip${shown[g] ? " rec-chip-on" : ""}`} aria-pressed={shown[g]} onClick={() => toggle(g)}>
+          {t(`mapLines_${g}`)}
+        </button>
+      ))}
+    </div>
     <svg viewBox="0 0 1500 990" className="dre-map" role="group" aria-label="Mapa do orçamento">
       <defs>
         {[
@@ -75,36 +105,39 @@ export function DreDiagram({ orcamentoId, year }: { orcamentoId: string; year: n
       <line x1="641" y1="0" x2="641" y2="775" stroke="#C9CFE0" strokeWidth="2" strokeDasharray="3 7" strokeLinecap="round" />
       <line x1="1005" y1="0" x2="1005" y2="775" stroke="#C9CFE0" strokeWidth="2" strokeDasharray="3 7" strokeLinecap="round" />
 
-      {/* conexões */}
+      {/* conexões, por grupo */}
       <g fill="none" strokeWidth="2.5" strokeLinecap="round">
-        {FEEDS.map((d) => (
+        {shown.feeds && FEEDS.map((d) => (
           <path key={d} d={d} stroke={BLUE} strokeDasharray="9 7" className="dre-flow" markerEnd="url(#arr-b)" />
         ))}
-        <path d="M427 430H532V483H1131" stroke={AMBER} strokeDasharray="12 8" markerEnd="url(#arr-o)" />
-        <path d="M825 179V303" stroke={MUTED} markerEnd="url(#arr-m)" />
-        <path d="M825 575V451" stroke={MUTED} markerEnd="url(#arr-m)" />
-        <path d="M1005 342L1131 196" stroke={GREEN} markerEnd="url(#arr-g)" />
-        <path d="M1005 410L1131 447" stroke={GREEN} markerEnd="url(#arr-g)" />
-        <path d="M1297 238V383" stroke={MUTED} markerEnd="url(#arr-m)" />
+        {shown.fixed && <path d="M427 430H532V483H1131" stroke={AMBER} strokeDasharray="12 8" markerEnd="url(#arr-o)" />}
+        {shown.approval && <path d="M825 179V303" stroke={MUTED} markerEnd="url(#arr-m)" />}
+        {shown.approval && <path d="M825 575V451" stroke={MUTED} markerEnd="url(#arr-m)" />}
+        {shown.consumes && <path d="M1005 342L1131 196" stroke={GREEN} markerEnd="url(#arr-g)" />}
+        {shown.consumes && <path d="M1005 410L1131 447" stroke={GREEN} markerEnd="url(#arr-g)" />}
+        {shown.consumes && <path d="M1297 238V383" stroke={MUTED} markerEnd="url(#arr-m)" />}
       </g>
 
       {/* Parâmetros (valem para o sistema todo) alimentam Receita e Custos pela lateral */}
-      <g fill="none" strokeWidth="2" strokeLinecap="round" stroke={MUTED} strokeDasharray="4 7">
-        <path d="M75 916H36V110H72" markerEnd="url(#arr-m)" />
-        <path d="M36 274H72" markerEnd="url(#arr-m)" />
-      </g>
+      {shown.params && (
+        <g fill="none" strokeWidth="2" strokeLinecap="round" stroke={MUTED} strokeDasharray="4 7">
+          <path d="M75 916H36V110H72" markerEnd="url(#arr-m)" />
+          <path d="M36 274H72" markerEnd="url(#arr-m)" />
+        </g>
+      )}
 
       {/* partículas percorrendo as setas que alimentam a DRE */}
-      <g className="dre-dots" fill={BLUE}>
+      {shown.feeds && <g className="dre-dots" fill={BLUE}>
         {FEEDS.map((d, i) => (
           <circle key={d} r="5">
             <animateMotion dur="2.6s" begin={`${(i * 0.45).toFixed(2)}s`} repeatCount="indefinite" path={d} />
           </circle>
         ))}
-      </g>
+      </g>}
 
       {/* rótulos das conexões */}
       <g fontStyle="italic" fontSize="18" fill="#6B7088">
+        {shown.feeds && <>
         <text x="433" y="68" fill="#2F5BD0">Receita</text>
         <text x="433" y="90" fill="#2F5BD0">Deduções</text>
         <text x="433" y="112" fill="#2F5BD0">CPV</text>
@@ -113,11 +146,14 @@ export function DreDiagram({ orcamentoId, year }: { orcamentoId: string; year: n
         <text x="433" y="373" fill="#2F5BD0">Depreciação</text>
         <text x="433" y="526" fill="#2F5BD0">Impostos</text>
         <text x="433" y="684" fill="#2F5BD0">Despesas</text>
+        </>}
+        {shown.consumes && <>
         <text x="1008" y="223">condições</text>
         <text x="1008" y="245">financeiras</text>
         <text x="1310" y="343">saldo e</text>
         <text x="1310" y="365">capital de giro</text>
-        <text x="640" y="507" fill="#B7791F">Imobilizado</text>
+        </>}
+        {shown.fixed && <text x="640" y="507" fill="#B7791F">Imobilizado</text>}
       </g>
 
       {/* módulos */}
@@ -183,5 +219,6 @@ export function DreDiagram({ orcamentoId, year }: { orcamentoId: string; year: n
         <text x="1006" y="808" fill="#0B7A53">{t("zoneConsumes")}</text>
       </g>
     </svg>
+    </>
   );
 }

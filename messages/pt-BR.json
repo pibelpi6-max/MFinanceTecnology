@@ -517,7 +517,13 @@
     "moduleInProgressHint": "Em breve você poderá trabalhar neste módulo aqui.",
     "backToMap": "Mapa do orçamento",
     "fullscreen": "Tela cheia",
-    "exitFullscreen": "Sair da tela cheia"
+    "exitFullscreen": "Sair da tela cheia",
+    "mapLinesLabel": "Conexões",
+    "mapLines_feeds": "Alimentam a DRE",
+    "mapLines_consumes": "Consomem da DRE",
+    "mapLines_fixed": "Imobilizado",
+    "mapLines_approval": "Aprovação e rateio",
+    "mapLines_params": "Parâmetros"
   },
   "receita": {
     "noProductsTitle": "Cadastre a hierarquia Produto",

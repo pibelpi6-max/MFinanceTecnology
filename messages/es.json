@@ -517,7 +517,13 @@
     "moduleInProgressHint": "Pronto podrá trabajar en este módulo aquí.",
     "backToMap": "Mapa del presupuesto",
     "fullscreen": "Pantalla completa",
-    "exitFullscreen": "Salir de pantalla completa"
+    "exitFullscreen": "Salir de pantalla completa",
+    "mapLinesLabel": "Conexiones",
+    "mapLines_feeds": "Alimentan el PyG",
+    "mapLines_consumes": "Consumen del PyG",
+    "mapLines_fixed": "Inmovilizado",
+    "mapLines_approval": "Aprobación y prorrateo",
+    "mapLines_params": "Parámetros"
   },
   "receita": {
     "noProductsTitle": "Cree la jerarquía Producto",

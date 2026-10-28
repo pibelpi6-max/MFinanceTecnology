@@ -517,7 +517,13 @@
     "moduleInProgressHint": "You will soon be able to work on this module here.",
     "backToMap": "Budget map",
     "fullscreen": "Full screen",
-    "exitFullscreen": "Exit full screen"
+    "exitFullscreen": "Exit full screen",
+    "mapLinesLabel": "Connections",
+    "mapLines_feeds": "Feed the P&L",
+    "mapLines_consumes": "Consume the P&L",
+    "mapLines_fixed": "Fixed assets",
+    "mapLines_approval": "Approval and allocation",
+    "mapLines_params": "Parameters"
   },
   "receita": {
     "noProductsTitle": "Create the Product hierarchy",
