@@ -1508,8 +1508,14 @@ select.rec-kind option:checked { background: #fff; color: #1C2033; }
 .tms-group + .tms-group { margin-top: 4px; }
 .tms-empty { padding: 12px; font-size: 13px; color: #6b7088; }
 
-.rec-rule-btn.is-set { border-style: solid; border-color: #F59E0B; background: #FFF4E0; color: #B45309; font-weight: 600; }
+.rec-rule-btn.is-set { color: #E8920C; }
 .rec-rules--modal { margin-left: 0; max-width: none; }
 .rec-rules--modal .rec-rule-row { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.2fr) 110px 36px; }
 
 .rec-ded-row .rec-rule-btn { width: 34px; padding: 0; justify-content: center; margin-left: 0; flex: none; }
+
+/* Engrenagem discreta: só o ícone; âmbar quando há condições salvas */
+.rec-ded-row .rec-rule-btn { width: 30px; height: 30px; border: 0; background: transparent; color: #9AA0B8; border-radius: 8px; }
+.rec-ded-row .rec-rule-btn:hover:not(:disabled) { background: #F1F3F9; color: #6b7088; }
+.rec-ded-row .rec-rule-btn.is-set { color: #E8920C; }
+.rec-ded-row .rec-rule-btn.is-set:hover:not(:disabled) { background: #FFF4E0; color: #D97706; }
