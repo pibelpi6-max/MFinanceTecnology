@@ -602,7 +602,9 @@ function DeductionDefaultsPanel({ orcamentoId, defaults, onError }: {
           <input value={it.label} onChange={(e) => touch((s) => s.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))} placeholder={t("deductionName")} />
           <input inputMode="decimal" value={it.pct} onChange={(e) => /^\d*[.,]?\d*$/.test(e.target.value) && touch((s) => s.map((x, j) => (j === i ? { ...x, pct: e.target.value } : x)))} placeholder="%" />
           <span>%</span>
-          <button type="button" className="rec-link" onClick={() => touch((s) => s.filter((_, j) => j !== i))}>{t("remove")}</button>
+          <button type="button" className="rec-edit-x" aria-label={t("remove")} title={t("remove")} onClick={() => touch((s) => s.filter((_, j) => j !== i))}>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5" /></svg>
+          </button>
         </div>
       ))}
       <div className="rec-presets">
