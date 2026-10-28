@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentTenant } from "@/lib/tenant/getCurrentTenant";
+import { getDimensionTreeByStructure } from "@/lib/dimensions/queries";
 import { BATCH_REF_PREFIX, type ImportRunSummary } from "@/lib/import/types";
 
 interface ActionResult {
@@ -400,6 +401,99 @@ export async function cancelDimensionNode(input: {
         .update({ valid_until_year: input.year - 1 })
         .eq("id", input.versionId);
       if (error) return { error: error.message };
+    }
+
+    revalidatePath("/admin/dimensoes");
+    revalidatePath("/admin/configuracoes");
+    return { success: true };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Erro inesperado" };
+  }
+}
+
+/**
+ * Move um item (com tudo que está abaixo dele) para dentro de outro item da
+ * mesma estrutura, a partir do ano informado. Valida ciclo (mover para dentro
+ * de si mesmo ou de um filho) e a profundidade máxima de 10 níveis.
+ */
+export async function moveDimensionNode(input: {
+  nodeId: string;
+  newParentId: string;
+  year: number;
+}): Promise<ActionResult> {
+  try {
+    const { tenantId } = await requireTenant();
+    const supabase = await createClient();
+
+    const { data: nodeRow } = await supabase
+      .from("dimension_nodes")
+      .select("id, structure_id")
+      .eq("id", input.nodeId)
+      .eq("tenant_id", tenantId)
+      .maybeSingle();
+    if (!nodeRow?.structure_id) return { error: "Item não encontrado." };
+
+    const nodes = await getDimensionTreeByStructure(tenantId, nodeRow.structure_id, input.year);
+    const byId = new Map(nodes.map((n) => [n.id, n]));
+    const self = byId.get(input.nodeId);
+    const parent = byId.get(input.newParentId);
+    if (!self || !parent) return { error: "Item não encontrado nesta estrutura." };
+    if (self.parentNodeId === input.newParentId) return { success: true };
+
+    const childrenOf = new Map<string, typeof nodes>();
+    for (const n of nodes) {
+      if (!n.parentNodeId) continue;
+      const list = childrenOf.get(n.parentNodeId) ?? [];
+      list.push(n);
+      childrenOf.set(n.parentNodeId, list);
+    }
+    const descendants: typeof nodes = [];
+    const stack = [...(childrenOf.get(self.id) ?? [])];
+    while (stack.length > 0) {
+      const cur = stack.pop()!;
+      descendants.push(cur);
+      stack.push(...(childrenOf.get(cur.id) ?? []));
+    }
+    if (parent.id === self.id || descendants.some((d) => d.id === parent.id)) {
+      return { error: "Não é possível mover um item para dentro dele mesmo ou de um item abaixo dele." };
+    }
+
+    const delta = parent.level + 1 - self.level;
+    const deepest = Math.max(self.level, ...descendants.map((d) => d.level)) + delta;
+    if (deepest > 10) return { error: "Profundidade máxima de 10 níveis atingida." };
+
+    const newLevel = parent.level + 1;
+    if (self.validFromYear === input.year) {
+      const { error } = await supabase
+        .from("dimension_node_versions")
+        .update({ parent_node_id: parent.id, level: newLevel })
+        .eq("id", self.versionId);
+      if (error) return { error: error.message };
+    } else {
+      const { error: closeError } = await supabase
+        .from("dimension_node_versions")
+        .update({ valid_until_year: input.year - 1 })
+        .eq("id", self.versionId);
+      if (closeError) return { error: closeError.message };
+      const { error: insertError } = await supabase.from("dimension_node_versions").insert({
+        dimension_node_id: self.id,
+        parent_node_id: parent.id,
+        name: self.name,
+        level: newLevel,
+        valid_from_year: input.year,
+        valid_until_year: null,
+      });
+      if (insertError) return { error: insertError.message };
+    }
+
+    if (delta !== 0) {
+      const results = await Promise.all(
+        descendants.map((d) =>
+          supabase.from("dimension_node_versions").update({ level: d.level + delta }).eq("id", d.versionId),
+        ),
+      );
+      const failed = results.find((r) => r.error);
+      if (failed?.error) return { error: failed.error.message };
     }
 
     revalidatePath("/admin/dimensoes");

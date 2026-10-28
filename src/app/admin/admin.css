@@ -1477,3 +1477,12 @@ select.rec-kind option:checked { background: #fff; color: #1C2033; }
 .rec-rule-row select option { background: #fff; color: #1C2033; }
 
 .settings-block-subtitle-row--stack { flex-direction: column; align-items: flex-start; gap: 12px; }
+
+/* Mover item da estrutura */
+.settings-item-row--drop { background: #E9EFFF; outline: 2px dashed #3E6FE0; outline-offset: -2px; }
+.settings-item-row[draggable="true"] { cursor: grab; }
+.move-node-list { list-style: none; margin: 0; padding: 4px; border: 1px solid #E6E8F0; border-radius: 12px; max-height: 320px; overflow: auto; background: #fff; }
+.move-node-item { display: block; width: 100%; text-align: left; padding: 8px 12px; border: 0; border-radius: 8px; background: #fff; color: #1C2033; font-size: 14px; cursor: pointer; }
+.move-node-item:hover:not(:disabled) { background: #F5F7FC; }
+.move-node-item.is-selected { background: #E9EFFF; color: #2F5BD0; font-weight: 600; }
+.move-node-item:disabled { color: #9AA0B5; cursor: not-allowed; }

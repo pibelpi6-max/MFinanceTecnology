@@ -124,7 +124,12 @@
       "parent": "Item superior",
       "parentHelp": "Pode ser um item do próprio arquivo ou já existente (código ou nome). Cada estrutura tem um único item de nível 1 (deixe o Item Superior em branco só nele)."
     },
-    "importButton": "Importar"
+    "importButton": "Importar",
+    "move": "Mover para...",
+    "moveTitle": "Mover item",
+    "moveHint": "Escolha o item que passará a ser o superior de {name}. Tudo que está abaixo dele vai junto.",
+    "moveConfirm": "Mover",
+    "moveNoTargets": "Não há outro item para onde mover."
   },
   "budget": {
     "title": "Matriz Orçamentária",

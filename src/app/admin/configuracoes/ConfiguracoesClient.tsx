@@ -21,7 +21,8 @@ import { ErpCodesModal } from "./ErpCodesModal";
 import { deleteDimensionType, updateFiscalYearStartMonth } from "./_actions";
 import { setDimensionStructureActive, deleteDimensionStructure, duplicateDimensionStructure } from "./_structureActions";
 import { deleteConjunto } from "./_conjuntoActions";
-import { cancelDimensionNode, createDimensionNode, updateDimensionNode } from "../dimensoes/_actions";
+import { cancelDimensionNode, createDimensionNode, moveDimensionNode, updateDimensionNode } from "../dimensoes/_actions";
+import { MoveNodeModal, validMoveTargets } from "./MoveNodeModal";
 
 type Translator = (key: string, values?: Record<string, string | number>) => string;
 
@@ -222,6 +223,29 @@ export function ConfiguracoesClient({
   const [editNodeName, setEditNodeName] = useState("");
   const [editNodeLoading, setEditNodeLoading] = useState(false);
   const [editNodeError, setEditNodeError] = useState<string | null>(null);
+
+  // Mover item: arrastando para cima de outro ou pelo botão "Mover para...".
+  const [dragNodeId, setDragNodeId] = useState<string | null>(null);
+  const [dropTargetId, setDropTargetId] = useState<string | null>(null);
+  const [moveDialog, setMoveDialog] = useState<{ node: DimensionNodeRow; structureId: string } | null>(null);
+  const [moveLoading, setMoveLoading] = useState(false);
+  const [moveError, setMoveError] = useState<string | null>(null);
+
+  async function handleMoveNode(nodeId: string, targetId: string): Promise<boolean> {
+    setMoveLoading(true);
+    setMoveError(null);
+    const result = await moveDimensionNode({ nodeId, newParentId: targetId, year });
+    setMoveLoading(false);
+    if (result.error) {
+      setMoveError(result.error);
+      setAddNodeError(result.error);
+      return false;
+    }
+    setAddNodeError(null);
+    treeExpand.expand(targetId);
+    router.refresh();
+    return true;
+  }
 
   // Item recém-criado (junto com a estrutura) que deve abrir já em edição assim que chegar na árvore.
   const [pendingEditNodeId, setPendingEditNodeId] = useState<string | null>(null);
@@ -623,6 +647,33 @@ export function ConfiguracoesClient({
           editLabel={td("edit")}
           onDelete={() => setNodeDeleting({ type: d, node })}
           deleteLabel={tc("delete")}
+          onMove={isAdmin ? () => { setMoveError(null); setMoveDialog({ node, structureId: s.id }); } : undefined}
+          moveLabel={td("move")}
+          draggable={isAdmin && !isEditing}
+          onDragStart={(e) => {
+            setDragNodeId(node.id);
+            e.dataTransfer.effectAllowed = "move";
+            e.dataTransfer.setData("text/plain", node.id);
+          }}
+          onDragEnd={() => { setDragNodeId(null); setDropTargetId(null); }}
+          onDragOver={(e) => {
+            if (!dragNodeId || dragNodeId === node.id) return;
+            const nodes = nodesByStructure[s.id] ?? [];
+            const dragged = nodes.find((n) => n.id === dragNodeId);
+            if (!dragged || !validMoveTargets(nodes, dragged).some((x) => x.id === node.id)) return;
+            e.preventDefault();
+            e.dataTransfer.dropEffect = "move";
+            if (dropTargetId !== node.id) setDropTargetId(node.id);
+          }}
+          onDragLeave={() => { if (dropTargetId === node.id) setDropTargetId(null); }}
+          onDrop={(e) => {
+            e.preventDefault();
+            const id = dragNodeId;
+            setDragNodeId(null);
+            setDropTargetId(null);
+            if (id && id !== node.id) void handleMoveNode(id, node.id);
+          }}
+          isDropTarget={dropTargetId === node.id}
           isEditing={isEditing}
           editCode={editNodeCode}
           onEditCodeChange={setEditNodeCode}
@@ -1108,6 +1159,22 @@ export function ConfiguracoesClient({
           loadingText={tc("saving")}
           onConfirm={handleConfirmDelete}
           error={deleteError}
+        />
+      )}
+
+      {isAdmin && (
+        <MoveNodeModal
+          open={moveDialog !== null}
+          onClose={() => setMoveDialog(null)}
+          node={moveDialog?.node ?? null}
+          nodes={moveDialog ? nodesByStructure[moveDialog.structureId] ?? [] : []}
+          loading={moveLoading}
+          error={moveError}
+          onConfirm={async (targetId) => {
+            if (!moveDialog) return;
+            const ok = await handleMoveNode(moveDialog.node.id, targetId);
+            if (ok) setMoveDialog(null);
+          }}
         />
       )}
 
