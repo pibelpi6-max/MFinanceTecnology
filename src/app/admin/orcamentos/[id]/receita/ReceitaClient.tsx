@@ -12,7 +12,7 @@ import {
   lineage, type Deduction, type MonthResult, type RateTable, type RevenueLine, type DeductionRule,
 } from "@/lib/receita/calc";
 import { TreeMultiSelect, type TreeMultiSelectLabels, type TreeSelectGroup } from "@/components/ui/tree/TreeMultiSelect";
-import { deletePremise, savePremise, saveCurrencyRates, setPremiseActive, saveDeductionDefaults, saveDeductionRules, saveRevenueEntries, saveRevenueDimensions } from "./_actions";
+import { deletePremise, savePremise, setPremiseActive, saveDeductionDefaults, saveDeductionRules, saveRevenueEntries, saveRevenueDimensions } from "./_actions";
 import { ReceitaCharts } from "./ReceitaCharts";
 import type { TablePrefs } from "@/components/ui/DataTable/types";
 import { ProdutosPanel } from "./ProdutosPanel";
@@ -943,62 +943,6 @@ function DeductionDefaultsPanel({ orcamentoId, defaults, rules, groups, products
           })}
         >{t("save")}</Button>
       </div>
-    </div>
-  );
-}
-
-export function FxPanel({ orcamentoId, rates, companyCurrencies, onError }: { orcamentoId: string; rates: RateTable; companyCurrencies: string[]; onError: (s: string | null) => void }) {
-  const t = useTranslations("receita");
-  const router = useRouter();
-  const [currency, setCurrency] = useState("");
-  const [vals, setVals] = useState<string[]>(() => MONTHS.map(() => ""));
-  const [pending, start] = useTransition();
-  const pick = (c: string) => { setCurrency(c); setVals(MONTHS.map((m) => fmtInput(rates[c]?.[m] ?? 0))); };
-  const inputRef = useRef<HTMLInputElement>(null);
-  const known = Array.from(new Set([...Object.keys(rates), ...companyCurrencies])).filter((c) => c !== "BRL");
-  const repeatFrom = (i: number) => setVals((s) => s.map((x, j) => (j > i ? s[i] : x)));
-  return (
-    <div className="rec-panel">
-      <p className="rec-hint">{t("fxHint")}</p>
-      <div className="rec-fx-head">
-        <label className="rec-field">
-          {t("currency")}
-          <input ref={inputRef} value={currency} maxLength={3} onChange={(e) => pick(e.target.value.toUpperCase())} />
-        </label>
-        <div className="rec-presets">
-          {known.map((c) => (
-            <button type="button" key={c} className={`rec-chip${c === currency ? " rec-chip-on" : ""}`} onClick={() => pick(c)}>{c}</button>
-          ))}
-          <button type="button" className="rec-chip rec-chip-new" onClick={() => { pick(""); inputRef.current?.focus(); }}>+ {t("fxNewCurrency")}</button>
-        </div>
-      </div>
-      <div className="rec-fx-grid">
-        {MONTHS.map((m, i) => (
-          <div key={m} className="rec-field">
-            <span>{new Intl.DateTimeFormat(undefined, { month: "short" }).format(new Date(2000, m - 1, 1))}</span>
-            <span className="rec-fx-cell">
-              <input
-                aria-label={new Intl.DateTimeFormat(undefined, { month: "long" }).format(new Date(2000, m - 1, 1))}
-                inputMode="decimal" value={vals[i]} placeholder="0,0000"
-                onChange={(e) => /^\d*[.,]?\d*$/.test(e.target.value) && setVals((s) => s.map((x, j) => (j === i ? e.target.value : x)))}
-              />
-              {i < MONTHS.length - 1 && (
-                <button type="button" className="rec-fx-repeat" title={t("fxRepeatNext")} aria-label={t("fxRepeatNext")} disabled={!vals[i]} onClick={() => repeatFrom(i)}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="m6 6 6 6-6 6M13 6l6 6-6 6" /></svg>
-                </button>
-              )}
-            </span>
-          </div>
-        ))}
-      </div>
-      <Button
-        variant="primary" size="sm" isLoading={pending} loadingText={t("saving")} disabled={currency.length !== 3}
-        onClick={() => start(async () => {
-          onError(null);
-          const r = await saveCurrencyRates({ orcamentoId, currency, rates: vals.map(num) });
-          if (r.error) onError(r.error); else router.refresh();
-        })}
-      >{t("save")}</Button>
     </div>
   );
 }

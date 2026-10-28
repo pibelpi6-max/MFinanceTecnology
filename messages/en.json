@@ -742,7 +742,7 @@
     "globalCurrencies": "Currencies",
     "currencyName": "Name",
     "currencyNamePlaceholder": "E.g. US dollar",
-    "currencyAdd": "Add currency",
+    "currencyAdd": "Add",
     "parGroupGeneral": "General",
     "parGroupRevenue": "Revenue",
     "parGroupCosts": "Costs",
@@ -751,7 +751,10 @@
     "parNavLabel": "Parameters by module",
     "productService": "Product/Service",
     "parGroupBudget": "This budget",
-    "fxSectionTitle": "Monthly rates for this budget"
+    "fxSectionTitle": "Monthly rates for this budget",
+    "currencyBaseHint": "Type the code (e.g. USD) and add it. Then enter each month's rate.",
+    "currencyInvalid": "Invalid code: use 3 letters (e.g. USD).",
+    "fxRepeatAll": "Repeat January for all 12 months"
   },
   "erpCodes": {
     "title": "ERP codes",
