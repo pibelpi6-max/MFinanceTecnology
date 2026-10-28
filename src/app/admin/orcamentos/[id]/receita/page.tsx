@@ -5,7 +5,7 @@ import { getOrcamentoById, getOrcamentosByTenant } from "@/lib/orcamentos/querie
 import { getDimensionTypeByCode, getDimensionTree, getDimensionTypes } from "@/lib/dimensions/queries";
 import { DIMENSION_CODES } from "@/lib/dimensions/constants";
 import { buildDimensionHierarchy } from "@/lib/dimensions/hierarchy";
-import { getDeductionDefaults, getDeductionLabels, getDeductionRules, getItemKinds, getPremises, getReceitaData, getReferenceEntries, getRevenueDimensionIds } from "@/lib/receita/queries";
+import { getDeductionDefaults, getDeductionLabels, getDeductionRules, getItemKinds, getPremises, getReceitaData, getReferenceEntries, getRevenueDimensionIds, getTenantCurrencies } from "@/lib/receita/queries";
 import { BackToMapLink } from "@/components/orcamentos/BackToMapLink";
 import { ModuleTitle } from "@/components/orcamentos/ModuleTitle";
 import { getUserPreference } from "@/app/_actions/userPreferences";
@@ -96,6 +96,7 @@ export default async function ReceitaPage({ params, searchParams }: PageProps) {
     validFromYear: r.item.validFromYear,
   }));
   const premises = await getPremises(tenant.tenantId, orcamento.id);
+  const companyCurrencies = (await getTenantCurrencies(tenant.tenantId)).map((c) => c.code);
   const budgetOptions = (await getOrcamentosByTenant(tenant.tenantId).catch(() => []))
     .filter((o) => o.id !== orcamento.id)
     .map((o) => ({ id: o.id, label: o.label, year: o.year }));
@@ -127,7 +128,8 @@ export default async function ReceitaPage({ params, searchParams }: PageProps) {
             budgetOptions={budgetOptions}
             refEntries={refEntries}
             displayCurrency={displayCurrency}
-            currencies={data.currencies}
+            currencies={Array.from(new Set([...data.currencies, ...companyCurrencies]))}
+            companyCurrencies={companyCurrencies}
             entries={data.entries}
             deductions={data.deductions}
             rates={data.rates}

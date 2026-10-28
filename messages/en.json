@@ -603,7 +603,7 @@
     "calcNet": "= Gross − Deductions",
     "tabParams": "Parameters",
     "tabAnalysis": "Analyses",
-    "paramProducts": "Products and services",
+    "paramProducts": "Deductions by product",
     "analysisHint": "Calculated view (read-only): Gross revenue = Price × Volume; Net revenue = Gross − Deductions.",
     "prodAddLabel": "Add products or services",
     "prodAddPlaceholder": "Names separated by commas or one per line",
@@ -731,7 +731,12 @@
     "baseOtherBudget": "Another budget",
     "premBaseBudget": "Reference budget",
     "premBaseBudgetPick": "Pick a budget",
-    "unitOverBase": "over the same month of the base"
+    "unitOverBase": "over the same month of the base",
+    "globalProducts": "Products and services",
+    "globalCurrencies": "Currencies",
+    "currencyName": "Name",
+    "currencyNamePlaceholder": "E.g. US dollar",
+    "currencyAdd": "Add currency"
   },
   "erpCodes": {
     "title": "ERP codes",

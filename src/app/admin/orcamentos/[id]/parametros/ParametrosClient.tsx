@@ -1,0 +1,112 @@
+"use client";
+
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { Button } from "@/components/ui/Button";
+import type { TablePrefs } from "@/components/ui/DataTable/types";
+import type { TenantCurrency } from "@/lib/receita/queries";
+import { ProdutosPanel } from "../receita/ProdutosPanel";
+import type { ProductRow } from "../receita/ReceitaClient";
+import { deleteTenantCurrency, saveTenantCurrency } from "./_actions";
+
+interface Props {
+  orcamentoId: string;
+  year: number;
+  productTypeId: string;
+  products: ProductRow[];
+  productPrefs?: TablePrefs;
+  currencies: TenantCurrency[];
+}
+
+type Tab = "products" | "currencies";
+
+export function ParametrosClient(p: Props) {
+  const t = useTranslations("receita");
+  const router = useRouter();
+  const [tab, setTab] = useState<Tab>("products");
+  const [error, setError] = useState<string | null>(null);
+  const tabs: [Tab, string][] = [["products", t("globalProducts")], ["currencies", t("globalCurrencies")]];
+
+  return (
+    <div className="rec-wrap">
+      <div className="rec-tabs" role="tablist">
+        {tabs.map(([k, label]) => (
+          <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? "active" : ""} onClick={() => setTab(k)}>{label}</button>
+        ))}
+      </div>
+      {error && <div className="rec-error">{error}</div>}
+      {tab === "products" && (
+        <ProdutosPanel
+          orcamentoId={p.orcamentoId}
+          productTypeId={p.productTypeId}
+          year={p.year}
+          products={p.products}
+          deductions={[]}
+          deductionLabels={[]}
+          deductionDefaults={[]}
+          initialPrefs={p.productPrefs}
+          hideDeductions
+          onChanged={() => router.refresh()}
+          onError={setError}
+        />
+      )}
+      {tab === "currencies" && <CurrenciesPanel orcamentoId={p.orcamentoId} currencies={p.currencies} onError={setError} />}
+    </div>
+  );
+}
+
+function CurrenciesPanel({ orcamentoId, currencies, onError }: { orcamentoId: string; currencies: TenantCurrency[]; onError: (s: string | null) => void }) {
+  const t = useTranslations("receita");
+  const router = useRouter();
+  const [code, setCode] = useState("");
+  const [name, setName] = useState("");
+  const [pending, start] = useTransition();
+  return (
+    <div className="rec-panel">
+      <div className="rec-fx-head">
+        <label className="rec-field">
+          {t("currency")}
+          <input value={code} maxLength={3} placeholder="USD" onChange={(e) => setCode(e.target.value.toUpperCase())} />
+        </label>
+        <label className="rec-field">
+          {t("currencyName")}
+          <input value={name} placeholder={t("currencyNamePlaceholder")} onChange={(e) => setName(e.target.value)} />
+        </label>
+        <Button
+          variant="accent-blue" size="sm" className="px-3" isLoading={pending} loadingText={t("saving")} disabled={code.length !== 3}
+          onClick={() => start(async () => {
+            onError(null);
+            const r = await saveTenantCurrency({ orcamentoId, code, name });
+            if (r.error) return onError(r.error);
+            setCode("");
+            setName("");
+            router.refresh();
+          })}
+        >
+          + {t("currencyAdd")}
+        </Button>
+      </div>
+      <div className="rec-presets">
+        <span className="rec-chip rec-chip-on">BRL</span>
+        {currencies.filter((c) => c.code !== "BRL").map((c) => (
+          <span key={c.code} className="rec-chip" title={c.name}>
+            {c.code}{c.name ? ` · ${c.name}` : ""}
+            <button
+              type="button"
+              className="rec-edit-x"
+              aria-label={t("remove")}
+              title={t("remove")}
+              disabled={pending}
+              onClick={() => start(async () => {
+                onError(null);
+                const r = await deleteTenantCurrency({ orcamentoId, code: c.code });
+                if (r.error) onError(r.error); else router.refresh();
+              })}
+            >×</button>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}

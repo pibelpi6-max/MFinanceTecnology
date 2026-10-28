@@ -208,3 +208,16 @@ export async function getReferenceEntries(tenantId: string, orcamentoIds: string
   }
   return out;
 }
+
+export interface TenantCurrency {
+  code: string;
+  name: string;
+}
+
+/** Moedas cadastradas em Parâmetros. Tolera a tabela ainda não existir (migration 0031). */
+export async function getTenantCurrencies(tenantId: string): Promise<TenantCurrency[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("tenant_currencies").select("code, name").eq("tenant_id", tenantId).order("code");
+  if (error) return [];
+  return (data ?? []).map((r) => ({ code: String(r.code), name: String(r.name ?? "") }));
+}
