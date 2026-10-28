@@ -106,6 +106,7 @@ export function MoedasPanel({ orcamentoId, currencies, rates, onError }: {
 
       {selected && (
         <div className="mo-rates">
+          <div className="mo-rates-head">{selected} → BRL</div>
           <div className="rec-fx-grid mo-grid">
             {MONTHS.map((m, i) => (
               <div key={m} className="rec-field">
