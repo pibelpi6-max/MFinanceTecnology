@@ -5,7 +5,7 @@ import { getOrcamentoById } from "@/lib/orcamentos/queries";
 import { getDimensionTypeByCode, getDimensionTree, getDimensionTypes } from "@/lib/dimensions/queries";
 import { DIMENSION_CODES } from "@/lib/dimensions/constants";
 import { buildDimensionHierarchy } from "@/lib/dimensions/hierarchy";
-import { getDeductionDefaults, getDeductionLabels, getDeductionRules, getItemKinds, getReceitaData } from "@/lib/receita/queries";
+import { getDeductionDefaults, getDeductionLabels, getDeductionRules, getItemKinds, getPremises, getReceitaData } from "@/lib/receita/queries";
 import { BackToMapLink } from "@/components/orcamentos/BackToMapLink";
 import { ModuleTitle } from "@/components/orcamentos/ModuleTitle";
 import { getUserPreference } from "@/app/_actions/userPreferences";
@@ -102,6 +102,7 @@ export default async function ReceitaPage({ params, searchParams }: PageProps) {
         ? entities[0].id
         : "all";
 
+  const premises = await getPremises(tenant.tenantId, orcamento.id);
   const data = await getReceitaData(tenant.tenantId, orcamento.id, orcamento.year);
   const displayCurrency = data.currencies.includes(searchParams.moeda ?? "") ? (searchParams.moeda as string) : "BRL";
 
@@ -123,6 +124,7 @@ export default async function ReceitaPage({ params, searchParams }: PageProps) {
             dimensions={dimTypes.map((d) => ({ id: d.id, name: d.name }))}
             dimId={dimType?.id ?? null}
             ruleGroups={ruleGroups}
+            premises={premises}
             entityId={entityId}
             displayCurrency={displayCurrency}
             currencies={data.currencies}

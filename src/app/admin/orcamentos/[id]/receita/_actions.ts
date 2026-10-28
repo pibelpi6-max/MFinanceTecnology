@@ -5,7 +5,6 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentTenant } from "@/lib/tenant/getCurrentTenant";
 import { createDimensionType } from "@/app/admin/configuracoes/_actions";
 import { createDimensionNode, updateDimensionNode } from "@/app/admin/dimensoes/_actions";
-import { applyPriceAdjust, applyVolumeGrowth, type RevenueLine } from "@/lib/receita/calc";
 
 interface Result {
   success?: true;
@@ -295,13 +294,17 @@ export async function saveCurrencyRates(input: {
   }
 }
 
-export async function applyAssumption(input: {
+const PREMISE_HINT = "Rode a migration 0027 (premissas da receita) no Supabase antes de salvar.";
+
+export async function savePremise(input: {
   orcamentoId: string;
-  entityNodeId: string | null;
-  kind: "price_adjust" | "volume_growth";
+  id?: string | null;
+  kind: "volume_growth" | "price_adjust";
   pct: number;
   fromMonth: number;
-  productId?: string | null;
+  base: "entered" | "previous_month";
+  productIds: string[];
+  dimensionFilters: Record<string, string[]>;
 }): Promise<Result> {
   try {
     const tenant = await getCurrentTenant();
@@ -310,51 +313,63 @@ export async function applyAssumption(input: {
     if (!orc) return { error: "Orçamento não encontrado" };
     if (!Number.isFinite(input.pct) || input.pct <= -100 || input.pct > 1000) return { error: "Percentual inválido" };
     if (input.fromMonth < 1 || input.fromMonth > 12) return { error: "Mês inválido" };
-
-    const supabase = await createClient();
-    let q = supabase
-      .from("revenue_entries")
-      .select("id, product_node_id, month, currency, volume, unit_price")
-      .eq("tenant_id", tenant.tenantId)
-      .eq("orcamento_id", input.orcamentoId)
-      .eq("year", orc.year)
-      .eq("extra_dimensions", "{}");
-    q = input.entityNodeId ? q.eq("entity_node_id", input.entityNodeId) : q.is("entity_node_id", null);
-    const { data, error } = await q;
-    if (error) return { error: error.message };
-    const rows = data ?? [];
-    const lines: RevenueLine[] = rows.map((r) => ({
-      productId: r.product_node_id,
-      month: r.month,
-      currency: r.currency,
-      volume: Number(r.volume),
-      unitPrice: Number(r.unit_price),
-    }));
-    const next =
-      input.kind === "price_adjust"
-        ? applyPriceAdjust(lines, input.pct, input.fromMonth, input.productId ?? undefined)
-        : applyVolumeGrowth(lines, input.pct, input.fromMonth, input.productId ?? undefined);
-
-    for (let i = 0; i < rows.length; i++) {
-      if (next[i].volume === lines[i].volume && next[i].unitPrice === lines[i].unitPrice) continue;
-      const { error: upErr } = await supabase
-        .from("revenue_entries")
-        .update({ volume: next[i].volume, unit_price: next[i].unitPrice, updated_at: new Date().toISOString() })
-        .eq("id", rows[i].id)
-        .eq("tenant_id", tenant.tenantId);
-      if (upErr) return { error: upErr.message };
-    }
-    await supabase.from("revenue_assumptions").insert({
-      tenant_id: tenant.tenantId,
-      orcamento_id: input.orcamentoId,
+    const filters: Record<string, string[]> = {};
+    for (const [k, v] of Object.entries(input.dimensionFilters)) if (v.length > 0) filters[k] = Array.from(new Set(v));
+    const row = {
       kind: input.kind,
-      product_node_id: input.productId ?? null,
-      params: { pct: input.pct, fromMonth: input.fromMonth, entityNodeId: input.entityNodeId },
-    });
+      pct: input.pct,
+      from_month: input.fromMonth,
+      base: input.kind === "volume_growth" ? input.base : "entered",
+      product_node_ids: Array.from(new Set(input.productIds)),
+      dimension_filters: filters,
+    };
+    const supabase = await createClient();
+    if (input.id) {
+      const { data, error } = await supabase
+        .from("revenue_premises").update(row).eq("id", input.id).eq("tenant_id", tenant.tenantId).eq("orcamento_id", input.orcamentoId).select("id");
+      if (error) return { error: /does not exist|schema cache|permission/i.test(error.message) ? PREMISE_HINT : error.message };
+      if (!data || data.length === 0) return { error: "Premissa não encontrada." };
+    } else {
+      const { error } = await supabase
+        .from("revenue_premises").insert({ ...row, tenant_id: tenant.tenantId, orcamento_id: input.orcamentoId, sort_order: Date.now() % 1000000000 });
+      if (error) return { error: /does not exist|schema cache|permission/i.test(error.message) ? PREMISE_HINT : error.message };
+    }
     refresh(input.orcamentoId);
     return { success: true };
   } catch (e) {
-    return { error: e instanceof Error ? e.message : "Erro ao aplicar premissa" };
+    return { error: e instanceof Error ? e.message : "Erro ao salvar premissa" };
+  }
+}
+
+export async function setPremiseActive(input: { orcamentoId: string; id: string; active: boolean }): Promise<Result> {
+  try {
+    const tenant = await getCurrentTenant();
+    if (!tenant) return { error: "Não autenticado" };
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("revenue_premises").update({ is_active: input.active }).eq("id", input.id).eq("tenant_id", tenant.tenantId).eq("orcamento_id", input.orcamentoId).select("id");
+    if (error) return { error: error.message };
+    if (!data || data.length === 0) return { error: "Premissa não encontrada." };
+    refresh(input.orcamentoId);
+    return { success: true };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Erro ao atualizar premissa" };
+  }
+}
+
+export async function deletePremise(input: { orcamentoId: string; id: string }): Promise<Result> {
+  try {
+    const tenant = await getCurrentTenant();
+    if (!tenant) return { error: "Não autenticado" };
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("revenue_premises").delete().eq("id", input.id).eq("tenant_id", tenant.tenantId).eq("orcamento_id", input.orcamentoId).select("id");
+    if (error) return { error: error.message };
+    if (!data || data.length === 0) return { error: "Premissa não encontrada." };
+    refresh(input.orcamentoId);
+    return { success: true };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Erro ao excluir premissa" };
   }
 }
 

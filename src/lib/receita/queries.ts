@@ -123,3 +123,38 @@ export async function getDeductionRules(tenantId: string): Promise<DeductionRule
     pct: Number(r.pct),
   }));
 }
+
+
+export interface PremiseRow {
+  id: string;
+  kind: "volume_growth" | "price_adjust";
+  pct: number;
+  fromMonth: number;
+  base: "entered" | "previous_month";
+  productIds: string[];
+  dimensionFilters: Record<string, string[]>;
+  isActive: boolean;
+}
+
+/** Premissas guardadas do orçamento. Tolera a tabela ainda não existir (migration 0027). */
+export async function getPremises(tenantId: string, orcamentoId: string): Promise<PremiseRow[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("revenue_premises")
+    .select("id, kind, pct, from_month, base, product_node_ids, dimension_filters, is_active")
+    .eq("tenant_id", tenantId)
+    .eq("orcamento_id", orcamentoId)
+    .order("sort_order")
+    .order("created_at");
+  if (error) return [];
+  return (data ?? []).map((r) => ({
+    id: String(r.id),
+    kind: r.kind,
+    pct: Number(r.pct),
+    fromMonth: Number(r.from_month),
+    base: r.base,
+    productIds: (r.product_node_ids ?? []) as string[],
+    dimensionFilters: (r.dimension_filters ?? {}) as Record<string, string[]>,
+    isActive: !!r.is_active,
+  }));
+}

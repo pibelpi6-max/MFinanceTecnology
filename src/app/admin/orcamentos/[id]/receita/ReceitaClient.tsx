@@ -3,14 +3,16 @@
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import type { PremiseRow } from "@/lib/receita/queries";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import {
-  EMPTY_MONTH, avgPrice, computeByProduct, rateFor, sumMonths,
+  EMPTY_MONTH, applyPremises, avgPrice, computeByProduct, rateFor, sumMonths,
   type Deduction, type MonthResult, type RateTable, type RevenueLine, type DeductionRule,
 } from "@/lib/receita/calc";
 import { TreeMultiSelect, type TreeMultiSelectLabels, type TreeSelectGroup } from "@/components/ui/tree/TreeMultiSelect";
-import { applyAssumption, saveCurrencyRates, saveDeductionDefaults, saveDeductionRules, saveRevenueEntries } from "./_actions";
+import { deletePremise, savePremise, saveCurrencyRates, setPremiseActive, saveDeductionDefaults, saveDeductionRules, saveRevenueEntries } from "./_actions";
 import { ReceitaCharts } from "./ReceitaCharts";
 import type { TablePrefs } from "@/components/ui/DataTable/types";
 import { ProdutosPanel } from "./ProdutosPanel";
@@ -41,6 +43,7 @@ interface Props {
   dimensions: { id: string; name: string }[];
   dimId: string | null;
   ruleGroups: TreeSelectGroup[];
+  premises?: PremiseRow[];
   deductionRules?: DeductionRule[];
   entityId: string; // "all" = consolidado (somente leitura)
   displayCurrency: string;
@@ -124,9 +127,20 @@ export function ReceitaClient(p: Props) {
     entityParents: Object.fromEntries(p.entities.map((e) => [e.id, e.parentId ?? null])),
     productParents: Object.fromEntries(p.products.map((x) => [x.id, x.parentId ?? null])),
   }), [p.entities, p.products]);
+  // Premissas guardadas: aplicadas por cima do lançado (o lançado não muda).
+  const premiseCtx = useMemo(() => {
+    const nodeParents: Record<string, string | null> = {};
+    for (const g of p.ruleGroups) for (const it of g.items) nodeParents[it.id] = it.parentId ?? null;
+    return { ...ruleCtx, entityTypeId: p.dimId, nodeParents };
+  }, [ruleCtx, p.ruleGroups, p.dimId]);
+  const activePremises = useMemo(
+    () => (p.premises ?? []).filter((x) => x.isActive).map((x) => ({ kind: x.kind, pct: x.pct, fromMonth: x.fromMonth, base: x.base, productIds: x.productIds, dimensionFilters: x.dimensionFilters })),
+    [p.premises],
+  );
+  const premisedLines = useMemo(() => applyPremises(lines, activePremises, premiseCtx), [lines, activePremises, premiseCtx]);
   const byProduct = useMemo(
-    () => computeByProduct(lines, p.deductions, p.rates, p.deductionRules ?? [], ruleCtx),
-    [lines, p.deductions, p.rates, p.deductionRules, ruleCtx],
+    () => computeByProduct(premisedLines, p.deductions, p.rates, p.deductionRules ?? [], ruleCtx),
+    [premisedLines, p.deductions, p.rates, p.deductionRules, ruleCtx],
   );
 
   // Agrega pais = soma dos descendentes
@@ -448,7 +462,7 @@ export function ReceitaClient(p: Props) {
       )}
 
       {tab === "assumptions" && (
-        <AssumptionsPanel orcamentoId={p.orcamentoId} entityKey={entityKey} readOnly={readOnly} leaves={leaves} onError={setError} />
+        <PremissasPanel orcamentoId={p.orcamentoId} premises={p.premises ?? []} products={p.products} groups={p.ruleGroups} entityTypeId={p.dimId} onError={setError} />
       )}
 
       {tab === "entry" && (
@@ -609,6 +623,21 @@ function ParamIcon({ id }: { id: ParamTab }) {
   }
 }
 
+function treeLabelsOf(t: ReturnType<typeof useTranslations>): TreeMultiSelectLabels {
+  return {
+    all: t("ruleAllStructures"),
+    search: t("treeSearch"),
+    synthetic: t("treeSynthetic"),
+    analytic: t("treeAnalytic"),
+    selectAll: t("treeAll"),
+    clear: t("treeClear"),
+    noResults: t("treeNoResults"),
+    expandAll: t("treeExpand"),
+    collapseAll: t("treeCollapse"),
+    selected: (count) => t("treeSelected", { count }),
+  };
+}
+
 const PRESETS = ["ICMS", "PIS", "COFINS", "ISS", "IPI"];
 
 type RuleDraft = { entityIds: string[]; productIds: string[]; pct: string };
@@ -697,18 +726,7 @@ function DeductionDefaultsPanel({ orcamentoId, defaults, rules, groups, products
     () => [{ typeId: "produtos", name: t("ruleColProduct"), items: products.map((x) => ({ id: x.id, name: x.name, parentId: x.parentId })) }],
     [products, t],
   );
-  const treeLabels: TreeMultiSelectLabels = {
-    all: t("ruleAllStructures"),
-    search: t("treeSearch"),
-    synthetic: t("treeSynthetic"),
-    analytic: t("treeAnalytic"),
-    selectAll: t("treeAll"),
-    clear: t("treeClear"),
-    noResults: t("treeNoResults"),
-    expandAll: t("treeExpand"),
-    collapseAll: t("treeCollapse"),
-    selected: (count) => t("treeSelected", { count }),
-  };
+  const treeLabels = treeLabelsOf(t);
   return (
     <div className="rec-panel" ref={listRef}>
       <p className="rec-hint">{t("dedDefaultsHint")}</p>
@@ -852,51 +870,215 @@ function FxPanel({ orcamentoId, rates, onError }: { orcamentoId: string; rates: 
   );
 }
 
-function AssumptionsPanel({ orcamentoId, entityKey, readOnly, leaves, onError }: {
-  orcamentoId: string; entityKey: string | null; readOnly: boolean; leaves: ProductRow[]; onError: (s: string | null) => void;
+type PremiseDraft = {
+  id: string | null;
+  kind: "volume_growth" | "price_adjust";
+  pct: string;
+  fromMonth: number;
+  base: "entered" | "previous_month";
+  productIds: string[];
+  dimensionFilters: Record<string, string[]>;
+};
+const EMPTY_PREMISE: PremiseDraft = { id: null, kind: "volume_growth", pct: "", fromMonth: 1, base: "entered", productIds: [], dimensionFilters: {} };
+
+/** Premissas guardadas: lista + modal com recorte por produto/família e por dimensão (canal, unidade...). */
+function PremissasPanel({ orcamentoId, premises, products, groups, entityTypeId, onError }: {
+  orcamentoId: string; premises: PremiseRow[]; products: ProductRow[]; groups: TreeSelectGroup[]; entityTypeId: string | null; onError: (s: string | null) => void;
 }) {
   const t = useTranslations("receita");
+  const locale = useLocale();
   const router = useRouter();
-  const [kind, setKind] = useState<"price_adjust" | "volume_growth">("price_adjust");
-  const [pct, setPct] = useState("");
-  const [from, setFrom] = useState(1);
-  const [product, setProduct] = useState("");
+  const [draft, setDraft] = useState<PremiseDraft | null>(null);
+  const [deleting, setDeleting] = useState<PremiseRow | null>(null);
   const [pending, start] = useTransition();
-  const [done, setDone] = useState(false);
+  const treeLabels = treeLabelsOf(t);
+  const monthName = (m: number) => new Intl.DateTimeFormat(locale, { month: "long" }).format(new Date(2000, m - 1, 1));
+  const productGroups: TreeSelectGroup[] = useMemo(
+    () => [{ typeId: "produtos", name: t("scopeProducts"), items: products.filter((x) => x.depth > 0).map((x) => ({ id: x.id, name: x.name, parentId: x.parentId === products.find((r) => r.depth === 0)?.id ? null : x.parentId })) }],
+    [products, t],
+  );
+  const nameOf = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const x of products) m.set(x.id, x.name);
+    for (const g of groups) for (const it of g.items) m.set(it.id, it.name);
+    return m;
+  }, [products, groups]);
+  const typeName = (id: string) => groups.find((g) => g.typeId === id)?.name ?? "";
+  const summaryNames = (d: PremiseDraft) => {
+    const parts = [
+      ...d.productIds.map((id) => nameOf.get(id)),
+      ...Object.values(d.dimensionFilters).flat().map((id) => nameOf.get(id)),
+    ].filter((x): x is string => !!x);
+    return parts.length > 0 ? parts.join(", ") : t("premAll");
+  };
+  const pctNum = (d: PremiseDraft) => parseFloat(d.pct.replace(",", "."));
+  const kindText = (k: PremiseRow["kind"]) => (k === "volume_growth" ? t("kindVolume") : t("kindPrice"));
+  const pctText = (r: PremiseRow) => `${r.pct > 0 ? "+" : ""}${String(r.pct).replace(".", ",")}% ${r.kind === "volume_growth" ? t("unitMonth") : t("unitOnce")}`;
+  const baseText = (r: PremiseRow) => (r.kind === "price_adjust" ? t("basePrice") : r.base === "previous_month" ? t("basePrevious") : t("baseEntered"));
+
+  function open(r?: PremiseRow) {
+    onError(null);
+    setDraft(r ? { id: r.id, kind: r.kind, pct: String(r.pct).replace(".", ","), fromMonth: r.fromMonth, base: r.base, productIds: r.productIds, dimensionFilters: r.dimensionFilters } : EMPTY_PREMISE);
+  }
+  function save() {
+    if (!draft) return;
+    onError(null);
+    start(async () => {
+      const r = await savePremise({ orcamentoId, id: draft.id, kind: draft.kind, pct: pctNum(draft), fromMonth: draft.fromMonth, base: draft.base, productIds: draft.productIds, dimensionFilters: draft.dimensionFilters });
+      if (r.error) { onError(r.error); return; }
+      setDraft(null);
+      router.refresh();
+    });
+  }
+  function toggle(r: PremiseRow) {
+    onError(null);
+    start(async () => {
+      const x = await setPremiseActive({ orcamentoId, id: r.id, active: !r.isActive });
+      if (x.error) onError(x.error); else router.refresh();
+    });
+  }
+  function confirmDelete() {
+    const r = deleting;
+    if (!r) return;
+    start(async () => {
+      const x = await deletePremise({ orcamentoId, id: r.id });
+      setDeleting(null);
+      if (x.error) onError(x.error); else router.refresh();
+    });
+  }
+  const chips = (r: PremiseRow) => {
+    const out: { key: string; text: string; dim: boolean }[] = [];
+    for (const id of r.productIds) out.push({ key: `p${id}`, text: nameOf.get(id) ?? "?", dim: false });
+    for (const [tid, ids] of Object.entries(r.dimensionFilters)) for (const id of ids) out.push({ key: `${tid}${id}`, text: nameOf.get(id) ?? "?", dim: true });
+    return out;
+  };
+  const otherDim = (r: PremiseRow) => Object.keys(r.dimensionFilters).some((k) => k !== entityTypeId);
+
   return (
     <div className="rec-panel">
-      <p className="rec-hint">{readOnly ? t("selectEntityToEdit") : t("assumptionsHint")}</p>
-      <div className="rec-assump">
-        <label className="rec-field">{t("assumption")}
-          <select value={kind} onChange={(e) => setKind(e.target.value as typeof kind)}>
-            <option value="price_adjust">{t("priceAdjust")}</option>
-            <option value="volume_growth">{t("volumeGrowth")}</option>
-          </select>
-        </label>
-        <label className="rec-field">{kind === "price_adjust" ? t("pctAdjust") : t("pctGrowth")}
-          <input inputMode="decimal" value={pct} onChange={(e) => /^-?\d*[.,]?\d*$/.test(e.target.value) && setPct(e.target.value)} placeholder="0,0" />
-        </label>
-        <label className="rec-field">{t("fromMonth")}
-          <select value={from} onChange={(e) => setFrom(Number(e.target.value))}>
-            {MONTHS.map((m) => <option key={m} value={m}>{new Intl.DateTimeFormat(undefined, { month: "long" }).format(new Date(2000, m - 1, 1))}</option>)}
-          </select>
-        </label>
-        <label className="rec-field">{t("product")}
-          <select value={product} onChange={(e) => setProduct(e.target.value)}>
-            <option value="">{t("allProducts")}</option>
-            {leaves.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
-          </select>
-        </label>
+      <div className="rec-prem-head">
+        <Button variant="accent-blue" size="sm" className="px-3" onClick={() => open()}>+ {t("premNew")}</Button>
+        <span className="rec-hint" style={{ margin: 0 }}>{t("premCount", { count: premises.length })}</span>
       </div>
-      <Button
-        variant="primary" size="sm" disabled={readOnly || pct === ""} isLoading={pending} loadingText={t("applying")}
-        onClick={() => start(async () => {
-          onError(null); setDone(false);
-          const r = await applyAssumption({ orcamentoId, entityNodeId: entityKey, kind, pct: parseFloat(pct.replace(",", ".")), fromMonth: from, productId: product || null });
-          if (r.error) onError(r.error); else { setDone(true); router.refresh(); }
-        })}
-      >{t("apply")}</Button>
-      {done && <span className="rec-saved">{t("applied")}</span>}
+
+      {premises.length === 0 ? (
+        <p className="rec-hint">{t("premEmpty")}</p>
+      ) : (
+        <div className="rec-prem-table">
+          <div className="rec-prem-row rec-prem-headrow">
+            <span>{t("colPremise")}</span><span>{t("colBase")}</span><span>{t("colScope")}</span><span>{t("colFrom")}</span><span>{t("colActive")}</span><span />
+          </div>
+          {premises.map((r) => (
+            <div key={r.id} className={`rec-prem-row${r.isActive ? "" : " is-off"}`}>
+              <span><strong>{kindText(r.kind)}</strong><br /><small>{pctText(r)}</small></span>
+              <span>{baseText(r)}</span>
+              <span className="rec-prem-chips">
+                {chips(r).length === 0 ? <span className="rec-chip-all">{t("premAll")}</span> : chips(r).map((c) => (
+                  <span key={c.key} className={c.dim ? "rec-pchip rec-pchip--dim" : "rec-pchip"}>{c.text}</span>
+                ))}
+                {otherDim(r) && <small title={t("premOtherDimHint")}>⚠</small>}
+              </span>
+              <span>{monthName(r.fromMonth)}</span>
+              <span>
+                <button type="button" role="switch" aria-checked={r.isActive} aria-label={t("colActive")} className={`rec-switch${r.isActive ? " on" : ""}`} onClick={() => toggle(r)} disabled={pending}><span /></button>
+              </span>
+              <span className="rec-prem-actions">
+                <button type="button" className="rec-link-btn" onClick={() => open(r)}>{t("premEditShort")}</button>
+                <button type="button" className="rec-edit-x" aria-label={t("remove")} title={t("remove")} onClick={() => setDeleting(r)}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v5M14 11v5" /></svg>
+                </button>
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {draft && (
+        <Modal
+          open
+          onClose={() => setDraft(null)}
+          title={draft.id ? t("premEdit") : t("premNew")}
+          size="lg"
+          footer={
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setDraft(null)} disabled={pending}>{t("prodCancel")}</Button>
+              <Button variant="primary" size="sm" isLoading={pending} loadingText={t("saving")} disabled={!Number.isFinite(pctNum(draft))} onClick={save}>{t("premSave")}</Button>
+            </div>
+          }
+        >
+          <div className="rec-prem-form">
+            <div className="rec-prem-grid">
+              <div className="rec-field">{t("premType")}
+                <div className="rec-seg" data-on={draft.kind === "volume_growth" ? "produto" : "servico"} role="group" aria-label={t("premType")}>
+                  <span className="rec-seg-thumb" aria-hidden />
+                  <button type="button" className={draft.kind === "volume_growth" ? "on" : ""} onClick={() => setDraft({ ...draft, kind: "volume_growth" })}>{t("kindVolume")}</button>
+                  <button type="button" className={draft.kind === "price_adjust" ? "on" : ""} onClick={() => setDraft({ ...draft, kind: "price_adjust" })}>{t("kindPrice")}</button>
+                </div>
+              </div>
+              <label className="rec-field">{t("premPct")} ({draft.kind === "volume_growth" ? t("unitMonth") : t("unitOnce")})
+                <input inputMode="decimal" value={draft.pct} autoFocus placeholder="0,0" onChange={(e) => /^-?\d*[.,]?\d*$/.test(e.target.value) && setDraft({ ...draft, pct: e.target.value })} />
+              </label>
+              <label className="rec-field">{t("colFrom")}
+                <select value={draft.fromMonth} onChange={(e) => setDraft({ ...draft, fromMonth: Number(e.target.value) })}>
+                  {MONTHS.map((m) => <option key={m} value={m}>{monthName(m)}</option>)}
+                </select>
+              </label>
+            </div>
+            {draft.kind === "volume_growth" && (
+              <label className="rec-field" style={{ maxWidth: 380 }}>{t("premBase")}
+                <select value={draft.base} onChange={(e) => setDraft({ ...draft, base: e.target.value as PremiseDraft["base"] })}>
+                  <option value="entered">{t("baseEnteredLong")}</option>
+                  <option value="previous_month">{t("basePreviousLong")}</option>
+                </select>
+              </label>
+            )}
+            <div className="rec-field">
+              <strong>{t("colScope")}</strong>
+              <span className="rec-hint" style={{ margin: 0 }}>{t("premScopeHint")}</span>
+            </div>
+            <div className="rec-prem-grid rec-prem-grid--scope">
+              <div className="rec-field">{t("scopeProducts")}
+                <TreeMultiSelect groups={productGroups} value={draft.productIds} onChange={(ids) => setDraft({ ...draft, productIds: ids })} labels={{ ...treeLabels, all: t("allProducts") }} ariaLabel={t("scopeProducts")} />
+              </div>
+              {groups.map((g) => (
+                <div className="rec-field" key={g.typeId}>{g.name}
+                  <TreeMultiSelect
+                    groups={[g]}
+                    value={draft.dimensionFilters[g.typeId] ?? []}
+                    onChange={(ids) => setDraft({ ...draft, dimensionFilters: { ...draft.dimensionFilters, [g.typeId]: ids } })}
+                    labels={{ ...treeLabels, all: t("premAll") }}
+                    ariaLabel={g.name}
+                  />
+                </div>
+              ))}
+            </div>
+            <p className="rec-prem-summary">
+              {t("premSummary", {
+                kind: kindText(draft.kind),
+                pct: draft.pct || "0",
+                unit: draft.kind === "volume_growth" ? t("unitMonth") : t("unitOnce"),
+                month: monthName(draft.fromMonth),
+                scope: summaryNames(draft),
+              })}
+            </p>
+            {Object.keys(draft.dimensionFilters).some((k) => (draft.dimensionFilters[k]?.length ?? 0) > 0 && k !== entityTypeId) && (
+              <p className="rec-hint">{t("premOtherDimHint")} {Object.entries(draft.dimensionFilters).filter(([k, v]) => v.length > 0 && k !== entityTypeId).map(([k]) => typeName(k)).join(", ")}.</p>
+            )}
+            <div style={{ minHeight: 220 }} />
+          </div>
+        </Modal>
+      )}
+
+      <ConfirmModal
+        open={deleting !== null}
+        onClose={() => setDeleting(null)}
+        title={t("premDeleteTitle")}
+        body={deleting ? t("premDeleteBody", { name: kindText(deleting.kind), pct: pctText(deleting) }) : ""}
+        cancelLabel={t("prodCancel")}
+        confirmLabel={t("prodDelete")}
+        loading={pending}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

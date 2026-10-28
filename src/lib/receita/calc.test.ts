@@ -86,3 +86,53 @@ describe("condições especiais por estrutura", () => {
     expect(out.p1[1].net).toBeCloseTo(800);
   });
 });
+
+import { applyPremises, type Premise, type PremiseContext } from "./calc";
+
+describe("premissas guardadas", () => {
+  const ctx: PremiseContext = {
+    entityTypeId: "unid",
+    entityParents: { cwb: "pr", pr: null },
+    productParents: { a1: "famA", a2: "famA", b1: "famB", famA: null, famB: null },
+    nodeParents: { varejo: "canais", canais: null },
+  };
+  const mk = (productId: string, month: number, volume = 100, unitPrice = 10, extra: Partial<{ entityId: string; dims: Record<string, string> }> = {}) => ({
+    productId, month, currency: "BRL", volume, unitPrice, ...extra,
+  });
+  const base: Premise = { kind: "volume_growth", pct: 10, fromMonth: 1, base: "entered", productIds: [], dimensionFilters: {} };
+
+  it("cresce em cima do lançado, a partir do mês-base (que não muda)", () => {
+    const r = applyPremises([mk("a1", 1), mk("a1", 2), mk("a1", 3)], [base], ctx);
+    expect(r.map((l) => l.volume)).toEqual([100, 110, 121]);
+  });
+
+  it("encadeia no mês anterior", () => {
+    const r = applyPremises([mk("a1", 1), mk("a1", 2, 999), mk("a1", 3, 999)], [{ ...base, base: "previous_month" }], ctx);
+    expect(r.map((l) => l.volume)).toEqual([100, 110, 121]);
+  });
+
+  it("filtra por família: vale nos filhos, não nos outros", () => {
+    const r = applyPremises([mk("a1", 2), mk("b1", 2)], [{ ...base, productIds: ["famA"] }], ctx);
+    expect(r.find((l) => l.productId === "a1")!.volume).toBe(110);
+    expect(r.find((l) => l.productId === "b1")!.volume).toBe(100);
+  });
+
+  it("filtra por dimensão: a lançada (entidade, com filhos) e outra (dims)", () => {
+    const lines = [mk("a1", 2, 100, 10, { entityId: "cwb", dims: { canal: "varejo" } }), mk("a2", 2, 100, 10, { entityId: "sp", dims: { canal: "atacado" } })];
+    const porUnidade = applyPremises(lines, [{ ...base, dimensionFilters: { unid: ["pr"] } }], ctx);
+    expect(porUnidade.map((l) => l.volume)).toEqual([110, 100]);
+    const porCanal = applyPremises(lines, [{ ...base, dimensionFilters: { canal: ["varejo"] } }], ctx);
+    expect(porCanal.map((l) => l.volume)).toEqual([110, 100]);
+  });
+
+  it("filtro de dimensão que a linha não tem não aplica", () => {
+    const r = applyPremises([mk("a1", 2)], [{ ...base, dimensionFilters: { canal: ["varejo"] } }], ctx);
+    expect(r[0].volume).toBe(100);
+  });
+
+  it("reajuste de preço vale do mês em diante e não mexe no volume", () => {
+    const r = applyPremises([mk("a1", 1), mk("a1", 2)], [{ ...base, kind: "price_adjust", pct: 5, fromMonth: 2 }], ctx);
+    expect(r.map((l) => l.unitPrice)).toEqual([10, 10.5]);
+    expect(r.map((l) => l.volume)).toEqual([100, 100]);
+  });
+});
