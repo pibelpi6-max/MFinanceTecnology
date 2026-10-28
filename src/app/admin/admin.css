@@ -1713,3 +1713,7 @@ input[inputmode="decimal"], input[inputmode="numeric"], input[type="number"] { t
 .tfc-foot { display: flex; justify-content: flex-end; margin-top: 10px; }
 .tfc-apply { height: 32px; padding: 0 18px; border: 0; border-radius: 8px; background: #3E6FE0; color: #fff; font-size: 13.5px; font-weight: 600; cursor: pointer; }
 .tfc-apply:disabled { opacity: .5; cursor: default; }
+
+.tfc-chip, .tfc-chip.on { height: 28px; padding: 0 10px; gap: 5px; border: 1px solid #3E6FE0; border-radius: 6px; background: #fff; color: #3E6FE0; font-size: 13px; font-weight: 400; }
+.tfc-chip svg { width: 13px; height: 13px; }
+.tfc-chip.on { font-weight: 400; box-shadow: inset 0 0 0 1px #3E6FE0; }
