@@ -8,6 +8,7 @@ import {
   EMPTY_MONTH, avgPrice, computeByProduct, rateFor, sumMonths,
   type Deduction, type MonthResult, type RateTable, type RevenueLine, type DeductionRule,
 } from "@/lib/receita/calc";
+import { TreeMultiSelect, type TreeMultiSelectLabels, type TreeSelectGroup } from "@/components/ui/tree/TreeMultiSelect";
 import { applyAssumption, saveCurrencyRates, saveDeductionDefaults, saveDeductionRules, saveRevenueEntries } from "./_actions";
 import { ReceitaCharts } from "./ReceitaCharts";
 import type { TablePrefs } from "@/components/ui/DataTable/types";
@@ -38,7 +39,7 @@ interface Props {
   entities: { id: string; name: string; depth?: number; parentId?: string | null }[];
   dimensions: { id: string; name: string }[];
   dimId: string | null;
-  ruleGroups: { typeId: string; name: string; items: { id: string; name: string; depth?: number }[] }[];
+  ruleGroups: TreeSelectGroup[];
   deductionRules?: DeductionRule[];
   entityId: string; // "all" = consolidado (somente leitura)
   displayCurrency: string;
@@ -609,7 +610,18 @@ function ParamIcon({ id }: { id: ParamTab }) {
 
 const PRESETS = ["ICMS", "PIS", "COFINS", "ISS", "IPI"];
 
-type RuleDraft = { entityId: string; productId: string; pct: string };
+type RuleDraft = { entityIds: string[]; productId: string; pct: string };
+/** Regras iguais (mesmo produto e %) em várias estruturas viram uma linha só com multi-seleção. */
+function groupRules(rs: DeductionRule[]): RuleDraft[] {
+  const map = new Map<string, RuleDraft>();
+  for (const r of rs) {
+    const key = `${r.productId ?? ""}|${r.pct}`;
+    const cur = map.get(key) ?? { entityIds: [], productId: r.productId ?? "", pct: fmtInput(r.pct) };
+    if (r.entityId) cur.entityIds.push(r.entityId);
+    map.set(key, cur);
+  }
+  return Array.from(map.values());
+}
 type DedDraftRow = { label: string; pct: string; rules: RuleDraft[] };
 
 /** Deduções padrão da empresa e suas condições especiais por estrutura / produto. */
@@ -617,7 +629,7 @@ function DeductionDefaultsPanel({ orcamentoId, defaults, rules, groups, products
   orcamentoId: string;
   defaults: { label: string; pct: number }[];
   rules: DeductionRule[];
-  groups: { typeId: string; name: string; items: { id: string; name: string; depth?: number }[] }[];
+  groups: TreeSelectGroup[];
   products: ProductRow[];
   onError: (s: string | null) => void;
 }) {
@@ -627,9 +639,7 @@ function DeductionDefaultsPanel({ orcamentoId, defaults, rules, groups, products
     defaults.map((d) => ({
       label: d.label,
       pct: fmtInput(d.pct),
-      rules: rules
-        .filter((r) => r.label.toLowerCase() === d.label.toLowerCase())
-        .map((r) => ({ entityId: r.entityId ?? "", productId: r.productId ?? "", pct: fmtInput(r.pct) })),
+      rules: groupRules(rules.filter((r) => r.label.toLowerCase() === d.label.toLowerCase())),
     })),
   );
   const [pending, start] = useTransition();
@@ -646,18 +656,30 @@ function DeductionDefaultsPanel({ orcamentoId, defaults, rules, groups, products
   }, [focusRow]);
   useEffect(() => {
     if (!focusRule) return;
-    const el = listRef.current?.querySelectorAll(".rec-ded-block")[focusRule.i]?.querySelectorAll<HTMLSelectElement>(".rec-rule-row")[focusRule.j]?.querySelector("select");
+    const el = listRef.current?.querySelectorAll(".rec-ded-block")[focusRule.i]?.querySelectorAll(".rec-rule-row")[focusRule.j]?.querySelector<HTMLElement>(".tms-trigger");
     el?.focus();
     setFocusRule(null);
   }, [focusRule]);
   const addRow = (label: string, field: 0 | 1) => { setFocusRow({ i: items.length, field }); touch((s) => [...s, { label, pct: "", rules: [] }]); };
   const addRule = (i: number) => {
     setFocusRule({ i, j: items[i].rules.length });
-    touch((s) => s.map((x, k) => (k === i ? { ...x, rules: [...x.rules, { entityId: "", productId: "", pct: "" }] } : x)));
+    touch((s) => s.map((x, k) => (k === i ? { ...x, rules: [...x.rules, { entityIds: [], productId: "", pct: "" }] } : x)));
   };
   const patchRule = (i: number, j: number, patch: Partial<RuleDraft>) =>
     touch((s) => s.map((x, k) => (k === i ? { ...x, rules: x.rules.map((r, m) => (m === j ? { ...r, ...patch } : r)) } : x)));
   const indent = (d?: number) => "\u00A0\u00A0".repeat(d ?? 0);
+  const treeLabels: TreeMultiSelectLabels = {
+    all: t("ruleAllStructures"),
+    search: t("treeSearch"),
+    synthetic: t("treeSynthetic"),
+    analytic: t("treeAnalytic"),
+    selectAll: t("treeAll"),
+    clear: t("treeClear"),
+    noResults: t("treeNoResults"),
+    expandAll: t("treeExpand"),
+    collapseAll: t("treeCollapse"),
+    selected: (count) => t("treeSelected", { count }),
+  };
   return (
     <div className="rec-panel" ref={listRef}>
       <p className="rec-hint">{t("dedDefaultsHint")}</p>
@@ -680,14 +702,7 @@ function DeductionDefaultsPanel({ orcamentoId, defaults, rules, groups, products
               <div className="rec-rule-row rec-rule-head"><span>{t("ruleColStructure")}</span><span>{t("ruleColProduct")}</span><span>{t("dedColPct")}</span><span /></div>
               {it.rules.map((r, j) => (
                 <div className="rec-rule-row" key={j}>
-                  <select value={r.entityId} onChange={(e) => patchRule(i, j, { entityId: e.target.value })} aria-label={t("ruleColStructure")}>
-                    <option value="">{t("ruleAllStructures")}</option>
-                    {groups.map((g) => (
-                      <optgroup key={g.typeId} label={g.name}>
-                        {g.items.map((e) => <option key={e.id} value={e.id}>{indent(e.depth)}{e.name}</option>)}
-                      </optgroup>
-                    ))}
-                  </select>
+                  <TreeMultiSelect groups={groups} value={r.entityIds} onChange={(ids) => patchRule(i, j, { entityIds: ids })} labels={treeLabels} ariaLabel={t("ruleColStructure")} />
                   <select value={r.productId} onChange={(e) => patchRule(i, j, { productId: e.target.value })} aria-label={t("ruleColProduct")}>
                     <option value="">{t("ruleAllProducts")}</option>
                     {products.map((x) => <option key={x.id} value={x.id}>{indent(x.depth)}{x.name}</option>)}
@@ -718,7 +733,9 @@ function DeductionDefaultsPanel({ orcamentoId, defaults, rules, groups, products
             onError(null);
             const r = await saveDeductionDefaults({ orcamentoId, items: items.map((i) => ({ label: i.label, pct: num(i.pct) })) });
             if (r.error) { onError(r.error); return; }
-            const flat = items.flatMap((i) => i.rules.map((x) => ({ label: i.label, entityId: x.entityId || null, productId: x.productId || null, pct: num(x.pct) })));
+            const flat = items.flatMap((i) =>
+              i.rules.flatMap((x) => (x.entityIds.length ? x.entityIds : [null]).map((eid) => ({ label: i.label, entityId: eid, productId: x.productId || null, pct: num(x.pct) }))),
+            );
             const r2 = await saveDeductionRules({ orcamentoId, items: flat });
             if (r2.error) onError(r2.error); else router.refresh();
           })}

@@ -669,7 +669,16 @@
     "ruleAllProducts": "Todos los productos y servicios",
     "ruleColStructure": "Estructura",
     "ruleColProduct": "Producto o servicio",
-    "launchBy": "Registrar por"
+    "launchBy": "Registrar por",
+    "treeSearch": "Buscar...",
+    "treeSynthetic": "Sintéticos",
+    "treeAnalytic": "Analíticos",
+    "treeAll": "Todos",
+    "treeClear": "Limpiar",
+    "treeNoResults": "Sin resultados.",
+    "treeExpand": "Expandir",
+    "treeCollapse": "Contraer",
+    "treeSelected": "{count} seleccionados"
   },
   "erpCodes": {
     "title": "Códigos del ERP",

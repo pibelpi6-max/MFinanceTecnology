@@ -669,7 +669,16 @@
     "ruleAllProducts": "All products and services",
     "ruleColStructure": "Structure",
     "ruleColProduct": "Product or service",
-    "launchBy": "Enter by"
+    "launchBy": "Enter by",
+    "treeSearch": "Search...",
+    "treeSynthetic": "Synthetic",
+    "treeAnalytic": "Analytic",
+    "treeAll": "All",
+    "treeClear": "Clear",
+    "treeNoResults": "Nothing found.",
+    "treeExpand": "Expand",
+    "treeCollapse": "Collapse",
+    "treeSelected": "{count} selected"
   },
   "erpCodes": {
     "title": "ERP codes",
