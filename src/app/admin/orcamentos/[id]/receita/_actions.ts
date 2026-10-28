@@ -224,12 +224,12 @@ export async function saveDeductionDefaults(input: {
       items.push({ label, pct: i.pct });
     }
     const supabase = await createClient();
-    const hint = "Rode a migration 0023 (deduções padrão) no Supabase antes de salvar.";
-    const del = await supabase.from("revenue_deduction_defaults").delete().eq("tenant_id", tenant.tenantId);
+    const hint = "Rode a migration 0030 (deduções por orçamento) no Supabase antes de salvar.";
+    const del = await supabase.from("revenue_deduction_defaults").delete().eq("tenant_id", tenant.tenantId).eq("orcamento_id", input.orcamentoId);
     if (del.error) return { error: /does not exist|schema cache|permission/i.test(del.error.message) ? hint : del.error.message };
     if (items.length > 0) {
       const ins = await supabase.from("revenue_deduction_defaults").insert(
-        items.map((i, idx) => ({ tenant_id: tenant.tenantId, label: i.label, pct: i.pct, sort_order: idx })),
+        items.map((i, idx) => ({ tenant_id: tenant.tenantId, orcamento_id: input.orcamentoId, label: i.label, pct: i.pct, sort_order: idx })),
       );
       if (ins.error) return { error: ins.error.message };
     }
@@ -260,13 +260,13 @@ export async function saveDeductionRules(input: {
       items.push({ label, entityId: i.entityId, productId: i.productId, pct: i.pct });
     }
     const supabase = await createClient();
-    const hint = "Rode a migration 0024 (condições especiais) no Supabase antes de salvar.";
-    const del = await supabase.from("revenue_deduction_rules").delete().eq("tenant_id", tenant.tenantId);
+    const hint = "Rode a migration 0030 (deduções por orçamento) no Supabase antes de salvar.";
+    const del = await supabase.from("revenue_deduction_rules").delete().eq("tenant_id", tenant.tenantId).eq("orcamento_id", input.orcamentoId);
     if (del.error) return { error: /does not exist|schema cache|permission/i.test(del.error.message) ? hint : del.error.message };
     if (items.length > 0) {
       const ins = await supabase.from("revenue_deduction_rules").insert(
         items.map((i, idx) => ({
-          tenant_id: tenant.tenantId, label: i.label, entity_node_id: i.entityId, product_node_id: i.productId, pct: i.pct, sort_order: idx,
+          tenant_id: tenant.tenantId, orcamento_id: input.orcamentoId, label: i.label, entity_node_id: i.entityId, product_node_id: i.productId, pct: i.pct, sort_order: idx,
         })),
       );
       if (ins.error) return { error: ins.error.message };

@@ -105,12 +105,13 @@ export interface DeductionDefault {
 }
 
 /** Deduções padrão da empresa. Tolera a tabela ainda não existir (migration 0023). */
-export async function getDeductionDefaults(tenantId: string): Promise<DeductionDefault[]> {
+export async function getDeductionDefaults(tenantId: string, orcamentoId: string): Promise<DeductionDefault[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("revenue_deduction_defaults")
     .select("label, pct, sort_order")
     .eq("tenant_id", tenantId)
+    .eq("orcamento_id", orcamentoId)
     .order("sort_order");
   if (error) return [];
   return (data ?? []).map((r) => ({ label: String(r.label), pct: Number(r.pct) }));
@@ -124,12 +125,13 @@ export interface DeductionRuleRow {
 }
 
 /** Condições especiais por estrutura. Tolera a tabela ainda não existir (migration 0024). */
-export async function getDeductionRules(tenantId: string): Promise<DeductionRuleRow[]> {
+export async function getDeductionRules(tenantId: string, orcamentoId: string): Promise<DeductionRuleRow[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("revenue_deduction_rules")
     .select("label, entity_node_id, product_node_id, pct, sort_order")
     .eq("tenant_id", tenantId)
+    .eq("orcamento_id", orcamentoId)
     .order("sort_order");
   if (error) return [];
   return (data ?? []).map((r) => ({
