@@ -4,6 +4,8 @@ export const BASE_CURRENCY = "BRL";
 
 export interface RevenueLine {
   productId: string;
+  /** Outras dimensões do lançamento: id do tipo de hierarquia -> id do item (ex.: Canal). */
+  dims?: Record<string, string>;
   /** Estrutura (entidade) do lançamento; usada nas condições especiais. */
   entityId?: string | null;
   month: number; // 1..12
@@ -171,4 +173,91 @@ export function distributeSeasonality(annualVolume: number, weights: number[]): 
 
 function round4(n: number): number {
   return Math.round(n * 10000) / 10000;
+}
+
+// ---- Premissas guardadas (não sobrescrevem o lançado) ----
+
+export interface Premise {
+  kind: "volume_growth" | "price_adjust";
+  pct: number;
+  fromMonth: number;
+  /** "entered": cresce em cima do valor lançado; "previous_month": encadeia no mês anterior (só volume). */
+  base: "entered" | "previous_month";
+  productIds: string[];
+  /** id do tipo de hierarquia -> itens escolhidos (vazio = todos). */
+  dimensionFilters: Record<string, string[]>;
+}
+
+export interface PremiseContext {
+  /** Hierarquia pela qual a receita é lançada (a "Lançar por") e os pais dos seus itens. */
+  entityTypeId: string | null;
+  entityParents: Record<string, string | null>;
+  productParents: Record<string, string | null>;
+  /** Pais de TODOS os itens das demais hierarquias (para famílias/níveis sintéticos). */
+  nodeParents: Record<string, string | null>;
+}
+
+function lineMatches(l: RevenueLine, p: Premise, ctx: PremiseContext): boolean {
+  if (p.productIds.length > 0) {
+    const pl = lineage(l.productId, ctx.productParents);
+    if (!p.productIds.some((id) => pl.includes(id))) return false;
+  }
+  for (const [typeId, nodeIds] of Object.entries(p.dimensionFilters)) {
+    if (nodeIds.length === 0) continue;
+    const own = typeId === ctx.entityTypeId ? l.entityId : l.dims?.[typeId];
+    if (!own) return false;
+    const parents = typeId === ctx.entityTypeId ? { ...ctx.nodeParents, ...ctx.entityParents } : ctx.nodeParents;
+    const ln = lineage(own, parents);
+    if (!nodeIds.some((id) => ln.includes(id))) return false;
+  }
+  return true;
+}
+
+/** Mais filtros = mais específica: aplica-se depois (por cima) das gerais. */
+function specificity(p: Premise): number {
+  return (p.productIds.length > 0 ? 1 : 0) + Object.values(p.dimensionFilters).filter((v) => v.length > 0).length;
+}
+
+/**
+ * Aplica as premissas ativas sobre as linhas lançadas, sem alterá-las.
+ * Cada série (produto × entidade × outras dimensões) é tratada mês a mês, em ordem:
+ * primeiro as premissas mais gerais, depois as mais específicas.
+ */
+export function applyPremises(lines: RevenueLine[], premises: Premise[], ctx: PremiseContext): RevenueLine[] {
+  if (premises.length === 0 || lines.length === 0) return lines;
+  const ordered = premises
+    .map((p, i) => ({ p, i }))
+    .sort((a, b) => specificity(a.p) - specificity(b.p) || a.i - b.i)
+    .map((x) => x.p);
+  const series = new Map<string, RevenueLine[]>();
+  for (const l of lines) {
+    const k = `${l.productId}|${l.entityId ?? ""}|${JSON.stringify(l.dims ?? {})}`;
+    const arr = series.get(k) ?? [];
+    arr.push({ ...l });
+    series.set(k, arr);
+  }
+  const out: RevenueLine[] = [];
+  for (const arr of Array.from(series.values())) {
+    arr.sort((a, b) => a.month - b.month);
+    for (const p of ordered) {
+      if (!lineMatches(arr[0], p, ctx)) continue;
+      const factor = 1 + p.pct / 100;
+      if (p.kind === "price_adjust") {
+        for (const l of arr) if (l.month >= p.fromMonth) l.unitPrice = round4(l.unitPrice * factor);
+      } else if (p.base === "previous_month") {
+        let prev: number | null = null;
+        for (const l of arr) {
+          if (l.month === p.fromMonth) prev = l.volume;
+          else if (l.month > p.fromMonth && prev !== null) {
+            l.volume = round4(prev * factor);
+            prev = l.volume;
+          }
+        }
+      } else {
+        for (const l of arr) if (l.month > p.fromMonth) l.volume = round4(l.volume * Math.pow(factor, l.month - p.fromMonth));
+      }
+    }
+    out.push(...arr);
+  }
+  return out;
 }
