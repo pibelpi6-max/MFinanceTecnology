@@ -742,7 +742,13 @@
     "globalCurrencies": "Monedas",
     "currencyName": "Nombre",
     "currencyNamePlaceholder": "Ej.: Dólar estadounidense",
-    "currencyAdd": "Agregar moneda"
+    "currencyAdd": "Agregar moneda",
+    "parGroupGeneral": "General",
+    "parGroupRevenue": "Ingresos",
+    "parGroupCosts": "Costos",
+    "parInputs": "Insumos",
+    "parSoon": "pronto",
+    "parNavLabel": "Parámetros por módulo"
   },
   "erpCodes": {
     "title": "Códigos del ERP",
