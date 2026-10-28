@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
+import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
@@ -350,19 +351,7 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
       key: "kind", label: t("kindLabel"), width: 150, getText: kindText, filterable: true, noTooltip: true,
       render: (r) =>
         r.isLeaf && r.depth > 0 ? (
-          <span className={`rec-kind-wrap rec-kind-wrap-${r.kind}`}>
-            <KindIcon kind={r.kind} />
-            <select
-              className={`rec-kind rec-kind-select rec-kind-${r.kind}`}
-              value={r.kind}
-              disabled={pending}
-              aria-label={t("kindLabel")}
-              onChange={(e) => changeKind(r, e.target.value as Kind)}
-            >
-              <option value="produto">{t("kindProduct")}</option>
-              <option value="servico">{t("kindService")}</option>
-            </select>
-          </span>
+          <KindMenu value={r.kind} disabled={pending} onChange={(k) => changeKind(r, k)} labels={{ produto: t("kindProduct"), servico: t("kindService") }} ariaLabel={t("kindLabel")} />
         ) : null,
     },
     {
@@ -492,5 +481,67 @@ function KindIcon({ kind }: { kind: "produto" | "servico" }) {
         <path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4Z" />
       )}
     </svg>
+  );
+}
+
+/** Pill de tipo com menu próprio (ícone em cada opção; o select nativo não aceita ícones). */
+function KindMenu({ value, onChange, labels, disabled, ariaLabel }: {
+  value: "produto" | "servico";
+  onChange: (k: "produto" | "servico") => void;
+  labels: Record<"produto" | "servico", string>;
+  disabled?: boolean;
+  ariaLabel: string;
+}) {
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!pos) return;
+    const close = () => setPos(null);
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && close();
+    document.addEventListener("mousedown", close);
+    document.addEventListener("keydown", onKey);
+    window.addEventListener("scroll", close, true);
+    window.addEventListener("resize", close);
+    return () => {
+      document.removeEventListener("mousedown", close);
+      document.removeEventListener("keydown", onKey);
+      window.removeEventListener("scroll", close, true);
+      window.removeEventListener("resize", close);
+    };
+  }, [pos]);
+  function toggle() {
+    if (pos) return setPos(null);
+    const r = btnRef.current?.getBoundingClientRect();
+    if (r) setPos({ top: r.bottom + 4, left: r.left });
+  }
+  return (
+    <>
+      <button
+        ref={btnRef}
+        type="button"
+        className={`rec-kind-btn rec-kind-${value}`}
+        disabled={disabled}
+        aria-label={ariaLabel}
+        aria-haspopup="listbox"
+        aria-expanded={!!pos}
+        onMouseDown={(e) => e.stopPropagation()}
+        onClick={toggle}
+      >
+        <KindIcon kind={value} />
+        {labels[value]}
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="m6 9 6 6 6-6" /></svg>
+      </button>
+      {pos && typeof document !== "undefined" && createPortal(
+        <div className="rec-kind-menu" role="listbox" style={{ top: pos.top, left: pos.left }} onMouseDown={(e) => e.stopPropagation()}>
+          {(["produto", "servico"] as const).map((k) => (
+            <button key={k} type="button" role="option" aria-selected={k === value} className={k === value ? "on" : ""} onClick={() => { setPos(null); onChange(k); }}>
+              <KindIcon kind={k} />
+              {labels[k]}
+            </button>
+          ))}
+        </div>,
+        document.body,
+      )}
+    </>
   );
 }
