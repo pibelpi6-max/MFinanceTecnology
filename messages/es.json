@@ -683,7 +683,10 @@
     "ruleAdd": "Agregar condición",
     "ruleDone": "Listo",
     "ruleModalHint": "Valen en lugar del estándar ({pct}%) para la estructura y/o producto elegidos.",
-    "ruleEmpty": "Aún no hay condiciones."
+    "ruleEmpty": "Aún no hay condiciones.",
+    "familyLabel": "Familia",
+    "familyPlaceholder": "Opcional: elija una existente o escriba una nueva",
+    "familyNone": "Sin familia"
   },
   "erpCodes": {
     "title": "Códigos del ERP",
