@@ -111,21 +111,36 @@ export function MoedasPanel({ orcamentoId, currencies, rates, onError }: {
             <strong>{selected}</strong>
             <span>{t("fxHint")}</span>
           </div>
-          <div className="mo-grid">
+          <div className="rec-fx-grid mo-grid">
             {MONTHS.map((m, i) => (
-              <label key={m} className="mo-cell">
+              <div key={m} className="rec-field">
                 <span>{new Intl.DateTimeFormat(undefined, { month: "short" }).format(new Date(2000, m - 1, 1))}</span>
-                <input
-                  inputMode="decimal"
-                  value={vals[i]}
-                  placeholder="0,0000"
-                  onChange={(e) => {
-                    if (!/^\d*[.,]?\d*$/.test(e.target.value)) return;
-                    setDirty(true);
-                    setVals((s) => s.map((x, j) => (j === i ? e.target.value : x)));
-                  }}
-                />
-              </label>
+                <span className="rec-fx-cell">
+                  <input
+                    aria-label={new Intl.DateTimeFormat(undefined, { month: "long" }).format(new Date(2000, m - 1, 1))}
+                    inputMode="decimal"
+                    value={vals[i]}
+                    placeholder="0,0000"
+                    onChange={(e) => {
+                      if (!/^\d*[.,]?\d*$/.test(e.target.value)) return;
+                      setDirty(true);
+                      setVals((x) => x.map((y, j) => (j === i ? e.target.value : y)));
+                    }}
+                  />
+                  {i < MONTHS.length - 1 && (
+                    <button
+                      type="button"
+                      className="rec-fx-repeat"
+                      title={t("fxRepeatNext")}
+                      aria-label={t("fxRepeatNext")}
+                      disabled={!vals[i]}
+                      onClick={() => { setDirty(true); setVals((x) => x.map((y, j) => (j > i ? x[i] : y))); }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="m6 6 6 6-6 6M13 6l6 6-6 6" /></svg>
+                    </button>
+                  )}
+                </span>
+              </div>
             ))}
           </div>
           <div className="mo-actions">
