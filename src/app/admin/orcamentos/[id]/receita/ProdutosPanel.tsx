@@ -174,8 +174,8 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
               {t("kindLabel")}
               <div className="rec-seg" data-on={editKind} role="group" aria-label={t("kindLabel")}>
                 <span className="rec-seg-thumb" aria-hidden />
-                <button type="button" className={editKind === "produto" ? "on" : ""} onClick={() => setEditKind("produto")}>{t("kindProduct")}</button>
-                <button type="button" className={editKind === "servico" ? "on" : ""} onClick={() => setEditKind("servico")}>{t("kindService")}</button>
+                <button type="button" className={editKind === "produto" ? "on" : ""} onClick={() => setEditKind("produto")}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M21 8 12 3 3 8v8l9 5 9-5Z" /><path d="m3 8 9 5 9-5M12 13v8" /></svg>{t("kindProduct")}</button>
+                <button type="button" className={editKind === "servico" ? "on" : ""} onClick={() => setEditKind("servico")}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4Z" /></svg>{t("kindService")}</button>
               </div>
             </div>
           )}

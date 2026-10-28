@@ -1520,3 +1520,8 @@ select.rec-kind option:checked { background: #fff; color: #1C2033; }
 .rec-ded-row .rec-rule-btn:hover:not(:disabled) { background: #F1F3F9; color: #6b7088; }
 .rec-ded-row .rec-rule-btn.is-set { color: #E8920C; }
 .rec-ded-row .rec-rule-btn.is-set:hover:not(:disabled) { background: #FFF4E0; color: #D97706; }
+
+/* Tipo (Produto/Serviço): mesma cor do pill selecionado das abas, com ícones */
+.rec-edit .rec-seg button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.rec-edit .rec-seg[data-on] .rec-seg-thumb { background: #3E6FE0; box-shadow: none; }
+.rec-edit .rec-seg[data-on] button.on { color: #fff; }
