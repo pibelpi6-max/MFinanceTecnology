@@ -36,6 +36,9 @@ interface Props {
   deductionDefaults?: { label: string; pct: number }[];
   products: ProductRow[];
   entities: { id: string; name: string; depth?: number; parentId?: string | null }[];
+  dimensions: { id: string; name: string }[];
+  dimId: string | null;
+  ruleGroups: { typeId: string; name: string; items: { id: string; name: string; depth?: number }[] }[];
   deductionRules?: DeductionRule[];
   entityId: string; // "all" = consolidado (somente leitura)
   displayCurrency: string;
@@ -197,6 +200,13 @@ export function ReceitaClient(p: Props) {
   function setParam(key: string, value: string) {
     const sp = new URLSearchParams(search.toString());
     sp.set(key, value);
+    router.push(`${pathname}?${sp.toString()}`);
+  }
+
+  function setDim(id: string) {
+    const sp = new URLSearchParams(search.toString());
+    sp.set("dim", id);
+    sp.delete("entidade");
     router.push(`${pathname}?${sp.toString()}`);
   }
 
@@ -429,7 +439,7 @@ export function ReceitaClient(p: Props) {
             />
           )}
           {paramTab === "deductions" && (
-            <DeductionDefaultsPanel orcamentoId={p.orcamentoId} defaults={p.deductionDefaults ?? []} rules={p.deductionRules ?? []} entities={p.entities} products={p.products} onError={setError} />
+            <DeductionDefaultsPanel orcamentoId={p.orcamentoId} defaults={p.deductionDefaults ?? []} rules={p.deductionRules ?? []} groups={p.ruleGroups} products={p.products} onError={setError} />
           )}
           {paramTab === "fx" && <FxPanel orcamentoId={p.orcamentoId} rates={p.rates} onError={setError} />}
         </>
@@ -442,6 +452,14 @@ export function ReceitaClient(p: Props) {
       {tab === "entry" && (
         <>
           <div className="rec-filters">
+            {p.dimensions.length > 1 && (
+              <label>
+                {t("launchBy")}
+                <select value={p.dimId ?? ""} onChange={(e) => setDim(e.target.value)} disabled={dirty}>
+                  {p.dimensions.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+                </select>
+              </label>
+            )}
             {p.entities.length > 0 && (
               <label>
                 {t("entity")}
@@ -478,6 +496,14 @@ export function ReceitaClient(p: Props) {
       {tab === "analysis" && (
         <>
           <div className="rec-filters">
+            {p.dimensions.length > 1 && (
+              <label>
+                {t("launchBy")}
+                <select value={p.dimId ?? ""} onChange={(e) => setDim(e.target.value)} disabled={dirty}>
+                  {p.dimensions.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+                </select>
+              </label>
+            )}
             {p.entities.length > 0 && (
               <label>
                 {t("entity")}
@@ -587,11 +613,11 @@ type RuleDraft = { entityId: string; productId: string; pct: string };
 type DedDraftRow = { label: string; pct: string; rules: RuleDraft[] };
 
 /** Deduções padrão da empresa e suas condições especiais por estrutura / produto. */
-function DeductionDefaultsPanel({ orcamentoId, defaults, rules, entities, products, onError }: {
+function DeductionDefaultsPanel({ orcamentoId, defaults, rules, groups, products, onError }: {
   orcamentoId: string;
   defaults: { label: string; pct: number }[];
   rules: DeductionRule[];
-  entities: { id: string; name: string; depth?: number }[];
+  groups: { typeId: string; name: string; items: { id: string; name: string; depth?: number }[] }[];
   products: ProductRow[];
   onError: (s: string | null) => void;
 }) {
@@ -656,7 +682,11 @@ function DeductionDefaultsPanel({ orcamentoId, defaults, rules, entities, produc
                 <div className="rec-rule-row" key={j}>
                   <select value={r.entityId} onChange={(e) => patchRule(i, j, { entityId: e.target.value })} aria-label={t("ruleColStructure")}>
                     <option value="">{t("ruleAllStructures")}</option>
-                    {entities.map((e) => <option key={e.id} value={e.id}>{indent(e.depth)}{e.name}</option>)}
+                    {groups.map((g) => (
+                      <optgroup key={g.typeId} label={g.name}>
+                        {g.items.map((e) => <option key={e.id} value={e.id}>{indent(e.depth)}{e.name}</option>)}
+                      </optgroup>
+                    ))}
                   </select>
                   <select value={r.productId} onChange={(e) => patchRule(i, j, { productId: e.target.value })} aria-label={t("ruleColProduct")}>
                     <option value="">{t("ruleAllProducts")}</option>

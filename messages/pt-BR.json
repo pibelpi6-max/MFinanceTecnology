@@ -668,7 +668,8 @@
     "ruleAllStructures": "Todas as estruturas",
     "ruleAllProducts": "Todos os produtos e serviços",
     "ruleColStructure": "Estrutura",
-    "ruleColProduct": "Produto ou serviço"
+    "ruleColProduct": "Produto ou serviço",
+    "launchBy": "Lançar por"
   },
   "erpCodes": {
     "title": "Códigos do ERP",
