@@ -544,11 +544,6 @@ export function ReceitaClient(p: Props) {
               </select>
             </label>
           )}
-          {withCarried && !readOnly && (
-            <span className="rec-slice-now">
-              {t("valuesFor")} <strong>{carried.map((id) => (p.dimNodes[id] ?? []).find((n) => n.id === sel[id])?.name).filter(Boolean).join(" · ")}</strong>
-            </span>
-          )}
         </div>
       )}
     </div>
@@ -607,7 +602,7 @@ export function ReceitaClient(p: Props) {
         <>
           {sliceBar(true)}
           <div className="rec-entry-bar">
-            <span>{readOnly ? t("consolidatedHint") : t("unifiedHint")}</span>
+            <span>{readOnly ? t("consolidatedHint") : ""}</span>
             <div>
               <Button variant="ghost" size="sm" onClick={toggleFull}>{isFull ? t("exitFullscreen") : t("fullscreen")}</Button>
               {dirty && <Button variant="ghost" size="sm" onClick={() => { setEdits({}); setCurrencyEdits({}); }}>{t("discard")}</Button>}
