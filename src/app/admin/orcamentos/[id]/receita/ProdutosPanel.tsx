@@ -51,6 +51,9 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
 
   const [text, setText] = useState("");
   const [newKind, setNewKind] = useState<Kind>("produto");
+  const [family, setFamily] = useState("");
+  const [editParent, setEditParent] = useState("");
+  const families = products.filter((r) => !r.isLeaf && r.depth === 1);
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<ProductRow | null>(null);
   const [editName, setEditName] = useState("");
@@ -96,13 +99,34 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
     onError(null);
     setNotice(null);
     const codes = nextCodes(names.length);
+    const famName = family.trim();
+    const existing = famName ? families.find((f) => f.name.toLowerCase() === famName.toLowerCase()) : undefined;
+    let groups: { code: string; name: string }[] = [];
+    let groupCode: string | undefined;
+    if (famName && !existing) {
+      const taken = new Set(products.map((r) => codeKey(r.code)));
+      let n = 0;
+      let fc: string;
+      do fc = `F${String(++n).padStart(3, "0")}`;
+      while (taken.has(fc.toLowerCase()));
+      groupCode = fc;
+      groups = [{ code: fc, name: famName }];
+    }
     start(async () => {
       const r = await importProdutos({
-        orcamentoId, productTypeId, rootId: root.id, rootLevel: 1, groups: [], updates: [],
-        creates: names.map((name, i) => ({ code: codes[i], name, parentId: root.id, parentLevel: 1, kind: newKind })),
+        orcamentoId, productTypeId, rootId: root.id, rootLevel: 1, groups, updates: [],
+        creates: names.map((name, i) => ({
+          code: codes[i], name, kind: newKind,
+          ...(groupCode
+            ? { parentId: null, parentLevel: 2, groupCode }
+            : existing
+              ? { parentId: existing.id, parentLevel: existing.depth + 1 }
+              : { parentId: root.id, parentLevel: 1 }),
+        })),
       });
       if (r.error) { onError(r.error); return; }
       setText("");
+      setFamily("");
       setAdding(false);
       onChanged();
     });
@@ -113,11 +137,12 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
     setEditName(r.name);
     setEditCode(r.code);
     setEditKind(r.kind);
+    setEditParent(r.parentId ?? root?.id ?? "");
     setEditDeds(deductions.filter((d) => d.productId === r.id).map((d) => ({ label: d.label, pct: fmtPct(d.pct) })));
-    setSnapshot(JSON.stringify([r.code, r.name, r.kind, deductions.filter((d) => d.productId === r.id).map((d) => ({ label: d.label, pct: fmtPct(d.pct) }))]));
+    setSnapshot(JSON.stringify([r.code, r.name, r.kind, r.parentId ?? root?.id ?? "", deductions.filter((d) => d.productId === r.id).map((d) => ({ label: d.label, pct: fmtPct(d.pct) }))]));
   }
 
-  const dirty = editing !== null && JSON.stringify([editCode, editName, editKind, editDeds]) !== snapshot;
+  const dirty = editing !== null && JSON.stringify([editCode, editName, editKind, editParent, editDeds]) !== snapshot;
 
   function openOrClose(r: ProductRow) {
     if (editing && dirty) { setSwitchTo(r); return; }
@@ -153,6 +178,15 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
                 <button type="button" className={editKind === "servico" ? "on" : ""} onClick={() => setEditKind("servico")}>{t("kindService")}</button>
               </div>
             </div>
+          )}
+          {isItem && root && (
+            <label>
+              {t("familyLabel")}
+              <select value={editParent} onChange={(e) => setEditParent(e.target.value)}>
+                <option value={root.id}>{t("familyNone")}</option>
+                {families.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
+              </select>
+            </label>
           )}
           <label>
             {t("importColCode")}
@@ -216,7 +250,7 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
     start(async () => {
       const r = await updateDimensionNode({
         nodeId: row.id, versionId: row.versionId, currentValidFromYear: row.validFromYear,
-        name, code: code !== row.code ? code : undefined, parentNodeId: row.parentId, year,
+        name, code: code !== row.code ? code : undefined, parentNodeId: row.isLeaf && row.depth > 0 ? (editParent || row.parentId) : row.parentId, year,
       });
       if (r.error) { onError(r.error); return; }
       if (editKind !== row.kind) {
@@ -386,6 +420,11 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
           <label>
             {t("prodAddLabel")}
             <textarea rows={5} autoFocus value={text} onChange={(e) => setText(e.target.value)} placeholder={t("prodAddPlaceholder")} />
+          </label>
+          <label>
+            {t("familyLabel")}
+            <input list="rec-family-list" value={family} onChange={(e) => setFamily(e.target.value)} placeholder={t("familyPlaceholder")} />
+            <datalist id="rec-family-list">{families.map((f) => <option key={f.id} value={f.name} />)}</datalist>
           </label>
           <label>
             {t("kindLabel")}

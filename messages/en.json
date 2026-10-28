@@ -683,7 +683,10 @@
     "ruleAdd": "Add condition",
     "ruleDone": "Done",
     "ruleModalHint": "Apply instead of the default ({pct}%) for the chosen structure and/or product.",
-    "ruleEmpty": "No conditions yet."
+    "ruleEmpty": "No conditions yet.",
+    "familyLabel": "Family",
+    "familyPlaceholder": "Optional: pick an existing one or type a new one",
+    "familyNone": "No family"
   },
   "erpCodes": {
     "title": "ERP codes",

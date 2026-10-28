@@ -683,7 +683,10 @@
     "ruleAdd": "Adicionar condição",
     "ruleDone": "Concluir",
     "ruleModalHint": "Valem no lugar do padrão ({pct}%) para a estrutura e/ou produto escolhidos.",
-    "ruleEmpty": "Nenhuma condição ainda."
+    "ruleEmpty": "Nenhuma condição ainda.",
+    "familyLabel": "Família",
+    "familyPlaceholder": "Opcional: escolha uma existente ou digite uma nova",
+    "familyNone": "Sem família"
   },
   "erpCodes": {
     "title": "Códigos do ERP",
