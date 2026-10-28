@@ -101,7 +101,7 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
     onError(null);
     setNotice(null);
     const codes = nextCodes(names.length);
-    const famName = family.trim();
+    const famName = newKind === "servico" ? "" : family.trim();
     const existing = famName ? families.find((f) => f.name.toLowerCase() === famName.toLowerCase()) : undefined;
     let groups: { code: string; name: string }[] = [];
     let groupCode: string | undefined;
@@ -181,7 +181,7 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
               </div>
             </div>
           )}
-          {isItem && root && (
+          {isItem && root && editKind === "produto" && (
             <label className="rec-f-family">
               {t("familyLabel")}
               <select value={editParent} onChange={(e) => setEditParent(e.target.value)}>
@@ -252,7 +252,7 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
     start(async () => {
       const r = await updateDimensionNode({
         nodeId: row.id, versionId: row.versionId, currentValidFromYear: row.validFromYear,
-        name, code: code !== row.code ? code : undefined, parentNodeId: row.isLeaf && row.depth > 0 ? (editParent || row.parentId) : row.parentId, year,
+        name, code: code !== row.code ? code : undefined, parentNodeId: row.isLeaf && row.depth > 0 ? (editKind === "servico" ? (root?.id ?? row.parentId) : (editParent || row.parentId)) : row.parentId, year,
       });
       if (r.error) { onError(r.error); return; }
       if (editKind !== row.kind) {
@@ -410,11 +410,11 @@ export function ProdutosPanel({ orcamentoId, productTypeId, year, products, dedu
             {t("prodAddLabel")}
             <textarea rows={5} autoFocus value={text} onChange={(e) => setText(e.target.value)} placeholder={t("prodAddPlaceholder")} />
           </label>
-          <label>
+          {newKind === "produto" && <label>
             {t("familyLabel")}
             <input list="rec-family-list" value={family} onChange={(e) => setFamily(e.target.value)} placeholder={t("familyPlaceholder")} />
             <datalist id="rec-family-list">{families.map((f) => <option key={f.id} value={f.name} />)}</datalist>
-          </label>
+          </label>}
           <label>
             {t("kindLabel")}
             {kindSelect(newKind, setNewKind)}
