@@ -754,7 +754,9 @@
     "fxSectionTitle": "Taxas mensais deste orçamento",
     "currencyBaseHint": "Digite a sigla (ex.: USD) e adicione. Em seguida informe a taxa de cada mês.",
     "currencyInvalid": "Sigla inválida: use 3 letras (ex.: USD).",
-    "fxRepeatAll": "Repetir janeiro nos 12 meses"
+    "fxRepeatAll": "Repetir janeiro nos 12 meses",
+    "parProductsSub": "Cadastro geral de produtos e serviços. Vale para todos os orçamentos e anos.",
+    "parCurrenciesSub": "Moedas da empresa e a taxa mensal de cada uma para converter em BRL. As taxas valem para este orçamento."
   },
   "erpCodes": {
     "title": "Códigos do ERP",

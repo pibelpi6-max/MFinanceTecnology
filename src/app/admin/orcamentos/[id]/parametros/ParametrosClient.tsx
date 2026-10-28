@@ -57,6 +57,10 @@ export function ParametrosClient(p: Props) {
       </nav>
       <div className="par-body">
         {error && <div className="rec-error">{error}</div>}
+        <header className="par-head">
+          <h2>{tab === "products" ? t("globalProducts") : t("globalCurrencies")}</h2>
+          <p>{tab === "products" ? t("parProductsSub") : t("parCurrenciesSub")}</p>
+        </header>
         {tab === "products" && (
           <ProdutosPanel
             orcamentoId={p.orcamentoId}

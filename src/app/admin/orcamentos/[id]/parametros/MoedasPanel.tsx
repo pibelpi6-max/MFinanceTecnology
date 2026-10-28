@@ -89,7 +89,6 @@ export function MoedasPanel({ orcamentoId, currencies, rates, onError }: {
         <Button variant="accent-blue" size="sm" className="px-3" onClick={add} isLoading={pending} disabled={code.length !== 3}>
           + {t("currencyAdd")}
         </Button>
-        <span className="mo-hint">{t("currencyBaseHint")}</span>
       </div>
 
       {codes.length > 0 && (
@@ -109,7 +108,6 @@ export function MoedasPanel({ orcamentoId, currencies, rates, onError }: {
         <div className="mo-rates">
           <div className="mo-rates-head">
             <strong>{selected}</strong>
-            <span>{t("fxHint")}</span>
           </div>
           <div className="rec-fx-grid mo-grid">
             {MONTHS.map((m, i) => (
